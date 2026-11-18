@@ -1,0 +1,35 @@
+/* Room identity: ink background, phosphor amber as the signal color,
+   condensed signage type for whatever must be read from afar. */
+:root {
+  --bg: #06080a;
+  --panel: #0b0f13;
+  --panel-2: #10161c;
+  --panel-3: #161f28;
+  --line: #1b242d;
+  --line-2: #2a3742;
+
+  /* Text: all three tones pass 4.5:1 on --panel-3. */
+  --tx-1: #eef2f5;
+  --tx-2: #b4bfc9;
+  --tx-3: #8794a1;
+
+  --amber: #ffb020;
+  --amber-ink: #171000;
+  --ice: #6cc6ff;
+  --violet: #b79cff;
+  --up: #3dd68c;
+  --down: #ff6b6b;
+  --live: #ff4d4d;
+
+  --font-display: 'Big Shoulders Display Variable', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  --font-text: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --gap: 0.625rem;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* The whole screen scales together: 16px at 1920×1080, ~21px at 2560×1440, 12.5px at 1440×900. */
+html {
+  font-size: clamp(12.5px, min(0.8334vw, 1.4815vh), 26px);
+}

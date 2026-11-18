@@ -1,0 +1,45 @@
+# Radar SEC settings. The values below are the defaults; edit freely.
+# Point to another file with --config or the RADAR_CONFIG variable.
+
+lang = "en"                     # language for AI summaries, alerts and CLI output: "en" or "pt-BR" (env RADAR_LANG overrides)
+
+[signals]
+cluster_window_days = 14        # window (days) in which the purchases must happen
+cluster_min_insiders = 2        # distinct insiders needed to form a cluster_buy
+cluster_min_value = 100000.0    # minimum total of the cluster's purchases (US$)
+officer_min_value = 250000.0    # minimum CEO/CFO purchase for big_officer_buy (US$)
+activist_min_percent = 5.0      # minimum stake in a new 13D for activist_13d (%)
+cooldown_days = 30              # days before the same signal repeats for the same issuer
+
+[sec]
+requests_per_second = 8.0       # the SEC limit is 10 per second
+max_retries = 5                 # retries on 429/5xx, with growing waits
+timeout_seconds = 30.0
+# "SCHEDULE 13D" is the form's current name and covers amendments. The old name,
+# "SC 13D", has received no filings since Dec 2024: its feed is empty and slow.
+feed_forms = ["4", "SCHEDULE 13D"]
+feed_count = 100                # entries per page of the Form 4 feed
+feed_count_13d = 40             # smaller page for 13D: the SEC answers much faster
+feed_max_pages = 5              # maximum pages read per cycle
+backfill_issuer = true          # fetch the issuer's recent Form 4s when a P purchase shows up
+
+[ai]
+enabled = true                  # false = always use the template summary
+model = "haiku"                 # model used to summarize signals
+timeout_seconds = 90.0
+max_calls_per_hour = 30         # call ceiling, so the subscription quota is not used up
+
+[backtest]
+cost_roundtrip = 0.002          # round-trip cost deducted from each trade (0.2%)
+horizons_months = [1, 3, 6]
+benchmark = "SPY"
+extra_benchmarks = ["IWM"]
+min_price = 5.0                 # liquidity filter: minimum purchase price (US$)
+min_market_cap = 300000000.0    # liquidity filter: minimum market cap (US$)
+price_tolerance_days = 5        # trading days of slack to find the entry/exit price
+price_check_min_ratio = 0.5     # market price ÷ Form 4 price: accepted range
+price_check_max_ratio = 2.0
+price_jump_ratio = 5.0          # daily jump that signals a reverse split Yahoo did not adjust...
+price_jump_below = 1.0          # ...when it starts from a price below this value (US$)
+price_batch_size = 20           # tickers per Yahoo query
+price_requests_per_second = 2.0 # average pace; bigger bursts get blocked by Yahoo

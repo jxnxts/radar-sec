@@ -1,0 +1,32 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# downloaded data and local database (rebuildable)
+data/
+
+# the backtest signals CSV is large and rebuildable; the .md reports are versioned
+reports/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# web dashboard
+web/node_modules/
+web/dist/
+
+# OS
+.DS_Store
+
+# AI tooling (never versioned)
+CLAUDE.md
+AGENTS.md
+.claude/

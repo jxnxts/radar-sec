@@ -1,0 +1,429 @@
+<SEC-DOCUMENT>0001213900-26-121050.txt : 20261117
+<SEC-HEADER>0001213900-26-121050.hdr.sgml : 20261117
+<ACCEPTANCE-DATETIME>20261117060615
+ACCESSION NUMBER:		0001213900-26-121050
+CONFORMED SUBMISSION TYPE:	SCHEDULE 13D
+PUBLIC DOCUMENT COUNT:		2
+FILED AS OF DATE:		20261117
+DATE AS OF CHANGE:		20261117
+
+SUBJECT COMPANY:	
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Trident Digital Tech Holdings Ltd
+		CENTRAL INDEX KEY:			0001983550
+		STANDARD INDUSTRIAL CLASSIFICATION:	SERVICES-BUSINESS SERVICES, NEC [7389]
+		ORGANIZATION NAME:           	07 Trade & Services
+		EIN:				000000000
+
+	FILING VALUES:
+		FORM TYPE:		SCHEDULE 13D
+		SEC ACT:		1934 Act
+		SEC FILE NUMBER:	005-94881
+		FILM NUMBER:		261563895
+
+	BUSINESS ADDRESS:	
+		ADDRESS IS A NON US LOCATION: 	YES
+		STREET 1:		8 TEMASEK BOULEVARD #24-03
+		STREET 2:		SUNTEC TOWER THREE
+		CITY:			SINGAPORE
+		PROVINCE COUNTRY:   	U0
+		BUSINESS PHONE:		(65)65136868
+
+	MAIL ADDRESS:	
+		ADDRESS IS A NON US LOCATION: 	YES
+		STREET 1:		8 TEMASEK BOULEVARD #24-03
+		STREET 2:		SUNTEC TOWER THREE
+		CITY:			SINGAPORE
+		PROVINCE COUNTRY:   	U0
+
+	FORMER COMPANY:	
+		FORMER CONFORMED NAME:	Trident Digital Tech Holdings Ltd.
+		DATE OF NAME CHANGE:	20230629
+
+FILED BY:		
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Lim Soon Huat
+		CENTRAL INDEX KEY:			0002056716
+		ORGANIZATION NAME:           	
+
+	FILING VALUES:
+		FORM TYPE:		SCHEDULE 13D
+
+	MAIL ADDRESS:	
+		ADDRESS IS A NON US LOCATION: 	YES
+		STREET 1:		SUNTEC TOWER 3,
+		STREET 2:		8 TEMASEK BOULEVARD ROAD, #24-03
+		CITY:			SINGAPORE
+		PROVINCE COUNTRY:   	U0
+</SEC-HEADER>
+<DOCUMENT>
+<TYPE>SCHEDULE 13D
+<SEQUENCE>1
+<FILENAME>primary_doc.xml
+<TEXT>
+<XML>
+<?xml version="1.0" encoding="UTF-8"?><edgarSubmission xmlns="http://www.sec.gov/edgar/schedule13D" xmlns:com="http://www.sec.gov/edgar/common">
+  <schemaVersion>X0202</schemaVersion>
+<headerData>
+    <submissionType>SCHEDULE 13D</submissionType>
+    <filerInfo>
+      <filer>
+        <filerCredentials>
+          <!-- Field: Pseudo-Tag; ID: Name; Data: Lim Soon Huat -->
+          <cik>0002056716</cik>
+          <ccc>XXXXXXXX</ccc>
+        </filerCredentials>
+      </filer>
+      <liveTestFlag>LIVE</liveTestFlag>
+
+
+
+    </filerInfo>
+  </headerData>
+  <formData>
+    <coverPageHeader>
+      <securitiesClassTitle>Class B ordinary share, par value $0.0024 per share</securitiesClassTitle>
+      <dateOfEvent>11/06/2026</dateOfEvent>
+      <previouslyFiledFlag>false</previouslyFiledFlag>
+      <issuerInfo>
+        <issuerCIK>0001983550</issuerCIK>
+        <issuerCusips>
+          <issuerCusipNumber>G90475115</issuerCusipNumber>
+        </issuerCusips>
+        <issuerName>Trident Digital Tech Holdings Ltd.</issuerName>
+        <address>
+          <com:street1>Suntec Tower 3</com:street1>
+          <com:street2>8 Temasek Boulevard Road, #24-03</com:street2>
+          <com:city>Singapore</com:city>
+          <com:stateOrCountry>U0</com:stateOrCountry>
+          <com:zipCode>038988</com:zipCode>
+        </address>
+      </issuerInfo>
+      <authorizedPersons>
+        <notificationInfo>
+          <personName>Soon Huat Lim</personName>
+          <personPhoneNum>65 6513 6868</personPhoneNum>
+          <personAddress>
+            <com:street1>Suntec Tower 3</com:street1>
+            <com:street2>8 Temasek Boulevard Road, #24-03</com:street2>
+            <com:city>Singapore</com:city>
+            <com:stateOrCountry>U0</com:stateOrCountry>
+            <com:zipCode>038988</com:zipCode>
+          </personAddress>
+        </notificationInfo>
+      </authorizedPersons>
+    </coverPageHeader>
+    <reportingPersons>
+      <reportingPersonInfo>
+        <reportingPersonCIK>0002056716</reportingPersonCIK>
+        <reportingPersonNoCIK>N</reportingPersonNoCIK>
+        <reportingPersonName>Lim Soon Huat</reportingPersonName>
+        <fundType>PF</fundType>
+        <legalProceedings>N</legalProceedings>
+        <citizenshipOrOrganization>U0</citizenshipOrOrganization>
+        <soleVotingPower>9905903.00</soleVotingPower>
+        <sharedVotingPower>0.00</sharedVotingPower>
+        <soleDispositivePower>9905903.00</soleDispositivePower>
+        <sharedDispositivePower>0.00</sharedDispositivePower>
+        <aggregateAmountOwned>9905903.00</aggregateAmountOwned>
+        <isAggregateExcludeShares>N</isAggregateExcludeShares>
+        <percentOfClass>15.56</percentOfClass>
+        <typeOfReportingPerson>IN</typeOfReportingPerson>
+        <commentContent>Note to Row 7, 9, 11: Represents 208,333 Class B ordinary shares (as defined below) issuable on conversion of Class A ordinary shares (as defined below) held by Trident Digital Tech, 518,452 Class B ordinary shares of the Issuer held by Tri Wealth, 424,214 Class B ordinary shares of the Issuer held by Trident Group Holdings and 8,754,904 Class B ordinary shares (383,651 Class B ordinary shares held in street name) of the Issuer directly held by Mr. Lim Soon Huat. Trident Digital Tech, Tri Wealth and Trident Group Holdings are all wholly owned and controlled by Mr. Lim Soon Huat.
+
+Note to Row 13: The percentage reported in Row 13 represents beneficial ownership of Class B ordinary shares and does not reflect voting power. It is calculated pursuant to Rule 13d-3(d)(1)(i) under the Act based on 63,469,878 Class B ordinary shares of the Issuer outstanding, consisting of (i) 58,854,494 Class B ordinary shares issued and outstanding as of September 29, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on September 30, 2026, plus (ii) 4,615,384 Class B ordinary shares issued to Mr. Lim on November 11, 2026 pursuant to the November Conversion Agreement, as reported in the Issuer's Report on Form 6-K filed with the SEC on November 12, 2026, plus 208,333 Class B ordinary shares issuable upon conversion of the 208,333 Class A ordinary shares held by Trident Digital Tech, for a total of 63,678,211 Class B ordinary shares. Class A ordinary shares are convertible at any time by the holder thereof into Class B ordinary shares on a one-for-one basis. Class B ordinary shares are not convertible into Class A ordinary shares under any circumstances.</commentContent>
+      </reportingPersonInfo>
+      <reportingPersonInfo>
+        <reportingPersonNoCIK>Y</reportingPersonNoCIK>
+        <reportingPersonName>Trident Digital Tech Ltd</reportingPersonName>
+        <fundType>WC</fundType>
+        <legalProceedings>N</legalProceedings>
+        <citizenshipOrOrganization>D8</citizenshipOrOrganization>
+        <soleVotingPower>208333.00</soleVotingPower>
+        <sharedVotingPower>0.00</sharedVotingPower>
+        <soleDispositivePower>208333.00</soleDispositivePower>
+        <sharedDispositivePower>0.00</sharedDispositivePower>
+        <aggregateAmountOwned>208333.00</aggregateAmountOwned>
+        <isAggregateExcludeShares>N</isAggregateExcludeShares>
+        <percentOfClass>0.33</percentOfClass>
+        <typeOfReportingPerson>CO</typeOfReportingPerson>
+        <commentContent>Note to Row 7, 9, 11: Represents 208,333 Class A ordinary shares of the Issuer held by Trident Digital Tech Ltd. Trident Digital Tech Ltd is wholly owned and controlled by Mr. Lim Soon Huat.
+
+Note to Row 13: The percentage reported in Row 13 represents beneficial ownership of Class B ordinary shares and does not reflect voting power. It is calculated pursuant to Rule 13d-3(d)(1)(i) under the Act based on 63,469,878 Class B ordinary shares of the Issuer outstanding, consisting of (i) 58,854,494 Class B ordinary shares issued and outstanding as of September 29, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on September 30, 2026, plus (ii) 4,615,384 Class B ordinary shares issued to Mr. Lim on November 11, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on November 12, 2026, plus 208,333 Class B ordinary shares issuable upon conversion of the 208,333 Class A ordinary shares held by the Reporting Person, for a total of 63,678,211 Class B ordinary shares. Class A ordinary shares are convertible at any time by the holder thereof into Class B ordinary shares on a one-for-one basis. Class B ordinary shares are not convertible into Class A ordinary shares under any circumstances.</commentContent>
+      </reportingPersonInfo>
+      <reportingPersonInfo>
+        <reportingPersonNoCIK>Y</reportingPersonNoCIK>
+        <reportingPersonName>Tri Wealth Ltd</reportingPersonName>
+        <fundType>WC</fundType>
+        <legalProceedings>N</legalProceedings>
+        <citizenshipOrOrganization>D8</citizenshipOrOrganization>
+        <soleVotingPower>518452.00</soleVotingPower>
+        <sharedVotingPower>0.00</sharedVotingPower>
+        <soleDispositivePower>518452.00</soleDispositivePower>
+        <sharedDispositivePower>0.00</sharedDispositivePower>
+        <aggregateAmountOwned>518452.00</aggregateAmountOwned>
+        <isAggregateExcludeShares>N</isAggregateExcludeShares>
+        <percentOfClass>0.82</percentOfClass>
+        <typeOfReportingPerson>CO</typeOfReportingPerson>
+        <commentContent>Note to Row 7, 9, 11: Represents 518,452 Class B ordinary shares of the Issuer held by Tri Wealth Ltd. Tri Wealth Ltd is wholly owned and controlled by Mr. Lim Soon Huat.
+
+Note to Row 13: The percentage reported in Row 13 represents beneficial ownership of Class B ordinary shares and does not reflect voting power. It is calculated based on 63,469,878 Class B ordinary shares of the Issuer outstanding, consisting of (i) 58,854,494 Class B ordinary shares issued and outstanding as of September 29, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on September 30, 2026, plus (ii) 4,615,384 Class B ordinary shares issued to Mr. Lim on November 11, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on November 12, 2026.</commentContent>
+      </reportingPersonInfo>
+      <reportingPersonInfo>
+        <reportingPersonNoCIK>Y</reportingPersonNoCIK>
+        <reportingPersonName>Trident Group Holdings Ltd</reportingPersonName>
+        <fundType>WC</fundType>
+        <legalProceedings>N</legalProceedings>
+        <citizenshipOrOrganization>D8</citizenshipOrOrganization>
+        <soleVotingPower>424214.00</soleVotingPower>
+        <sharedVotingPower>0.00</sharedVotingPower>
+        <soleDispositivePower>424214.00</soleDispositivePower>
+        <sharedDispositivePower>0.00</sharedDispositivePower>
+        <aggregateAmountOwned>424214.00</aggregateAmountOwned>
+        <isAggregateExcludeShares>N</isAggregateExcludeShares>
+        <percentOfClass>0.66</percentOfClass>
+        <typeOfReportingPerson>CO</typeOfReportingPerson>
+        <commentContent>Note to Row 7, 9, 11: Represents 424,214 Class B ordinary shares of the Issuer held by Trident Group Holdings Ltd. Trident Group Holdings Ltd is wholly owned and controlled by Mr. Lim Soon Huat.
+
+Note to Row 13: The percentage reported in Row 13 represents beneficial ownership of Class B ordinary shares and does not reflect voting power. It is calculated based on 63,469,878 Class B ordinary shares of the Issuer outstanding, consisting of (i) 58,854,494 Class B ordinary shares issued and outstanding as of September 29, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on September 30, 2026, plus (ii) 4,615,384 Class B ordinary shares issued to Mr. Lim on November 11, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on November 12, 2026.</commentContent>
+      </reportingPersonInfo>
+    </reportingPersons>
+    <items1To7>
+      <item1>
+        <securityTitle>Class B ordinary share, par value $0.0024 per share</securityTitle>
+        <issuerName>Trident Digital Tech Holdings Ltd.</issuerName>
+        <issuerPrincipalAddress>
+          <com:street1>Suntec Tower 3</com:street1>
+          <com:street2>8 Temasek Boulevard Road, #24-03</com:street2>
+          <com:city>Singapore</com:city>
+          <com:stateOrCountry>U0</com:stateOrCountry>
+          <com:zipCode>038988</com:zipCode>
+        </issuerPrincipalAddress>
+        <commentText>This statement on Schedule 13D (this "Statement") relates to the Class B ordinary shares, par value US$0.0024 per share (the "Class B Ordinary Shares"), of Trident Digital Tech Holdings Ltd, a Cayman Islands exempted company with limited liability (the "Issuer"). The principal executive offices of the Issuer are located at Suntec Tower 3, 8 Temasek Boulevard Road, #24-03, Singapore 038988. The Class B Ordinary Shares are listed on the Nasdaq Capital Market under the symbol "TDTH." The current CUSIP is G90475115.</commentText>
+      </item1>
+      <item2>
+        <filingPersonName>This Statement is filed jointly by Soon Huat Lim ("Mr. Lim"), a citizen of the Republic of Singapore; Trident Digital Tech Ltd ("Trident Digital Tech"); Tri Wealth Ltd ("Tri Wealth"); and Trident Group Holdings Ltd ("Trident Group Holdings," and collectively with Mr. Lim, the "Reporting Persons"). Each of the three entities is organized under the laws of the British Virgin Islands and is wholly owned and controlled by Mr. Lim.</filingPersonName>
+        <principalBusinessAddress>The principal business address of Mr. Lim is Suntec Tower 3, 8 Temasek Boulevard Road, #24-03, Singapore 038988. The principal business address of each entity is Sertus Chambers, P.O. Box 905, Quastisky Building, Road Town, Tortola, British Virgin Islands.</principalBusinessAddress>
+        <principalJob>Mr. Lim is the founder, Chairman and Chief Executive Officer of the Issuer. The principal business of each corporate Reporting Person is Investment Holding Company. Mr. Lim is the controlling person for each corporate Reporting Person.</principalJob>
+        <hasBeenConvicted>None of the Reporting Persons has, during the last five years, been convicted in a criminal proceeding (excluding traffic violations or similar misdemeanors).</hasBeenConvicted>
+        <convictionDescription>None of the Reporting Persons has, during the last five years, been party to a civil proceeding of a judicial or administrative body of competent jurisdiction and as a result of such proceeding was or is subject to a judgment, decree or final order enjoining future violations of, or prohibiting or mandating activities subject to, federal or state securities laws or finding any violation with respect to such laws.</convictionDescription>
+        <citizenship>Mr. Lim is a citizen of Singapore. Trident Digital Tech, Tri Wealth, and Trident Group Holdings were organized in the British Virgin Islands.</citizenship>
+      </item2>
+      <item3>
+        <fundsSource>Mr. Lim beneficially owns the Class B Ordinary Shares described in Item 5 both directly and indirectly through the three wholly owned and controlled entities named in Item 2. As of November 16, 2026, the direct holdings include shares issued in the debt conversions described below and other shares acquired or held previously.
+
+On June 30, 2026, Mr. Lim and the Issuer entered into a Share Subscription Agreement (the "July Conversion Agreement") pursuant to which the Issuer agreed to satisfy US$8,000,000 of outstanding indebtedness owed to Mr. Lim by issuing 901,408,450 Class B Ordinary Shares, on a pre-consolidation basis, at a conversion price of US$0.008875 per share. The transaction was approved by the Issuer's shareholders on July 8, 2026 and was subsequently completed in July 2026, as reported by the Issuer. The Issuer effected a 240-for-1 consolidation of its ordinary shares effective July 16, 2026.
+
+On October 31, 2026, the Issuer issued a demand grid promissory note to Mr. Lim (the "Note") evidencing amounts previously advanced by Mr. Lim as working capital loans. As of October 31, 2026, the Note evidenced outstanding principal of approximately US$5,125,000. On November 6, 2026, Mr. Lim and the Issuer entered into a Debt Conversion Agreement (the "November Conversion Agreement"), pursuant to which US$3,000,000 of the indebtedness evidenced by the Note was converted into 4,615,384 Class B Ordinary Shares at a conversion price of US$0.65 per share. The Issuer issued the shares on November 11, 2026, in satisfaction and discharge of the converted indebtedness, without the payment of additional cash consideration by Mr. Lim. The remainder of the Note remains outstanding in accordance with its terms.
+
+The July Conversion Agreement, the Note and the November Conversion Agreement are described in Items 4 and 6 and are incorporated by reference to the Issuer's filings identified in Item 7.</fundsSource>
+      </item3>
+      <item4>
+        <transactionPurpose>Mr. Lim acquired the Class B Ordinary Shares in connection with the transactions described in Item 3, including the conversion of founder working capital loans into equity of the Issuer. The July and November debt conversions replaced outstanding liabilities of the Issuer with equity and were disclosed by the Issuer as measures to strengthen its balance sheet and preserve cash. Mr. Lim is the founder, Chairman and Chief Executive Officer of the Issuer and, through his direct and indirect holdings, is a substantial beneficial owner of its equity securities.
+
+The Class B Ordinary Shares acquired under the November Conversion Agreement were issued as restricted securities. On October 28, 2026, the Issuer announced that Mr. Lim intends to purchase up to 1,000,000 Class B Ordinary Shares in the open market using his personal funds, at prices not exceeding US$1.00 per share, subject to applicable securities laws and market conditions. The timing and amount of any such purchases remain subject to Mr. Lim's discretion.
+
+Depending on various factors including, without limitation, the outcome of any discussions referenced above, the Issuer's financial position, strategic direction, business and prospects, anticipated future developments, existing and anticipated market conditions from time to time, actions taken by the Issuer's management and Board, price levels of the Ordinary Shares, general economic conditions and regulatory matters, the Reporting Persons may in the future take such actions with respect to their investment in the Issuer as they deem appropriate including, without limitation, purchasing additional Ordinary Shares or other securities of the Issuer (which may include rights or securities exercisable or convertible into securities of the Issuer), selling or otherwise disposing some or all of their Ordinary Shares (which may include, but is not limited to, transferring some or all of such securities to its affiliates or distributing some or all of such securities to such Reporting Persons' respective partners, members or beneficiaries, as applicable) or engaging in hedging or similar transaction with respect to the Ordinary Shares, in each case, in open market or private transactions, block sales or otherwise to the extent permitted under applicable law. Except for the foregoing, the Reporting Persons do not have, as of the date of this filing, any plans or proposals that relate to or would result in any of the actions or events specified in clauses (a) through (j) of Item 4 of Schedule 13D; provided, that the Reporting Persons at any time and from time to time, may review or reconsider and change their position and/or change their purpose and/or develop such plans.</transactionPurpose>
+      </item4>
+      <item5>
+        <percentageOfClassSecurities>The information contained in rows 11 and 13 of the cover pages of this Schedule 13D (including the accompanying comments thereto) is incorporated herein by reference. The ownership information presented herein represents beneficial ownership of Class B Ordinary Shares as of the date of this filing, based upon 63,469,878 Class B Ordinary Shares outstanding, consisting of (i) 58,854,494 Class B Ordinary Shares issued and outstanding as of September 29, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on September 30, 2026, plus (ii) 4,615,384 Class B Ordinary Shares issued to Mr. Lim on November 11, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on November 12, 2026, plus, where applicable, Class B Ordinary Shares issuable upon conversion of Class A ordinary shares beneficially owned by the applicable Reporting Person.</percentageOfClassSecurities>
+        <numberOfShares>The information contained in rows 7 through 10 and 13 of the cover pages of this Schedule 13D (including the accompanying comments thereto) is incorporated herein by reference. The ownership information presented herein represents beneficial ownership of Class B Ordinary Shares as of the date of this filing, based upon 63,469,878 Class B Ordinary Shares outstanding, consisting of (i) 58,854,494 Class B Ordinary Shares issued and outstanding as of September 29, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on September 30, 2026, plus (ii) 4,615,384 Class B Ordinary Shares issued to Mr. Lim on November 11, 2026, as reported in the Issuer's Report on Form 6-K filed with the SEC on November 12, 2026, plus, where applicable, Class B Ordinary Shares issuable upon conversion of Class A ordinary shares beneficially owned by the applicable Reporting Person.</numberOfShares>
+        <transactionDesc>On November 6, 2026, Mr. Lim entered into a Debt Conversion Agreement with the Issuer, pursuant to which the Issuer agreed to convert US$3,000,000 of outstanding indebtedness owed to Mr. Lim into 4,615,384 Class B Ordinary Shares at a conversion price of US$0.65 per share. The Class B Ordinary Shares were issued to Mr. Lim on November 11, 2026, in satisfaction and discharge of such indebtedness. Except as described herein, none of the Reporting Persons effected any transactions in the Class B Ordinary Shares during the 60 days preceding the filing of this Schedule 13D.</transactionDesc>
+        <listOfShareholders>No person other than the Reporting Persons is known to have the right to receive, or the power to direct the receipt of dividends from, or proceeds from the sale of, such securities.</listOfShareholders>
+        <date5PercentOwnership>Not applicable.</date5PercentOwnership>
+      </item5>
+      <item6>
+        <contractDescription>The information set forth in Items 3, 4 and 5 is incorporated by reference. The Reporting Persons are parties to or otherwise subject to the agreements described below, to the extent applicable:
+
+(i) Share Subscription Agreement, dated June 30, 2026, between Mr. Lim and the Issuer, relating to the US$8,000,000 debt conversion into Class B Ordinary Shares and subject to applicable conditions and approvals, including shareholder approval received July 8, 2026;
+
+(ii) Demand Grid Promissory Note, dated October 31, 2026, issued by the Issuer to Mr. Lim, evidencing working capital loans and payable on demand;
+
+(iii) Debt Conversion Agreement, dated November 6, 2026, between Mr. Lim and the Issuer, providing for the US$3,000,000 debt conversion into 4,615,384 restricted Class B Ordinary Shares, the discharge of debt upon issuance and registration of the shares, and transfer restrictions on the unregistered shares.
+
+The foregoing descriptions are summaries and qualified in their entirety by reference to the applicable agreements, which are incorporated by reference or to be filed as exhibits as described in Item 7.</contractDescription>
+      </item6>
+      <item7>
+        <filedExhibits>Exhibit 1: Joint Filing Agreement dated November 16, 2026 by and between the Reporting Persons
+
+Exhibit 2: Share Subscription Agreement, dated June 30, 2026, incorporated by reference to Exhibit 99.4 to the Issuer's Form 6-K filed June 30, 2026.
+
+Exhibit 3: Demand Grid Promissory Note, dated October 31, 2026, incorporated by reference to Exhibit 10.1 to the Issuer's Form 6-K filed November 12, 2026.
+
+Exhibit 4: Debt Conversion Agreement, dated November 6, 2026, incorporated by reference to Exhibit 10.2 to the Issuer's Form 6-K filed November 12, 2026.</filedExhibits>
+      </item7>
+    </items1To7>
+    <signatureInfo>
+      <signaturePerson>
+        <signatureReportingPerson>Lim Soon Huat</signatureReportingPerson>
+        <signatureDetails>
+          <signature>/s/ Lim Soon Huat</signature>
+          <title>Lim Soon Huat</title>
+          <date>11/17/2026</date>
+        </signatureDetails>
+      </signaturePerson>
+      <signaturePerson>
+        <signatureReportingPerson>Trident Digital Tech Ltd</signatureReportingPerson>
+        <signatureDetails>
+          <signature>/s/ Lim Soon Huat</signature>
+          <title>Lim Soon Huat/Director</title>
+          <date>11/17/2026</date>
+        </signatureDetails>
+      </signaturePerson>
+      <signaturePerson>
+        <signatureReportingPerson>Tri Wealth Ltd</signatureReportingPerson>
+        <signatureDetails>
+          <signature>/s/ Lim Soon Huat</signature>
+          <title>Lim Soon Huat/Director</title>
+          <date>11/17/2026</date>
+        </signatureDetails>
+      </signaturePerson>
+      <signaturePerson>
+        <signatureReportingPerson>Trident Group Holdings Ltd</signatureReportingPerson>
+        <signatureDetails>
+          <signature>/s/ Lim Soon Huat</signature>
+          <title>Lim Soon Huat/Director</title>
+          <date>11/17/2026</date>
+        </signatureDetails>
+      </signaturePerson>
+    </signatureInfo>
+  </formData>
+
+</edgarSubmission>
+</XML>
+</TEXT>
+</DOCUMENT>
+<DOCUMENT>
+<TYPE>EX-99.1
+<SEQUENCE>2
+<FILENAME>ea031248301ex-1.htm
+<DESCRIPTION>JOINT FILING AGREEMENT DATED NOVEMBER 16, 2026 BY AND BETWEEN THE REPORTING PERSONS
+<TEXT>
+<HTML>
+<HEAD>
+     <TITLE></TITLE>
+</HEAD>
+<BODY STYLE="font: 10pt Times New Roman, Times, Serif">
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0; text-align: right"><B>Exhibit 1</B></P>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0; text-align: right"><B>&nbsp;</B></P>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0; text-align: center; background-color: white">JOINT FILING AGREEMENT</P>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0; text-align: center; background-color: white">&nbsp;</P>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0; text-align: justify; text-indent: 0.25in; background-color: white">Each
+of the undersigned hereby agrees that this Amendment to Schedule 13D, dated November 16, 2026, with respect to the common shares of Trident
+Digital Tech Holdings Ltd (the &ldquo;Schedule 13D&rdquo;) is, and any and all subsequent amendments thereto shall be, filed on behalf
+of each of the undersigned pursuant to and in accordance with the provisions of Rule 13d-1(k) under the Securities Exchange Act of 1934,
+as amended, and that this Joint Filing Agreement shall be included as an exhibit to the Schedule 13D and any amendments thereto. Each
+of the undersigned agrees to be responsible for the timely filing of any amendments to the Schedule 13D, and for the completeness and
+accuracy of the information concerning itself contained therein, but shall not be responsible for the completeness and accuracy of the
+information concerning any other party hereto or thereto, except to the extent that it knows or has reason to believe that such information
+is inaccurate. This Joint Filing Agreement may be executed in any number of counterparts, all of which taken together shall constitute
+one and the same instrument.</P>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0; text-align: justify; text-indent: 0.25in; background-color: white">&nbsp;</P>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0; text-align: justify; text-indent: 0.25in; background-color: white">IN
+WITNESS WHEREOF, this Joint Filing Agreement has been executed and delivered by each of the undersigned as of November 16, 2026.</P>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0; text-align: justify; text-indent: 0.25in; background-color: white">&nbsp;</P>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0; background-color: white">Date: February 14, 2025</P>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0">&nbsp;</P>
+
+<TABLE CELLSPACING="0" CELLPADDING="0" STYLE="font: 10pt Times New Roman, Times, Serif; width: 100%; border-collapse: collapse">
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="3" STYLE="border-bottom: Black 1.5pt solid">/s/ Soon Huat Lim</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="3">Soon Huat Lim</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="3">&nbsp;</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="3">Trident Digital Tech Ltd</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="2">&nbsp;</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>By:</TD>
+    <TD COLSPAN="2" STYLE="border-bottom: black 1.5pt solid">/s/ Soon Huat Lim</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD STYLE="width: 60%">&nbsp;</TD>
+    <TD STYLE="width: 4%">&nbsp;</TD>
+    <TD STYLE="width: 5%">Name:&nbsp;</TD>
+    <TD STYLE="width: 31%">Soon Huat Lim</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD>Title:</TD>
+    <TD>Director</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="2">&nbsp;</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="3">Tri Wealth Ltd</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="2">&nbsp;</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>By:</TD>
+    <TD COLSPAN="2" STYLE="border-bottom: black 1.5pt solid">/s/ Soon Huat Lim</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD>Name:</TD>
+    <TD>Soon Huat Lim</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD>Title:</TD>
+    <TD>Director</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="2">&nbsp;</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="3">Trident Group Holdings Ltd</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD COLSPAN="2">&nbsp;</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>By:</TD>
+    <TD COLSPAN="2" STYLE="border-bottom: black 1.5pt solid">/s/ Soon Huat Lim</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD>Name:</TD>
+    <TD>Soon Huat Lim</TD></TR>
+  <TR STYLE="vertical-align: top">
+    <TD>&nbsp;</TD>
+    <TD>&nbsp;</TD>
+    <TD>Title:</TD>
+    <TD>Director</TD></TR>
+  </TABLE>
+
+<P STYLE="font: 10pt Times New Roman, Times, Serif; margin: 0pt 0">&nbsp;</P>
+
+</BODY>
+</HTML>
+</TEXT>
+</DOCUMENT>
+</SEC-DOCUMENT>

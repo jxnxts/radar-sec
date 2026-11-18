@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Starts the radar server and the web dashboard together, and stops both on exit.
+#
+#   ./dev             LIVE mode (real SEC)
+#   ./dev --replay    REPLAY mode (historical backtest signals)
+#
+# Any extra option goes to `radar serve` (see `uv run radar serve --help`).
+# The server port can be changed with RADAR_PORT (default: 8000).
+set -euo pipefail
+cd "$(dirname "$0")"
+
+PORT="${RADAR_PORT:-8000}"
+
+if [ ! -d web/node_modules ]; then
+  echo "Installing the dashboard dependencies (first run only)..."
+  (cd web && npm install)
+fi
+
+uv run radar serve --port "$PORT" "$@" &
+API=$!
+(cd web && RADAR_API="http://127.0.0.1:$PORT" npm run dev -- --clearScreen false) &
+WEB=$!
+
+cleanup() {
+  kill "$API" "$WEB" 2>/dev/null || true
+  wait "$API" "$WEB" 2>/dev/null || true
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM
+
+echo "Dashboard: http://localhost:5173  ·  Ctrl+C stops both"
+
+# If either one dies, stop the other (macOS bash has no `wait -n`).
+while kill -0 "$API" 2>/dev/null && kill -0 "$WEB" 2>/dev/null; do
+  sleep 1
+done

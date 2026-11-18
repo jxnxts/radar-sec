@@ -1,0 +1,452 @@
+/* ------------------------------------------------------------ radar (03) */
+
+.radar .panel__body {
+  padding-top: 0.25rem;
+  gap: 0.25rem;
+}
+
+.scope {
+  display: block;
+  width: 100%;
+  max-height: 16.5rem;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.scope__ring {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1;
+}
+
+.scope__ring--rim {
+  stroke: var(--amber);
+  stroke-opacity: 0.6;
+  stroke-width: 1.5;
+}
+
+.scope__spoke {
+  stroke: var(--line-2);
+  stroke-width: 1;
+}
+
+.scope__label {
+  fill: var(--tx-3);
+  font-family: var(--font-text);
+  font-size: 15px;
+}
+
+.scope__sector.is-active .scope__label {
+  fill: var(--tx-1);
+  font-weight: 600;
+}
+
+.scope__count {
+  fill: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.scope__center {
+  fill: var(--tx-3);
+}
+
+.scope__sweep {
+  transform-origin: 260px 200px;
+  animation: spin 9s linear infinite;
+  pointer-events: none;
+}
+
+.scope__beam {
+  stroke: var(--amber);
+  stroke-width: 1.5;
+  stroke-opacity: 0.85;
+}
+
+.scope__blip {
+  cursor: pointer;
+  outline: none;
+}
+
+.scope__hit {
+  fill: transparent;
+}
+
+.scope__dot {
+  fill: var(--amber);
+  stroke: var(--bg);
+  stroke-width: 1.5;
+  transition: stroke 0.15s;
+}
+
+.scope__blip:hover .scope__dot,
+.scope__blip:focus-visible .scope__dot {
+  stroke: var(--tx-1);
+  stroke-width: 2;
+}
+
+.scope__blip:focus-visible .scope__hit {
+  stroke: var(--ice);
+  stroke-width: 2;
+}
+
+.scope__ticker {
+  fill: var(--tx-1);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+}
+
+.radar__sectors {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--tx-3);
+}
+
+.radar__key {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  text-align: center;
+  color: var(--tx-3);
+}
+
+.radar__sectors b {
+  font-weight: 600;
+  color: var(--tx-1);
+}
+
+.rank {
+  display: grid;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.rank__row {
+  display: grid;
+  grid-template-columns: 1rem auto minmax(0, 9.5rem) minmax(1rem, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.rank__pos {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--tx-3);
+}
+
+.rank__id {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4375rem;
+  min-width: 0;
+}
+
+.rank__ticker {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--tx-1);
+}
+
+.rank__name {
+  overflow: hidden;
+  font-size: 0.6875rem;
+  color: var(--tx-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rank__bar {
+  height: 0.375rem;
+  background: var(--line);
+}
+
+.rank__bar span {
+  display: block;
+  height: 100%;
+  background: var(--amber);
+}
+
+.rank__value {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx-1);
+}
+
+/* --------------------------------------------------------- backtest (04) */
+
+.bt .panel__body {
+  gap: 0.4375rem;
+  padding-top: 0.625rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+
+.bt__verdict {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bt__stamp {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid currentColor;
+  font-size: 1.625rem;
+}
+
+.bt__verdict--no .bt__stamp {
+  color: var(--down);
+}
+
+.bt__verdict--yes .bt__stamp {
+  color: var(--up);
+}
+
+.bt__headline {
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tx-1);
+}
+
+.bt__sub {
+  margin-top: 0.1875rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--tx-2);
+}
+
+.bt__grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.bt__grid thead th {
+  padding-bottom: 0.1875rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--tx-3);
+  border-bottom: 1px solid var(--line-2);
+}
+
+.bt__grid thead th:first-child {
+  width: 37%;
+}
+
+.bt__grid tbody th {
+  padding: 0.25rem 0.375rem 0.25rem 0;
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  color: var(--tx-1);
+  border-bottom: 1px solid var(--line);
+}
+
+.bt__grid tbody th svg {
+  float: left;
+  margin: 0.125rem 0.4375rem 0 0;
+  font-size: 1.125rem;
+  color: var(--tx-3);
+}
+
+.bt__grid tbody th small {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 400;
+  color: var(--tx-3);
+}
+
+.bt__grid td {
+  padding: 0.25rem 0.5rem 0.1875rem 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.bt__num {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.bt__num--neg {
+  color: var(--down);
+}
+
+.bt__num--pos {
+  color: var(--up);
+}
+
+.xbar {
+  position: relative;
+  display: block;
+  height: 0.25rem;
+  margin: 0.1875rem 0;
+  background: var(--line);
+}
+
+.xbar::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -0.125rem;
+  bottom: -0.125rem;
+  width: 1px;
+  background: var(--tx-3);
+}
+
+.xbar__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.xbar__fill--neg {
+  background: var(--down);
+}
+
+.xbar__fill--pos {
+  background: var(--up);
+}
+
+.bt__beats {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--tx-3);
+  white-space: nowrap;
+}
+
+.bt__years {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 2px;
+  table-layout: fixed;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bt__years caption {
+  padding-bottom: 0.125rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--tx-3);
+  caption-side: top;
+}
+
+.bt__years th {
+  font-weight: 400;
+  color: var(--tx-3);
+}
+
+.bt__years thead th {
+  font-size: 0.625rem;
+}
+
+.bt__years thead th::before {
+  content: "'";
+}
+
+.bt__years tbody th {
+  width: 3.5rem;
+  text-align: left;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.heat {
+  padding: 0.125rem 0;
+  text-align: center;
+  color: var(--tx-1);
+}
+
+.heat--neg-0,
+.heat--pos-0 {
+  background: var(--line);
+}
+
+.heat--neg-1 {
+  background: rgb(255 107 107 / 0.14);
+}
+
+.heat--neg-2 {
+  background: rgb(255 107 107 / 0.27);
+}
+
+.heat--neg-3 {
+  background: rgb(255 107 107 / 0.42);
+}
+
+.heat--pos-1 {
+  background: rgb(61 214 140 / 0.14);
+}
+
+.heat--pos-2 {
+  background: rgb(61 214 140 / 0.26);
+}
+
+.heat--pos-3 {
+  background: rgb(61 214 140 / 0.4);
+}
+
+.bt__notes {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--tx-2);
+}
+
+.bt__notes b,
+.bt__board b {
+  font-weight: 600;
+  color: var(--tx-1);
+}
+
+.bt__board {
+  margin-top: auto;
+  padding: 0.25rem 0.5rem;
+  border: 1px dashed var(--amber);
+  font-size: 0.75rem;
+  color: var(--tx-2);
+}
+
+.bt__board-label {
+  margin-right: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--amber);
+}

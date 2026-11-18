@@ -1,0 +1,226 @@
+<SEC-DOCUMENT>0001104659-26-129222.txt : 20261117
+<SEC-HEADER>0001104659-26-129222.hdr.sgml : 20261117
+<ACCEPTANCE-DATETIME>20261117195247
+ACCESSION NUMBER:		0001104659-26-129222
+CONFORMED SUBMISSION TYPE:	SCHEDULE 13D
+PUBLIC DOCUMENT COUNT:		1
+FILED AS OF DATE:		20261117
+DATE AS OF CHANGE:		20261117
+
+SUBJECT COMPANY:	
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Perfect Moment Ltd.
+		CENTRAL INDEX KEY:			0001849221
+		STANDARD INDUSTRIAL CLASSIFICATION:	APPAREL & OTHER FINISHED PRODS OF FABRICS & SIMILAR MATERIAL [2300]
+		ORGANIZATION NAME:           	04 Manufacturing
+		EIN:				861437114
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			0331
+
+	FILING VALUES:
+		FORM TYPE:		SCHEDULE 13D
+		SEC ACT:		1934 Act
+		SEC FILE NUMBER:	005-94454
+		FILM NUMBER:		261567758
+
+	BUSINESS ADDRESS:	
+		STREET 1:		244 FIFTH AVENUE
+		STREET 2:		SUITE 1219
+		CITY:			NEW YORK
+		STATE:			NY
+		ZIP:			10001
+		BUSINESS PHONE:		315-615-6156
+
+	MAIL ADDRESS:	
+		STREET 1:		244 FIFTH AVENUE
+		STREET 2:		SUITE 1219
+		CITY:			NEW YORK
+		STATE:			NY
+		ZIP:			10001
+
+FILED BY:		
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			X 3 Higher Moment Fund LLC
+		CENTRAL INDEX KEY:			0001844136
+		ORGANIZATION NAME:           	
+		EIN:				854388416
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			1231
+
+	FILING VALUES:
+		FORM TYPE:		SCHEDULE 13D
+
+	BUSINESS ADDRESS:	
+		STREET 1:		3033 EXCELSIOR BLVD
+		STREET 2:		NUMBER 345
+		CITY:			MINNEAPOLIS
+		STATE:			MN
+		ZIP:			55416
+		BUSINESS PHONE:		6128175297
+
+	MAIL ADDRESS:	
+		STREET 1:		3033 EXCELSIOR BLVD
+		STREET 2:		NUMBER 345
+		CITY:			MINNEAPOLIS
+		STATE:			MN
+		ZIP:			55416
+</SEC-HEADER>
+<DOCUMENT>
+<TYPE>SCHEDULE 13D
+<SEQUENCE>1
+<FILENAME>primary_doc.xml
+<TEXT>
+<XML>
+<?xml version="1.0" encoding="UTF-8"?><edgarSubmission xmlns="http://www.sec.gov/edgar/schedule13D" xmlns:com="http://www.sec.gov/edgar/common">
+  <schemaVersion>X0202</schemaVersion>
+<headerData>
+    <submissionType>SCHEDULE 13D</submissionType>
+    <filerInfo>
+      <filer>
+        <filerCredentials>
+          <!-- Field: Pseudo-Tag; ID: Name; Data: X 3 Higher Moment Fund LLC -->
+          <cik>0001844136</cik>
+          <ccc>XXXXXXXX</ccc>
+        </filerCredentials>
+      </filer>
+      <liveTestFlag>LIVE</liveTestFlag>
+
+
+    </filerInfo>
+  </headerData>
+  <formData>
+    <coverPageHeader>
+      <securitiesClassTitle>Common Stock, par value $0.001</securitiesClassTitle>
+      <dateOfEvent>11/16/2026</dateOfEvent>
+      <previouslyFiledFlag>true</previouslyFiledFlag>
+      <issuerInfo>
+        <issuerCIK>0001849221</issuerCIK>
+        <issuerCusips>
+          <issuerCusipNumber>713715100</issuerCusipNumber>
+        </issuerCusips>
+        <issuerName>Perfect Moment Ltd.</issuerName>
+        <address>
+          <com:street1>244 5th Ave. Ste. 1219</com:street1>
+          <com:city>New York</com:city>
+          <com:stateOrCountry>NY</com:stateOrCountry>
+          <com:zipCode>10001</com:zipCode>
+        </address>
+      </issuerInfo>
+      <authorizedPersons>
+        <notificationInfo>
+          <personName>X3 Higher Moment Fund LLC</personName>
+          <personPhoneNum>1 202 457 5130</personPhoneNum>
+          <personAddress>
+            <com:street1>c/o X Cubed Capital Management, LLC</com:street1>
+            <com:street2>3033 Excelsior Blvd, Suite 343</com:street2>
+            <com:city>Minneapolis</com:city>
+            <com:stateOrCountry>MN</com:stateOrCountry>
+            <com:zipCode>55416</com:zipCode>
+          </personAddress>
+        </notificationInfo>
+      </authorizedPersons>
+    </coverPageHeader>
+    <reportingPersons>
+      <reportingPersonInfo>
+        <reportingPersonCIK>0001844136</reportingPersonCIK>
+        <reportingPersonNoCIK>N</reportingPersonNoCIK>
+        <reportingPersonName>X3 Higher Moment Fund LLC</reportingPersonName>
+        <fundType>WC</fundType>
+        <legalProceedings>N</legalProceedings>
+        <citizenshipOrOrganization>DE</citizenshipOrOrganization>
+        <soleVotingPower>5267050.00</soleVotingPower>
+        <sharedVotingPower>0.00</sharedVotingPower>
+        <soleDispositivePower>5267050.00</soleDispositivePower>
+        <sharedDispositivePower>0.00</sharedDispositivePower>
+        <aggregateAmountOwned>5267050.00</aggregateAmountOwned>
+        <isAggregateExcludeShares>N</isAggregateExcludeShares>
+        <percentOfClass>9.9</percentOfClass>
+        <typeOfReportingPerson>OO</typeOfReportingPerson>
+        <commentContent>Rows 7, 9 and 11: Consists of 3,172,858 shares of Common Stock held directly and the shares of Common Stock issuable upon exercise of the Warrants (as defined in Item 5), which are exercisable only up to the maximum amount permitted by the Blocker described in Item 5. The figure reported is the maximum number of shares the Reporting Person may beneficially own under the Blocker, based on the outstanding share count described below.
+
+Row 13: Limited to 9.9% by the Blocker. Based on 53,202,530 shares of Common Stock outstanding as of August 14, 2026, as reported in the Issuer's Quarterly Report on Form 10-Q for the quarter ended June 30, 2026.</commentContent>
+      </reportingPersonInfo>
+    </reportingPersons>
+    <items1To7>
+      <item1>
+        <securityTitle>Common Stock, par value $0.001</securityTitle>
+        <issuerName>Perfect Moment Ltd.</issuerName>
+        <issuerPrincipalAddress>
+          <com:street1>244 5th Ave. Ste. 1219</com:street1>
+          <com:city>New York</com:city>
+          <com:stateOrCountry>NY</com:stateOrCountry>
+          <com:zipCode>10001</com:zipCode>
+        </issuerPrincipalAddress>
+      </item1>
+      <item2>
+        <filingPersonName>This Schedule 13D is filed by X3 Higher Moment Fund LLC, a Delaware limited liability company (the "Fund" or the "Reporting Person").</filingPersonName>
+        <principalBusinessAddress>3033 Excelsior Boulevard, Suite 343, Minneapolis, MN 55416</principalBusinessAddress>
+        <principalJob>The principal business of the Fund is investing in securities and other financial instruments.</principalJob>
+        <hasBeenConvicted>During the last five years, the Reporting Person has not been convicted in a criminal proceeding (excluding traffic violations or similar misdemeanors).</hasBeenConvicted>
+        <convictionDescription>During the last five years, the Reporting Person has not been a party to a civil proceeding of a judicial or administrative body of competent jurisdiction as a result of which it was or is subject to, federal or state securities laws, or finding any violation with respect to such laws.</convictionDescription>
+        <citizenship>The Fund is a Delaware limited liability company.</citizenship>
+      </item2>
+      <item3>
+        <fundsSource>The Reporting Person acquired securities pursuant to (i) a Securities Purchase Agreement, dated August 27, 2025, between the Issuer and the Reporting Person, (ii) a Securities Purchase Agreement, dated March 30, 2026, between the Issuer and a third party, and (iii) a Loan Agreement, dated March 30, 2026, among the Issuer, the Reporting Person as administrative agent, certain guarantors and the lenders therein. The securities were purchased for an aggregate price of $1,485,596 or issued in connection with the extension of credit for which no cash consideration was paid by the Reporting Person.</fundsSource>
+      </item3>
+      <item4>
+        <transactionPurpose>The Reporting Person acquired the securities reported herein for investment purposes and previously reported its beneficial ownership on Schedule 13G filed on September 4, 2025. This Schedule 13D is being filed pursuant to Rule 13d 1(e) under the Act.
+
+On November 16, 2026, the Issuer's board of directors (the "Board") appointed Toby Maitland Hudson, Head of Trading and Markets of X Cubed Capital Management LLC ("X Cubed"), as a director of the Issuer. Mr. Maitland Hudson's appointment was made in light of the Reporting Persons' investment in, and lending relationship with, the Issuer described in Item 6. In his capacity as a director, Mr. Maitland Hudson may participate in and influence the Board's deliberations and decisions, including with respect to matters described in clauses (a) through (j) of Item 4 of Schedule 13D.
+
+Except as set forth in this Item 4, the Reporting Person has no present plans or proposals that relate to or would result in any of the matters described in clauses (a) through (j) of Item 4 of Schedule 13D. The Reporting Person intends to review its investment in the Issuer on a continuing basis. Depending on the factors it considers relevant, it may, among other things, acquire additional securities of the Issuer (subject to the exercise limitations described in Item 5) or dispose of securities of the Issuer; engage in discussions with the Issuer's management, the Board, other securityholders or third parties; and modify or enforce its rights as a lender to the Issuer. Any of those actions may relate to one or more of the matters described in clauses (a) through (j) of Item 4 of Schedule 13D.</transactionPurpose>
+      </item4>
+      <item5>
+        <percentageOfClassSecurities>The Reporting Person is deemed to be the beneficial owner of 5,267,050 shares of Common Stock, as a result of its ownership of (i) 3,172,858 shares of Common Stock, and (ii) 2,094,192 warrants (the "Warrants") to purchase shares of Common Stock, consisting of (a) 7,970,274 Warrants to purchase shares of Common Stock at an exercise price of $0.46822 per share and (b) 8,276,944 Warrants to purchase shares of Common Stock at an exercise price of $0.40 per share, in each case exercisable only up to the maximum number of shares permitted by the Blocker (as defined below). The Warrants are subject to a blocker which prevents the holder from exercising the Warrants to the extent that, upon such exercise, the holder would beneficially own in excess of 9.99% of the Common Stock outstanding as a result of the exercise (the "Blocker"). Accordingly, the Reporting Person is deemed to beneficially own 9.99% of the Issuer's outstanding shares of Common Stock or 5,267,050 shares of Common Stock based on 53,202,530 shares of Common Stock outstanding as of August 14, 2026, as reported in the Issuer's Quarterly Report on Form 10-Q for the quarter ended June 30, 2026.</percentageOfClassSecurities>
+        <numberOfShares>See rows (7) through (10) of the cover pages to this Schedule 13D for the number of shares as to which each Reporting Person has the sole or shared power to vote or direct the vote and sole or shared power to dispose or to direct the disposition.</numberOfShares>
+        <transactionDesc>The Reporting Person has not made any transactions in the Common Stock within the past 60 days.</transactionDesc>
+        <listOfShareholders>No other person other than the Reporting Person is known to have the right to receive or the power to direct the receipt of dividends from, or the proceeds from the sale of, the securities reported in this Schedule 13D.</listOfShareholders>
+        <date5PercentOwnership>Not applicable.</date5PercentOwnership>
+      </item5>
+      <item6>
+        <contractDescription>Loan Agreement. On March 30, 2026, the Issuer entered into a loan agreement, as amended (the "Loan Agreement") with the Reporting Persons, as agent and lender. As of November 1, 2026, $10,500,000 of principal was outstanding under the Loan Agreement. Borrowings under the Loan Agreement bear interest at 12% per annum, payable monthly in arrears.
+
+Warrants. In connection with the Loan Agreement, the Issuer issued to the Reporting Person warrants (the "Warrants") as described in Item 5.  The Warrants are subject to the Blocker which may be changed by the holder only on 61 days' prior written notice to the Issuer.
+
+Board Service. Mr. Maitland Hudson, Head of Trading and Markets of X Cubed, was appointed to the Board on November 16, 2026.
+
+Except as described in this Schedule 13D, the Reporting Person has no contracts, arrangements, understandings or relationships (legal or otherwise) with any person with respect to securities of the Issuer.</contractDescription>
+      </item6>
+      <item7>
+        <filedExhibits>99.1 Securities Purchase Agreement, dated August 27, 2025, between Perfect Moment Ltd. and X3 Higher Moment Fund LLC (incorporated by reference to Exhibit 10.1 to Perfect Moment Ltd.'s Current Report on Form 8-K dated August 27, 2025).
+
+99.2 Securities Purchase Agreement, dated March 30, 2026, between Perfect Moment Ltd. and X3 Higher Moment Fund LLC (incorporated by reference to Exhibit 10.6 to Perfect Moment Ltd.'s Current Report on Form 8-K dated March 30, 2026).
+
+99.3 Loan Agreement, dated March 30, 2026, between Perfect Moment Ltd. and X3 Higher Moment Fund LLC (incorporated by reference to Exhibit 10.1 to Perfect Moment Ltd.'s Current Report on Form 8-K dated March 30, 2026).
+
+99.4 Second Amendment and Limited Waiver to Loan Agreement, dated October 9, 2026 (incorporated by reference to Exhibit 10.1 to Perfect Moment Ltd.'s Current Report on Form 8-K dated October 15, 2026).
+
+99.5 Third Amendment and Limited Waiver to Loan Agreement, dated November 13, 2026 (incorporated by reference to Exhibit 10.1 to Perfect Moment Ltd.'s Current Report on Form 8-K dated November 16, 2026).
+
+99.6 Registration Rights Agreement, dated August 27, 2025, between Perfect Moment Ltd. and X3 Higher Moment Fund LLC (incorporated by reference to Exhibit 10.2 to Perfect Moment Ltd.'s Current Report on Form 8-K dated August 27, 2025).
+
+99.7 Warrant 1 (incorporated by reference to Exhibit 4.1 to Perfect Moment Ltd.'s Current Report on Form 8-K filed January 21, 2026).
+
+99.8 Warrant 2 (incorporated by reference to Exhibit 4.2 to Perfect Moment Ltd.'s Current Report on Form 8-K filed January 21, 2026).
+
+99.9 Common Stock Purchase Warrant, dated May 8, 2026 (incorporated by reference to Exhibit 4.1 to Perfect Moment Ltd.'s Current Report on Form 8-K filed May 12, 2026).</filedExhibits>
+      </item7>
+    </items1To7>
+    <signatureInfo>
+      <signaturePerson>
+        <signatureReportingPerson>X3 Higher Moment Fund LLC</signatureReportingPerson>
+        <signatureDetails>
+          <signature>Wendy Angeles</signature>
+          <title>Chief Compliance Officer</title>
+          <date>11/17/2026</date>
+        </signatureDetails>
+      </signaturePerson>
+    </signatureInfo>
+  </formData>
+</edgarSubmission>
+</XML>
+</TEXT>
+</DOCUMENT>
+</SEC-DOCUMENT>

@@ -1,0 +1,235 @@
+<SEC-DOCUMENT>0001104659-26-129252.txt : 20261117
+<SEC-HEADER>0001104659-26-129252.hdr.sgml : 20261117
+<ACCEPTANCE-DATETIME>20261117204248
+ACCESSION NUMBER:		0001104659-26-129252
+CONFORMED SUBMISSION TYPE:	4
+PUBLIC DOCUMENT COUNT:		1
+CONFORMED PERIOD OF REPORT:	20261116
+FILED AS OF DATE:		20261117
+DATE AS OF CHANGE:		20261117
+
+REPORTING-OWNER:	
+
+	OWNER DATA:	
+		COMPANY CONFORMED NAME:			Coastlands Capital LP
+		CENTRAL INDEX KEY:			0002068530
+		ORGANIZATION NAME:           	
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			1231
+
+	FILING VALUES:
+		FORM TYPE:		4
+		SEC ACT:		1934 Act
+		SEC FILE NUMBER:	001-39988
+		FILM NUMBER:		261567840
+
+	BUSINESS ADDRESS:	
+		STREET 1:		601 CALIFORNIA STREET, SUITE 1210
+		CITY:			SAN FRANCISCO
+		STATE:			CA
+		ZIP:			94108
+		BUSINESS PHONE:		(415) 249-1280
+
+	MAIL ADDRESS:	
+		STREET 1:		601 CALIFORNIA STREET, SUITE 1210
+		CITY:			SAN FRANCISCO
+		STATE:			CA
+		ZIP:			94108
+
+ISSUER:		
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Bolt Biotherapeutics, Inc.
+		CENTRAL INDEX KEY:			0001641281
+		STANDARD INDUSTRIAL CLASSIFICATION:	PHARMACEUTICAL PREPARATIONS [2834]
+		ORGANIZATION NAME:           	03 Life Sciences
+		EIN:				472804636
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			1231
+
+	BUSINESS ADDRESS:	
+		STREET 1:		900 CHESAPEAKE DRIVE
+		CITY:			REDWOOD CITY
+		STATE:			CA
+		ZIP:			94063
+		BUSINESS PHONE:		650-665-9295
+
+	MAIL ADDRESS:	
+		STREET 1:		900 CHESAPEAKE DRIVE
+		CITY:			REDWOOD CITY
+		STATE:			CA
+		ZIP:			94063
+
+	FORMER COMPANY:	
+		FORMER CONFORMED NAME:	Bolt Therapeutics, Inc.
+		DATE OF NAME CHANGE:	20150504
+</SEC-HEADER>
+<DOCUMENT>
+<TYPE>4
+<SEQUENCE>1
+<FILENAME>tm2630121-2_4seq1.xml
+<DESCRIPTION>OWNERSHIP DOCUMENT
+<TEXT>
+<XML>
+<?xml version="1.0"?>
+<ownershipDocument>
+
+    <schemaVersion>X0609</schemaVersion>
+
+    <documentType>4</documentType>
+
+    <periodOfReport>2026-11-16</periodOfReport>
+
+    <notSubjectToSection16>0</notSubjectToSection16>
+
+    <issuer>
+        <issuerCik>0001641281</issuerCik>
+        <issuerName>Bolt Biotherapeutics, Inc.</issuerName>
+        <issuerTradingSymbol>BOLT</issuerTradingSymbol>
+        <issuerForeignTradingSymbol></issuerForeignTradingSymbol>
+    </issuer>
+
+    <reportingOwner>
+        <reportingOwnerId>
+            <rptOwnerCik>0002068530</rptOwnerCik>
+            <rptOwnerName>Coastlands Capital LP</rptOwnerName>
+        </reportingOwnerId>
+        <reportingOwnerAddress>
+            <rptOwnerNonUSAddressFlag>false</rptOwnerNonUSAddressFlag>
+            <rptOwnerStreet1>601 CALIFORNIA STREET</rptOwnerStreet1>
+            <rptOwnerStreet2>SUITE 1210</rptOwnerStreet2>
+            <rptOwnerCity>SAN FRANCISCO</rptOwnerCity>
+            <rptOwnerState>CA</rptOwnerState>
+            <rptOwnerZipCode>94108</rptOwnerZipCode>
+            <rptOwnerStateDescription></rptOwnerStateDescription>
+        </reportingOwnerAddress>
+        <reportingOwnerRelationship>
+            <isDirector>0</isDirector>
+            <isOfficer>0</isOfficer>
+            <isTenPercentOwner>1</isTenPercentOwner>
+            <isOther>0</isOther>
+            <officerTitle></officerTitle>
+            <otherText></otherText>
+        </reportingOwnerRelationship>
+    </reportingOwner>
+
+    <aff10b5One>0</aff10b5One>
+
+    <nonDerivativeTable>
+        <nonDerivativeTransaction>
+            <securityTitle>
+                <value>Common Stock</value>
+            </securityTitle>
+            <transactionDate>
+                <value>2026-11-16</value>
+            </transactionDate>
+            <deemedExecutionDate></deemedExecutionDate>
+            <transactionCoding>
+                <transactionFormType>4</transactionFormType>
+                <transactionCode>P</transactionCode>
+                <equitySwapInvolved>0</equitySwapInvolved>
+            </transactionCoding>
+            <transactionTimeliness></transactionTimeliness>
+            <transactionAmounts>
+                <transactionShares>
+                    <value>33094</value>
+                </transactionShares>
+                <transactionPricePerShare>
+                    <value>5.89</value>
+                    <footnoteId id="F1"/>
+                </transactionPricePerShare>
+                <transactionAcquiredDisposedCode>
+                    <value>A</value>
+                </transactionAcquiredDisposedCode>
+            </transactionAmounts>
+            <postTransactionAmounts>
+                <sharesOwnedFollowingTransaction>
+                    <value>495510</value>
+                </sharesOwnedFollowingTransaction>
+            </postTransactionAmounts>
+            <ownershipNature>
+                <directOrIndirectOwnership>
+                    <value>I</value>
+                </directOrIndirectOwnership>
+                <natureOfOwnership>
+                    <value>By Coastlands Capital LP</value>
+                    <footnoteId id="F2"/>
+                </natureOfOwnership>
+            </ownershipNature>
+        </nonDerivativeTransaction>
+        <nonDerivativeTransaction>
+            <securityTitle>
+                <value>Common Stock</value>
+            </securityTitle>
+            <transactionDate>
+                <value>2026-11-17</value>
+            </transactionDate>
+            <deemedExecutionDate></deemedExecutionDate>
+            <transactionCoding>
+                <transactionFormType>4</transactionFormType>
+                <transactionCode>P</transactionCode>
+                <equitySwapInvolved>0</equitySwapInvolved>
+            </transactionCoding>
+            <transactionTimeliness></transactionTimeliness>
+            <transactionAmounts>
+                <transactionShares>
+                    <value>20000</value>
+                </transactionShares>
+                <transactionPricePerShare>
+                    <value>5.7499</value>
+                </transactionPricePerShare>
+                <transactionAcquiredDisposedCode>
+                    <value>A</value>
+                </transactionAcquiredDisposedCode>
+            </transactionAmounts>
+            <postTransactionAmounts>
+                <sharesOwnedFollowingTransaction>
+                    <value>515510</value>
+                </sharesOwnedFollowingTransaction>
+            </postTransactionAmounts>
+            <ownershipNature>
+                <directOrIndirectOwnership>
+                    <value>I</value>
+                </directOrIndirectOwnership>
+                <natureOfOwnership>
+                    <value>By Coastlands Capital LP</value>
+                    <footnoteId id="F2"/>
+                </natureOfOwnership>
+            </ownershipNature>
+        </nonDerivativeTransaction>
+    </nonDerivativeTable>
+
+    <footnotes>
+        <footnote id="F1">The price reported represents the weighted average purchase price per share. The shares were purchased in multiple transactions at prices ranging from $5.8000 to $5.9136. Upon request by the staff of the U.S. Securities and Exchange Commission, the Issuer, or a security holder of the Issuer, the reporting persons will provide full information regarding the number of shares purchased at each separate price.</footnote>
+        <footnote id="F2">Coastlands Capital LP (&quot;Coastlands&quot;) and Coastlands Capital GP LLC (the &quot;General Partner&quot;) are the investment adviser and general partner, respectively, of Coastlands Capital Partners LP, a Delaware limited partnership (the &quot;Partnership&quot;). Coastlands Capital LLC (&quot;Coastlands GP&quot;) is the general partner of Coastlands. Matthew Perry is the control person of Coastlands, the Partnership, Coastlands GP and the General Partner. The reporting persons are filing this Form 4 jointly, but not as members of a group, and each disclaims membership in a group. Each reporting person also disclaims beneficial ownership of common stock except to the extent of that person's pecuniary interest therein.</footnote>
+    </footnotes>
+
+    <ownerSignature>
+        <signatureName>/s/ Mark Shamia, Chief Operating Officer of the General Partner of Coastlands Capital LP</signatureName>
+        <signatureDate>2026-11-17</signatureDate>
+    </ownerSignature>
+
+    <ownerSignature>
+        <signatureName>/s/ Mark Shamia, Chief Operating Officer of the General Partner of Coastlands Capital Partners LP</signatureName>
+        <signatureDate>2026-11-17</signatureDate>
+    </ownerSignature>
+
+    <ownerSignature>
+        <signatureName>/s/ Mark Shamia, Chief Operating Officer of Coastlands Capital GP LLC</signatureName>
+        <signatureDate>2026-11-17</signatureDate>
+    </ownerSignature>
+
+    <ownerSignature>
+        <signatureName>/s/ Mark Shamia, Chief Operating Officer of Coastlands Capital LLC</signatureName>
+        <signatureDate>2026-11-17</signatureDate>
+    </ownerSignature>
+
+    <ownerSignature>
+        <signatureName>/s/ Matthew D. Perry</signatureName>
+        <signatureDate>2026-11-17</signatureDate>
+    </ownerSignature>
+</ownershipDocument>
+</XML>
+</TEXT>
+</DOCUMENT>
+</SEC-DOCUMENT>

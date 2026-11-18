@@ -1,0 +1,358 @@
+// English catalog (default). Every user-facing string of the dashboard lives here;
+// `pt-BR.ts` must provide the same keys (the `Messages` type enforces it).
+
+export const en = {
+  meta: {
+    /** Name of this language, written in this language (shown by the language switcher). */
+    nativeName: 'English',
+    short: 'EN',
+  },
+
+  app: {
+    title: 'Radar SEC · operations room',
+    skipToSignals: 'Skip to signals',
+  },
+
+  connection: {
+    lost: 'Lost connection to the server.',
+    never: 'No connection to the radar server.',
+    stale: 'The data on screen stopped updating.',
+    hint: 'Check that `uv run radar serve` is running.',
+    retry: (when: string) => `Retrying ${when}.`,
+    connecting: 'Connecting.',
+  },
+
+  common: {
+    na: 'n/a',
+    andMore: (n: number) => `and ${n} more`,
+    months: (n: number) => (n === 1 ? '1 month' : `${n} months`),
+    monthsShort: (n: number | string) => `${n} mo`,
+    days: (n: number | string) => `${n} days`,
+    delayed: (minutes: number) => `Delayed ~${minutes} min`,
+  },
+
+  time: {
+    seconds: (n: number) => `${n}s`,
+    minutes: (n: number) => `${n} min`,
+    hours: (n: number) => `${n}h`,
+    days: (n: number) => `${n}d`,
+    ago: (amount: string) => `${amount} ago`,
+    in: (amount: string) => `in ${amount}`,
+    today: 'today',
+  },
+
+  language: {
+    group: 'Language',
+  },
+
+  topbar: {
+    brandSub: 'Operations room',
+    clocks: 'Clocks',
+    newYork: 'New York',
+    brasilia: 'Brasilia',
+    replaySr: (date: string) => `Replay mode: historical data from ${date}`,
+  },
+
+  market: {
+    group: 'New York trading session',
+    label: {
+      open: 'Market open',
+      pre: 'Pre-market',
+      post: 'After hours',
+      closed: 'Market closed',
+    },
+    closesIn: (span: string) => `closes in ${span}`,
+    opensIn: (span: string) => `opens in ${span}`,
+    sessionEnded: 'session closed at 4 pm',
+    opensAt: (when: string) => `opens ${when} at 9:30 (NY)`,
+    today: 'today',
+    tomorrow: 'tomorrow',
+    span: (hours: number, minutes: number) =>
+      hours > 0 ? `${hours}h ${String(minutes).padStart(2, '0')}m` : `${minutes} min`,
+  },
+
+  indices: {
+    group: (delay: number) => `Indices, quotes delayed about ${delay} minutes`,
+    noQuote: 'no quote',
+  },
+
+  system: {
+    group: 'System status',
+    lamps: { sec: 'SEC', ai: 'AI', ws: 'WS', prices: 'Prices' },
+    waiting: 'waiting',
+    paused: 'paused',
+    queue: (n: number) => `queue ${n}`,
+    reading: (stage: string) => `reading ${stage}`,
+    stages: {
+      idle: 'idle',
+      feeds: 'feeds',
+      filings: 'filings',
+      signals: 'signals',
+    } as Record<string, string>,
+    cycleFailed: 'cycle failed',
+    error: 'error',
+    readAgo: (when: string) => `read ${when}`,
+    unused: 'not used',
+    aiOff: 'off',
+    aiCapped: (used: number, cap: number) => `cap ${used}/${cap} per h`,
+    aiRate: (used: number, cap: number) => `${used}/${cap} per h`,
+    connected: 'connected',
+    connecting: 'connecting',
+    reconnects: (when: string) => `reconnects ${when}`,
+    noSource: 'no source',
+    pricesOff: 'off',
+    fetching: 'fetching',
+  },
+
+  mode: {
+    replayGroup: 'Replay mode',
+    replay: 'Replay',
+    historical: (years: string) => `Historical data ${years}`,
+    resume: 'Resume replay',
+    pause: 'Pause replay',
+    speed: 'Replay speed',
+    position: 'Position in history',
+    progress: (position: string, total: string) => `${position} of ${total} signals`,
+    liveGroup: 'Live mode',
+    live: 'Live',
+    liveSub: 'Form 4 and 13D as they arrive',
+    connecting: 'Connecting',
+  },
+
+  signalType: {
+    short: {
+      cluster_buy: 'Cluster buy',
+      big_officer_buy: 'CEO/CFO buy',
+      activist_13d: 'New 13D',
+    },
+    long: {
+      cluster_buy: 'Insider cluster buy',
+      big_officer_buy: 'Large CEO/CFO buy',
+      activist_13d: 'New 13D (significant stake)',
+    },
+    /** Compact names for filters and table rows. */
+    tiny: {
+      cluster_buy: 'Cluster',
+      big_officer_buy: 'CEO/CFO',
+      activist_13d: '13D',
+    },
+  },
+
+  /** Server sends these English labels; unknown values (free-text SEC titles) pass through. */
+  roles: {
+    Director: 'Director',
+    Officer: 'Officer',
+    '10% owner': '10% owner',
+    'Director/Officer': 'Director/Officer',
+    Other: 'Other',
+    '13D filer': '13D filer',
+    'Joint filer': 'Joint filer',
+    'Unidentified filer': 'Unidentified filer',
+    CEO: 'CEO',
+    CFO: 'CFO',
+    'CEO/CFO': 'CEO/CFO',
+  } as Record<string, string>,
+
+  sectors: {
+    Healthcare: 'Healthcare',
+    Technology: 'Technology',
+    Financials: 'Financials',
+    'Real Estate': 'Real Estate',
+    Energy: 'Energy',
+    Utilities: 'Utilities',
+    Materials: 'Materials',
+    Industrials: 'Industrials',
+    Consumer: 'Consumer',
+    Communication: 'Communication',
+    Services: 'Services',
+    Unclassified: 'Unclassified',
+  } as Record<string, string>,
+
+  filingKinds: {
+    buy: 'Open-market buy',
+    sale: 'Sale',
+    grant: 'Grant',
+    exercise: 'Option exercise',
+    tax: 'Tax withholding',
+    gift: 'Gift',
+    return_to_issuer: 'Return to issuer',
+    conversion: 'Conversion',
+    new_13d: 'New 13D',
+    amended_13d: '13D amendment',
+    other: 'Other',
+  } as Record<string, string>,
+
+  outcome: {
+    status: {
+      ok: 'measured',
+      no_ticker: 'no ticker',
+      no_prices: 'no prices (delisted)',
+      no_entry_price: 'no entry price',
+      price_mismatch: 'price mismatch',
+      suspect_jump: 'suspect data',
+      unmeasured: 'not measured',
+    } as Record<string, string>,
+    notMeasuredTitle: 'The backtest could not measure this signal',
+    after: 'After',
+    sixMonthsTitle: (ret: string, spy: string, excess: string) =>
+      `Over 6 months: return ${ret}, SPY ${spy}, excess ${excess}`,
+    sixMonthsLater: '6 mo later',
+    vsSpy: (excess: string) => `${excess} vs SPY`,
+  },
+
+  score: {
+    title: 'Score from 0 to 100: a heuristic to rank signals. In the backtest, a higher score did not pay off.',
+    outOf: ' out of 100 score',
+  },
+
+  card: {
+    stakeOfCompany: (percent: string) => `${percent} of the company`,
+    insiders: (n: number) => (n === 1 ? '1 insider' : `${n} insiders`),
+    stake: (change: string) => `stake ${change}`,
+    openMarket: 'open-market buy',
+    activistTone: 'activist tone',
+    declaredStake: 'declared stake',
+    aiSummary: 'AI summary',
+    new: 'New',
+    todayTitle: 'Change in the latest session. Quote delayed about 15 minutes.',
+    todayDelayed: 'Today · delayed',
+  },
+
+  feed: {
+    title: 'Signals',
+    filterGroup: 'Filter by signal type',
+    all: 'All',
+    count: (n: number) => (n === 1 ? '1 signal' : `${n} signals`),
+    replayTime: ' · replay time',
+    last30: ' · last 30 days',
+    pinnedTitle: 'You picked a signal: the panel goes back to following new ones shortly. Click to resume now.',
+    followingTitle: 'The panel opens each new signal as soon as it arrives.',
+    pinned: (seconds: number) => `Pinned · ${seconds}s`,
+    following: 'Following new ones',
+    announce: (who: string, type: string) => `New signal: ${who}, ${type}`,
+    emptyTitle: 'No signals here',
+    emptyAll: 'The radar alerts you as soon as a rule fires. Real signals are rare: a few a day.',
+    emptyFiltered: 'No signals of this type in the period. Change the filter to see the others.',
+  },
+
+  detail: {
+    title: 'Signal in focus',
+    waitingTitle: 'Waiting for a signal',
+    waitingText: 'When the first signal arrives, the chart and the insider buys show up here.',
+    openFiling: 'Open filing on SEC',
+    publishedOn: (date: string) => `Public on ${date}`,
+    kpi: {
+      declaredStake: 'Declared stake',
+      shares: 'Shares',
+      eventDate: 'Event date',
+      tone: 'Purpose tone (Item 4)',
+      activist: 'Activist',
+      neutral: 'Neutral',
+      quoteDelayed: 'Quote · delayed',
+      bought: 'Amount bought',
+      distinctInsiders: 'Distinct insiders',
+      stakeIncrease: 'Stake increase',
+      avgPrice: 'Average price paid',
+      buys: 'Buys',
+      range: (from: string, to: string) => `${from} to ${to}`,
+      vsBuy: 'vs. buy',
+    },
+    noTicker: 'No ticker',
+    noTickerText: 'The filing does not list a traded ticker, so there is no price chart.',
+    loadingPrices: (symbol: string) => `Fetching prices for ${symbol}`,
+    noPrices: (symbol: string) => `No prices for ${symbol}`,
+    noPricesText:
+      'The source has no history for this stock in this period. That is typical of a delisted company or a ticker that changed.',
+    summaryRegion: 'Signal summary',
+    summary: 'Summary',
+    byAi: 'Written by AI',
+    template: 'Fixed template',
+    afterwards: 'What happened next',
+    rule: 'Rule that fired',
+    buysRegion: 'Buys and earlier signals',
+    replayBuys: 'Buys that form the signal',
+    companyBuys: "Company's buy history",
+    loadError: 'Could not load the detail.',
+    previous: 'Earlier signals from this company',
+    notMeasuredBefore: 'The backtest did not measure this signal: ',
+    notMeasuredAfter:
+      '. Delisted companies lose their prices, and there is no way to know whether they went bust or were acquired.',
+    horizon: 'Horizon',
+    signal: 'Signal',
+    excess: 'Excess',
+    noPurchases: 'No open-market buys from this company recorded by the radar.',
+    purchasesRegion: 'Insider buy history',
+    columns: { date: 'Date', insider: 'Insider', shares: 'Shares', price: 'Price', value: 'Value' },
+  },
+
+  chart: {
+    avgPriceLine: 'insiders average price',
+    summary: (symbol: string, from: string, to: string, first: string, last: string, signalDate: string) =>
+      `${symbol} price from ${from} to ${to}: from ${first} to ${last} dollars. Signal public on ${signalDate}.`,
+    signalPublic: (date: string) => `signal public · ${date}`,
+    closedAt: (price: string) => `closed at ${price}`,
+    buys: (n: number) => (n === 1 ? '1 insider buy' : `${n} insider buys`),
+    legendFiling: 'filing',
+    legendBuy: 'insider buy (no. = buys that day)',
+    legendExit: 'backtest exits',
+    daily: 'Daily',
+    close: 'Close',
+    delayed: (minutes: number) => `delayed ~${minutes} min`,
+  },
+
+  radar: {
+    title: 'Buying radar',
+    window: 'Radar window',
+    building: 'Building the radar',
+    basis: (basis: string) => `Basis: ${basis}`,
+    bases: {
+      open_market_buys: 'open-market buys (Form 4, code P)',
+      replayed_signals: 'replayed signals (replay time)',
+    } as Record<string, string>,
+    noBuys: 'No buys in the window',
+    sizeTitle: 'The size of each dot is the amount bought.',
+    key: (days: number) => `Edge: today · center: ${days} days ago`,
+    since: (date: string) => ` · data since ${date}`,
+    dotValue: ' · dot: amount bought',
+    rankGroup: (days: number) => `Companies with the most buying in ${days} days`,
+    scopeEmpty: (days: number) => `Sector radar with no buys in the last ${days} days.`,
+    scope: (companies: number, days: number, total: string, leader: string) =>
+      `Sector radar: ${companies} companies with insider buys in the last ${days} days, ${total} in total. Sector with the most buying: ${leader}.`,
+  },
+
+  backtest: {
+    title: 'What the backtest says',
+    reading: 'Reading the report',
+    unavailable: 'Report unavailable',
+    runHint: 'Run `radar backtest` to generate the report in reports/.',
+    against: (years: string, benchmark: string) => `${years} · vs ${benchmark}`,
+    beat: 'The signals beat the SPY',
+    notBeat: 'The signals did not beat the SPY',
+    sub: 'The typical signal lost to the index at every horizon.',
+    caption: (benchmark: string) =>
+      `Median excess over ${benchmark} and share of signals that beat the index, by signal type and horizon`,
+    medianExcess: 'Median excess',
+    signals: (n: string) => `${n} signals`,
+    beatShare: (share: string) => `${share} beat`,
+    yearsCaption: '6-month median excess, by signal year',
+    maxT: 't max.',
+    evidence: '(evidence needs 2)',
+    unmeasured: 'not measured',
+    scoreNoHelp: 'score did not help',
+    inThisReplay: 'In this replay',
+    noneMeasured: 'no measured signals yet',
+    beatOf: (beat: string, measured: string) => `${beat} of ${measured}`,
+    beatSpy: ' beat the SPY at 6 mo · median ',
+    unmeasuredCount: (n: string) => ` · ${n} not measured`,
+  },
+
+  tape: {
+    group: 'Recent filings',
+    latest: 'Latest filing',
+    waiting: 'waiting',
+    empty: 'No filings yet. The tape starts moving once collection brings in the first ones.',
+  },
+}
+
+/** Shape every catalog must follow. */
+export type Messages = typeof en

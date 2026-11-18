@@ -1,0 +1,179 @@
+<SEC-DOCUMENT>0001104659-26-129242.txt : 20261117
+<SEC-HEADER>0001104659-26-129242.hdr.sgml : 20261117
+<ACCEPTANCE-DATETIME>20261117202540
+ACCESSION NUMBER:		0001104659-26-129242
+CONFORMED SUBMISSION TYPE:	SCHEDULE 13D/A
+PUBLIC DOCUMENT COUNT:		1
+FILED AS OF DATE:		20261117
+DATE AS OF CHANGE:		20261117
+
+SUBJECT COMPANY:	
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Atlas Energy Solutions Inc.
+		CENTRAL INDEX KEY:			0001984060
+		STANDARD INDUSTRIAL CLASSIFICATION:	CRUDE PETROLEUM & NATURAL GAS [1311]
+		ORGANIZATION NAME:           	01 Energy & Transportation
+		EIN:				932154509
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			1231
+
+	FILING VALUES:
+		FORM TYPE:		SCHEDULE 13D/A
+		SEC ACT:		1934 Act
+		SEC FILE NUMBER:	005-94180
+		FILM NUMBER:		261567798
+
+	BUSINESS ADDRESS:	
+		STREET 1:		5918 WEST COURTYARD DRIVE
+		STREET 2:		SUITE 500
+		CITY:			AUSTIN
+		STATE:			TX
+		ZIP:			78730
+		BUSINESS PHONE:		5122201200
+
+	MAIL ADDRESS:	
+		STREET 1:		5918 WEST COURTYARD DRIVE
+		STREET 2:		SUITE 500
+		CITY:			AUSTIN
+		STATE:			TX
+		ZIP:			78730
+
+	FORMER COMPANY:	
+		FORMER CONFORMED NAME:	New Atlas HoldCo Inc.
+		DATE OF NAME CHANGE:	20230703
+
+FILED BY:		
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			SHEPARD GREGORY M
+		CENTRAL INDEX KEY:			0001065833
+		ORGANIZATION NAME:           	
+
+	FILING VALUES:
+		FORM TYPE:		SCHEDULE 13D/A
+
+	MAIL ADDRESS:	
+		STREET 1:		15405 ACHORAGE PLACE
+		CITY:			LAKEWOOD RANCH
+		STATE:			FL
+		ZIP:			34202
+</SEC-HEADER>
+<DOCUMENT>
+<TYPE>SCHEDULE 13D/A
+<SEQUENCE>1
+<FILENAME>primary_doc.xml
+<TEXT>
+<XML>
+<?xml version="1.0" encoding="UTF-8"?><edgarSubmission xmlns="http://www.sec.gov/edgar/schedule13D" xmlns:com="http://www.sec.gov/edgar/common">
+  <schemaVersion>X0202</schemaVersion>
+<headerData>
+    <submissionType>SCHEDULE 13D/A</submissionType>
+    <filerInfo>
+      <filer>
+        <filerCredentials>
+          <!-- Field: Pseudo-Tag; ID: Name; Data: SHEPARD GREGORY M -->
+          <cik>0001065833</cik>
+          <ccc>XXXXXXXX</ccc>
+        </filerCredentials>
+      </filer>
+      <liveTestFlag>LIVE</liveTestFlag>
+
+
+    </filerInfo>
+  </headerData>
+  <formData>
+    <coverPageHeader>
+      <amendmentNo>5</amendmentNo>
+      <securitiesClassTitle>Common Stock, par value $0.01</securitiesClassTitle>
+      <dateOfEvent>11/13/2026</dateOfEvent>
+      <previouslyFiledFlag>false</previouslyFiledFlag>
+      <issuerInfo>
+        <issuerCIK>0001984060</issuerCIK>
+        <issuerCusips>
+          <issuerCusipNumber>642045108</issuerCusipNumber>
+        </issuerCusips>
+        <issuerName>Atlas Energy Solutions Inc.</issuerName>
+        <address>
+          <com:street1>5918 WEST COURTYARD DRIVE</com:street1>
+          <com:street2>Suite 500</com:street2>
+          <com:city>Austin</com:city>
+          <com:stateOrCountry>TX</com:stateOrCountry>
+          <com:zipCode>78730</com:zipCode>
+        </address>
+      </issuerInfo>
+      <authorizedPersons>
+        <notificationInfo>
+          <personName>Amundsen Davis LLC</personName>
+          <personPhoneNum>312-894-3200</personPhoneNum>
+          <personAddress>
+            <com:street1>Eric M. Fogel / Larry C. Tomlin</com:street1>
+            <com:street2>150 N. Michigan Avenue, Suite 3300</com:street2>
+            <com:city>Chicago</com:city>
+            <com:stateOrCountry>IL</com:stateOrCountry>
+            <com:zipCode>60601</com:zipCode>
+          </personAddress>
+        </notificationInfo>
+      </authorizedPersons>
+    </coverPageHeader>
+    <reportingPersons>
+      <reportingPersonInfo>
+        <reportingPersonCIK>0001065833</reportingPersonCIK>
+        <reportingPersonNoCIK>N</reportingPersonNoCIK>
+        <reportingPersonName>Gregory M. Shepard</reportingPersonName>
+        <fundType>OO</fundType>
+        <legalProceedings>N</legalProceedings>
+        <citizenshipOrOrganization>FL</citizenshipOrOrganization>
+        <soleVotingPower>6121798.00</soleVotingPower>
+        <sharedVotingPower>0.00</sharedVotingPower>
+        <soleDispositivePower>6121798.00</soleDispositivePower>
+        <sharedDispositivePower>0.00</sharedDispositivePower>
+        <aggregateAmountOwned>6121798.00</aggregateAmountOwned>
+        <isAggregateExcludeShares>N</isAggregateExcludeShares>
+        <percentOfClass>4.89</percentOfClass>
+        <typeOfReportingPerson>IN</typeOfReportingPerson>
+        <commentContent>Percent of Class Represented is based on a total of 125,257,801 outstanding shares of Common Stock as of October 29, 2026, as reported in the Issuer's Quarterly Report on Form 10-Q for the quarterly period ended on September 30, 2026 filed on 11/03/2026.</commentContent>
+      </reportingPersonInfo>
+    </reportingPersons>
+    <items1To7>
+      <item1>
+        <securityTitle>Common Stock, par value $0.01</securityTitle>
+        <issuerName>Atlas Energy Solutions Inc.</issuerName>
+        <issuerPrincipalAddress>
+          <com:street1>5918 WEST COURTYARD DRIVE</com:street1>
+          <com:street2>Suite 500</com:street2>
+          <com:city>Austin</com:city>
+          <com:stateOrCountry>TX</com:stateOrCountry>
+          <com:zipCode>78730</com:zipCode>
+        </issuerPrincipalAddress>
+      </item1>
+      <item4>
+        <transactionPurpose>Item 4 of the Schedule 13D is hereby amended and supplemented by adding the following: The sales of Common Stock reported in Item 5(c) of this Amendment No. 5 were effected in connection with the Reporting Person's margin account with J.P. Morgan described in Item 6, in order to maintain such account in a non-margin position, and not as a result of any change in the Reporting Person's view of the Issuer. The Reporting Person may from time to time dispose of shares of Common Stock, including in order to maintain such margin account in a non-margin position, or acquire additional shares of Common Stock, in each case in the open market, in privately negotiated transactions or otherwise, depending on market conditions, the price of the Common Stock, the requirements of such margin account and other factors. The Reporting Person intends to communicate with the Issuer's management and Board of Directors regarding exiting the power business. Except as set forth herein, the Reporting Person does not have any present plans or proposals that relate to or would result in any of the matters set forth in clauses (a) through (j) of Item 4 of Schedule 13D, although the Reporting Person reserves the right to develop such plans or proposals and to change his intentions with respect to any of the matters described herein at any time.</transactionPurpose>
+      </item4>
+      <item5>
+        <percentageOfClassSecurities>As of the date hereof, the Reporting Person beneficially owns 6,121,798.00 shares of Common Stock, representing approximately 4.89% of the outstanding shares of Common Stock, based on 125,257,801 shares of Common Stock outstanding as of October 29, 2026, as reported in the Issuer's most recent Quarterly Report on Form 10-Q. Such shares include the 2,232,500 Pledged Shares subject to the Agreement described in Item 6.</percentageOfClassSecurities>
+        <numberOfShares>The Reporting Person has sole power to vote or direct the vote, and sole power to dispose or direct the disposition of, 6,121,798.00 shares of Common Stock, and shared power to vote or dispose of 0 shares of Common Stock.</numberOfShares>
+        <transactionDesc>During the past sixty days, the Reporting Person effected the following sales of Common Stock in open market transactions: 500,000 shares on November 6, 2026 at a weighted average price of $5.32 per share; 200,000 shares on November 9, 2026 at a weighted average price of $5.56 per share; 190,500 shares on November 10, 2026 at a weighted average price of $5.16 per share; 100,000 shares on November 12, 2026 at a price of $5.4284 per share; and 308,912 shares on November 13, 2026 at a weighted average price of $5.33 per share, for an aggregate of 1,299,412 shares. The Reporting Person undertakes to provide, upon request by the staff of the Securities and Exchange Commission, the Issuer or any security holder of the Issuer, full information regarding the number of shares sold at each separate price. Except as set forth herein, the Reporting Person has not effected any transactions in the Common Stock during the past sixty days.</transactionDesc>
+        <listOfShareholders>Not applicable.</listOfShareholders>
+        <date5PercentOwnership>On November 13, 2026, the Reporting Person ceased to be the beneficial owner of more than five percent of the outstanding shares of Common Stock.</date5PercentOwnership>
+      </item5>
+      <item6>
+        <contractDescription>Item 6 of the Schedule 13D is hereby amended and supplemented by adding the following: The Reporting Person maintains a margin account with J.P. Morgan ("JPM") pursuant to a margin agreement (the "Margin Agreement"). The Reporting Person intends to maintain such account in a non-margin position, and the sales reported in Item 5(c) were effected for that purpose. Upon the occurrence of a default or a margin deficiency under the Margin Agreement, JPM may sell shares of Common Stock held in such account. There have been no changes to the Agreement with UBS described in this Item 6, and no tranche thereunder has been settled early, accelerated or amended, and the Pledged Shares remain pledged thereunder. Except as described in this Schedule 13D, the Reporting Person is not party to any contracts, arrangements, understandings or relationships (legal or otherwise) with any person with respect to any securities of the Issuer.</contractDescription>
+      </item6>
+    </items1To7>
+    <signatureInfo>
+      <signaturePerson>
+        <signatureReportingPerson>Gregory M. Shepard</signatureReportingPerson>
+        <signatureDetails>
+          <signature>/s/ Gregory M. Shepard</signature>
+          <title>Gregory M. Shepard</title>
+          <date>11/17/2026</date>
+        </signatureDetails>
+      </signaturePerson>
+    </signatureInfo>
+  </formData>
+</edgarSubmission>
+</XML>
+</TEXT>
+</DOCUMENT>
+</SEC-DOCUMENT>

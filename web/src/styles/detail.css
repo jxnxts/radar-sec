@@ -1,0 +1,476 @@
+.detail .panel__body {
+  padding: 0;
+}
+
+.detail__scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  animation: focus-in 0.35s var(--ease);
+}
+
+@keyframes focus-in {
+  from {
+    opacity: 0.35;
+  }
+}
+
+.detail__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 45%);
+}
+
+.detail__id {
+  min-width: 0;
+}
+
+.detail__ticker {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 0.88;
+  letter-spacing: 0.035em;
+  color: var(--tx-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail__company {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.3125rem;
+  font-size: 0.9375rem;
+  color: var(--tx-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail__sector {
+  padding: 0.0625rem 0.4375rem;
+  border: 1px solid var(--line-2);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tx-3);
+}
+
+.detail__type {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.detail__date {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tx-3);
+}
+
+/* ------------------------------------------------------------------ KPIs */
+
+.kpis {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  border-bottom: 1px solid var(--line);
+}
+
+.kpi {
+  padding: 0.5625rem 1rem 0.625rem;
+  border-left: 1px solid var(--line);
+  min-width: 0;
+}
+
+.kpi:first-child {
+  border-left: 0;
+}
+
+.kpi dt {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--tx-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi dd {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 0.5rem;
+  overflow: hidden;
+  margin-top: 0.125rem;
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.025em;
+  color: var(--tx-1);
+  white-space: nowrap;
+}
+
+.kpi dd .delta {
+  font-size: 0.8125rem;
+}
+
+.kpi__sub {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--tx-3);
+}
+
+/* ----------------------------------------------------------------- chart */
+
+.detail__chart {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 19rem;
+  min-height: 14rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.014), transparent);
+}
+
+.chart {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.chart__canvas {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Vertical line on the day the signal became public. */
+.chart__signal {
+  position: absolute;
+  top: 0;
+  bottom: 3.25rem;
+  left: 0;
+  width: 0;
+  border-left: 1px dashed var(--amber);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.chart__signal span {
+  position: absolute;
+  top: 0.375rem;
+  left: 0.3125rem;
+  padding: 0.0625rem 0.375rem;
+  background: var(--amber);
+  color: var(--amber-ink);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Readout for the day under the cursor: price and that session's insider buys. */
+.chart__tip {
+  position: absolute;
+  top: 2rem;
+  z-index: 3;
+  display: grid;
+  gap: 0.125rem;
+  min-width: 11rem;
+  max-width: 19rem;
+  padding: 0.4375rem 0.5625rem;
+  background: var(--panel-3);
+  border: 1px solid var(--line-2);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--tx-2);
+  pointer-events: none;
+}
+
+.chart__tip b {
+  font-weight: 600;
+  color: var(--tx-1);
+}
+
+.chart__tip-buy {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--ice);
+}
+
+.chart__tip-buy span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Signal near the right edge: the tag flips to the left of the line. */
+.chart__signal--flip span {
+  left: auto;
+  right: 0.3125rem;
+}
+
+.chart__caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 0.3125rem 1rem 0.4375rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--tx-3);
+}
+
+.chart__legend {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.key {
+  display: inline-block;
+  width: 0.5625rem;
+  height: 0.5625rem;
+  margin-left: 0.625rem;
+}
+
+.key:first-child {
+  margin-left: 0;
+}
+
+.key--signal {
+  background: var(--amber);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.key--buy {
+  border-radius: 50%;
+  background: var(--ice);
+}
+
+.key--exit {
+  background: var(--tx-3);
+}
+
+/* ------------------------------------------------------ summary and buys */
+
+.detail__lower {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  flex: 0 1 auto;
+  min-height: 12rem;
+  max-height: 47%;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+  padding: 0.75rem 1rem 0.875rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+
+.block + .block {
+  border-left: 1px solid var(--line);
+}
+
+.block__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tx-2);
+}
+
+.block__title:not(:first-child) {
+  margin-top: 0.375rem;
+}
+
+.block__count {
+  font-weight: 400;
+  color: var(--tx-3);
+}
+
+.summary {
+  display: grid;
+  gap: 0.3125rem;
+  font-size: 0.875rem;
+  line-height: 1.42;
+  color: var(--tx-1);
+  max-width: 62ch;
+}
+
+.rule {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--tx-2);
+  max-width: 68ch;
+}
+
+.aftermath {
+  display: grid;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+  padding-top: 0.625rem;
+  border-top: 1px dashed var(--line-2);
+}
+
+.aftermath__none {
+  font-size: 0.8125rem;
+  color: var(--tx-2);
+}
+
+.aftermath__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.aftermath__table th,
+.aftermath__table td {
+  padding: 0.1875rem 0;
+  text-align: right;
+  font-weight: 400;
+  color: var(--tx-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.aftermath__table th:first-child {
+  text-align: left;
+}
+
+.aftermath__table thead th {
+  font-size: 0.625rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--tx-3);
+}
+
+.aftermath__table td:last-child {
+  font-weight: 600;
+}
+
+.tablewrap {
+  min-height: 3rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  padding: 0 0.5rem 0.25rem 0;
+  background: var(--panel);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--tx-3);
+  border-bottom: 1px solid var(--line-2);
+}
+
+.table th.num {
+  text-align: right;
+}
+
+.table td {
+  padding: 0.3125rem 0.5rem 0.3125rem 0;
+  vertical-align: baseline;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.table td:first-child {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tx-3);
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 0;
+}
+
+.table td.num {
+  font-size: 0.75rem;
+}
+
+/* The insider column takes the leftover width and clips long text;
+   the number columns never overflow the table. */
+.table td.who {
+  width: 100%;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table__name {
+  font-weight: 500;
+  color: var(--tx-1);
+}
+
+.table__role {
+  margin-left: 0.4375rem;
+  font-size: 0.75rem;
+  color: var(--tx-3);
+}
+
+.previous {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.previous__item {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.1875rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tx-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.previous__item svg {
+  font-size: 0.9375rem;
+  color: var(--tx-3);
+}
