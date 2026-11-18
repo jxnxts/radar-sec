@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import socket
 from pathlib import Path
 
@@ -15,6 +16,19 @@ from radar.http import RateLimiter, SecClient
 
 FIXTURES = Path(__file__).parent / "fixtures"
 TEST_USER_AGENT = "RadarSEC-Tests contact@example.com"
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Keep CLI output plain everywhere, including CI.
+
+    Typer and Rich force styled output when GITHUB_ACTIONS, FORCE_COLOR or PY_COLORS
+    is set, which splits option names with ANSI codes. This runs before the test
+    modules import Typer.
+    """
+    os.environ["_TYPER_FORCE_DISABLE_TERMINAL"] = "1"
+    os.environ["NO_COLOR"] = "1"
+    for var in ("FORCE_COLOR", "PY_COLORS"):
+        os.environ.pop(var, None)
 
 
 @pytest.fixture(autouse=True)
