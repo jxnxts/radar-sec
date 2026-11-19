@@ -244,3 +244,105 @@ def test_fund_signals_already_stored_are_hidden_but_kept(engine, monkeypatch):
         ],
     )
     assert "LEO" not in [c["ticker"] for c in engine.ranking(7)["companies"]]
+
+
+CONCEPT = "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik:010d}/dei/EntityCommonStockSharesOutstanding.json"
+
+
+def concept(*facts):
+    return json.dumps(
+        {
+            "units": {
+                "shares": [{"end": end, "val": val, "filed": filed} for end, val, filed in facts]
+            }
+        }
+    )
+
+
+def test_price_and_market_value_are_stored_and_sent_with_each_signal(engine, recorder):
+    asked = []
+
+    def prices(symbols):
+        asked.append(sorted(symbols))
+        known = {"MP": (40.0, "2026-11-17"), "TINY": (2.0, "2026-11-17"), "BIG": (80.0, "x")}
+        return {s: known[s] for s in symbols if s in known}
+
+    engine.use_prices(prices)
+    recorder.add(
+        CONCEPT.format(cik=1801368),
+        concept(
+            ("2026-06-30", 170_000_000, "2026-08-01"), ("2026-09-30", 176_000_000, "2026-11-05")
+        ),
+    )
+    recorder.add(CONCEPT.format(cik=777), concept(("2026-09-30", 10_000_000, "2026-11-01")))
+    recorder.add(CONCEPT.format(cik=888), concept(("2026-09-30", 50_000_000, "2026-11-01")))
+    tiny = stored_signal(engine, "late_filing_nt", "777", "Tiny Corp", "TINY")
+    stored_signal(engine, "short_crowded", "888", "Big Corp", "BIG")
+    stored_signal(engine, "ftd_persistent", "999", "Ghost Corp", "GHST")  # no price anywhere
+    subscription = engine.hub.subscribe()
+    engine.run_cycle()
+
+    by_ticker = {s["ticker"]: s for s in engine.list_signals()}
+    mp = by_ticker["MP"]
+    assert mp["price"] == 40.0 and mp["market_value"] == pytest.approx(40.0 * 176_000_000)
+    assert mp["liquid"] is True and mp["liquidity_gated"] is False  # a long signal
+    small = by_ticker["TINY"]
+    assert small["price"] == 2.0 and small["market_value"] == pytest.approx(20_000_000)
+    assert small["liquid"] is False and small["liquidity_gated"] is True
+    big = by_ticker["BIG"]
+    assert big["liquid"] is True and big["liquidity_gated"] is True
+    ghost = by_ticker["GHST"]
+    assert ghost["price"] is None and ghost["market_value"] is None
+    assert ghost["liquid"] is False  # unknown liquidity counts as not liquid
+    assert engine.signal_detail(f"l{tiny.id}")["market_value"] == pytest.approx(20_000_000)
+
+    events = drain(subscription)
+    new = next(
+        e["data"] for e in events if e["type"] == "signal.new" and e["data"]["ticker"] == "MP"
+    )
+    assert new["price"] == 40.0 and new["liquid"] is True  # measured before it was published
+    updates = [e["data"] for e in events if e["type"] == "signals.update"]
+    assert {s["ticker"] for s in updates[0]} >= {"TINY", "BIG", "GHST"}
+    assert engine.status()["liquidity"] == {"min_price": 5.0, "min_market_value": 300_000_000.0}
+
+    # Fresh values are not looked up again on the next cycle, and the SEC is asked once.
+    calls = len(asked)
+    engine.run_cycle()
+    assert len(asked) == calls
+    assert recorder.urls().count(CONCEPT.format(cik=777)) == 1
+
+
+def test_thresholds_come_from_the_config(engine, recorder):
+    from radar.config import DashboardConfig
+
+    engine.settings = replace(
+        engine.settings, dashboard=DashboardConfig(avoid_min_price=1.0, avoid_min_market_value=1e7)
+    )
+    engine.use_prices(lambda symbols: {s: (2.0, "2026-11-17") for s in symbols})
+    recorder.add(CONCEPT.format(cik=777), concept(("2026-09-30", 10_000_000, "2026-11-01")))
+    stored_signal(engine, "late_filing_nt", "777", "Tiny Corp", "TINY")
+    engine.run_cycle()
+    tiny = next(s for s in engine.list_signals() if s["ticker"] == "TINY")
+    assert tiny["liquid"] is True
+
+
+def test_without_a_price_source_liquidity_stays_unknown(engine):
+    stored_signal(engine, "late_filing_nt", "777", "Tiny Corp", "TINY")
+    engine.run_cycle()
+    tiny = next(s for s in engine.list_signals() if s["ticker"] == "TINY")
+    assert tiny["price"] is None and tiny["liquid"] is False and tiny["liquidity_gated"] is True
+
+
+def test_api_payload_carries_the_liquidity_fields(engine, tmp_path):
+    engine.use_prices(lambda symbols: {s: (40.0, "2026-11-17") for s in symbols})
+    app = create_app(
+        engine=engine, hub=engine.hub, reports_dir=tmp_path / "nothing", background=False
+    )
+    with TestClient(app) as client:
+        engine.run_cycle()
+        for signal in client.get("/api/signals").json():
+            assert {"price", "price_as_of", "market_value", "liquid", "liquidity_gated"} <= set(
+                signal
+            )
+        state = client.get("/api/state").json()["data"]
+        assert all("liquid" in s for s in state["signals"])

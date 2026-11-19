@@ -13,6 +13,7 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 from radar import legacy
+from radar.liquidity import Liquidity
 from radar.models import (
     FilingRef,
     Form4,
@@ -168,6 +169,18 @@ CREATE TABLE IF NOT EXISTS issuers (
     investment_company INTEGER
 );
 
+-- Latest price and market value of each signal's company (see radar.liquidity).
+CREATE TABLE IF NOT EXISTS signal_liquidity (
+    signal_id     INTEGER PRIMARY KEY REFERENCES signals(id),
+    symbol        TEXT NOT NULL,
+    price         REAL,
+    price_as_of   TEXT,
+    shares        REAL,
+    shares_as_of  TEXT,
+    market_value  REAL,
+    liquid        INTEGER NOT NULL,
+    updated_at    TEXT NOT NULL
+);
 """
 )
 
@@ -822,6 +835,70 @@ class Database:
             details=json.loads(row["details"]),
             created_at=datetime.fromisoformat(row["created_at"]),
         )
+
+    # -------------------------------------------------------------- liquidity
+
+    def set_liquidity(self, signal_id: int, liquidity: Liquidity) -> None:
+        self.conn.execute(
+            """INSERT OR REPLACE INTO signal_liquidity
+               (signal_id, symbol, price, price_as_of, shares, shares_as_of, market_value,
+                liquid, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                signal_id,
+                liquidity.symbol,
+                liquidity.price,
+                liquidity.price_as_of,
+                liquidity.shares,
+                liquidity.shares_as_of,
+                liquidity.market_value,
+                int(liquidity.liquid),
+                _now(),
+            ),
+        )
+        self.conn.commit()
+
+    def signal_liquidity(self, signal_ids: Iterable[int]) -> dict[int, dict]:
+        """Stored price and market value by signal id (signals without a row are left out)."""
+        ids = [i for i in signal_ids if i is not None]
+        out: dict[int, dict] = {}
+        for start in range(0, len(ids), 500):
+            chunk = ids[start : start + 500]
+            marks = ", ".join("?" for _ in chunk)
+            rows = self.conn.execute(
+                f"SELECT * FROM signal_liquidity WHERE signal_id IN ({marks})", chunk
+            ).fetchall()
+            out.update({r["signal_id"]: dict(r) for r in rows})
+        return out
+
+    def signals_needing_liquidity(
+        self,
+        since: date,
+        stale_before: datetime,
+        *,
+        first_types: Iterable[str] = (),
+        limit: int = 150,
+    ) -> list[Signal]:
+        """Recent signals with a ticker and no (or a stale) price/market value, the
+        `first_types` first, newest first."""
+        first = list(first_types) or [""]
+        marks = ", ".join("?" for _ in first)
+        rows = self.conn.execute(
+            f"""SELECT s.* FROM signals s
+                LEFT JOIN signal_liquidity l ON l.signal_id = s.id
+                WHERE s.signal_date >= ? AND COALESCE(s.ticker, '') <> ''
+                  AND (l.signal_id IS NULL OR l.updated_at < ?)
+                ORDER BY CASE WHEN s.type IN ({marks}) THEN 0 ELSE 1 END,
+                         s.signal_date DESC, s.id DESC
+                LIMIT ?""",
+            (
+                since.isoformat(),
+                stale_before.astimezone(UTC).isoformat(timespec="seconds"),
+                *first,
+                limit,
+            ),
+        ).fetchall()
+        return [self._signal(row) for row in rows]
 
     # --------------------------------------------------------------------- AI
 

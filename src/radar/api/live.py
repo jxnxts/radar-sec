@@ -21,6 +21,13 @@ from radar.db import NEW, Database
 from radar.edgar import normalize_cik
 from radar.funds import FUND_EXCLUDED_TYPES, is_fund
 from radar.http import SecClient, cache_path_for
+from radar.liquidity import (
+    LIQUIDITY_GATED_TYPES,
+    REFRESH_AFTER,
+    PriceLookup,
+    SharesLookup,
+    measure,
+)
 from radar.models import FilingRef, Signal
 from radar.sectors import UNKNOWN, SectorLookup, sector_for_sic
 from radar.sources.base import MarketEvent
@@ -39,6 +46,8 @@ TAPE_LIMIT = 60
 TRACKED_DAYS = 14
 TRACKED_LIMIT = 20
 CHART_DAYS_BEFORE = 180
+# Signals whose price and market value are looked up per collection cycle.
+LIQUIDITY_BATCH = 150
 
 WatcherFactory = Callable[[Database, WatchListener], Watcher]
 
@@ -75,6 +84,8 @@ class LiveEngine:
         self._events: SourceStore | None = None
         self._client: SecClient | None = None
         self._sectors: SectorLookup | None = None
+        self._shares: SharesLookup | None = None
+        self._prices: PriceLookup | None = None
         self._stop: asyncio.Event | None = None
         self._closed = False
         # CIK → current ticker in the SEC registry: only confirmed tickers get a logo.
@@ -91,6 +102,10 @@ class LiveEngine:
         self._last_error: str | None = None
 
     # ------------------------------------------------------------- collection
+
+    def use_prices(self, lookup: PriceLookup | None) -> None:
+        """Where the latest prices for the liquidity check come from (the quote service)."""
+        self._prices = lookup
 
     def _default_factory(self, db: Database, listener: WatchListener) -> Watcher:
         client = SecClient(self.settings.cache_dir, config=self.settings.sec)
@@ -134,6 +149,7 @@ class LiveEngine:
         self._client = self._watcher.client
         # One SIC cache per process: the monitor's (it also decides what is a fund).
         self._sectors = getattr(self._watcher, "sectors", None) or SectorLookup(self._client)
+        self._shares = SharesLookup(self._client, today=self._today)
         had_tickers = bool(self._tickers)
         self._tickers = dict(self._watcher.tickers._load()) or self._tickers
         if self._tickers and not had_tickers:
@@ -145,6 +161,7 @@ class LiveEngine:
         assert self._watcher is not None
         result = self._watcher.run_once()
         self._fill_sectors()
+        self._fill_liquidity()
         return result
 
     def _fill_sectors(self, limit: int = 40) -> None:
@@ -156,6 +173,58 @@ class LiveEngine:
             if found is not None:
                 db.set_sector(cik, found.sic, sector_for_sic(found.sic), found.investment_company)
         self._sectors.flush()
+
+    def _measure(self, signals: list[Signal]) -> list[int]:
+        """Stores the price and market value of each signal's company. Collection thread only.
+
+        Returns the ids of the signals measured. Without a price source nothing is
+        stored: unknown liquidity simply counts as not liquid.
+        """
+        if self._prices is None or self._watcher is None or self._shares is None:
+            return []
+        wanted = [s for s in signals if s.id is not None and price_symbol(s.ticker)]
+        if not wanted:
+            return []
+        try:
+            prices = self._prices(sorted({price_symbol(s.ticker) for s in wanted}))
+        except Exception:
+            log.exception("latest prices unavailable")
+            return []
+        db = self._watcher.db
+        cfg = self.settings.dashboard
+        shares: dict[str, Any] = {}
+        done: list[int] = []
+        for signal in wanted:
+            symbol = price_symbol(signal.ticker)
+            cik = normalize_cik(signal.issuer_cik) if signal.issuer_cik else ""
+            if cik and cik not in shares:
+                shares[cik] = self._shares.get(cik)
+            liquidity = measure(symbol, prices.get(symbol), shares.get(cik), cfg)
+            assert signal.id is not None
+            db.set_liquidity(signal.id, liquidity)
+            done.append(signal.id)
+        return done
+
+    def _fill_liquidity(self, limit: int = LIQUIDITY_BATCH) -> None:
+        """Measures the recent signals still without (or with a stale) price and market
+        value, avoid signals first, and sends the updated cards to the dashboard."""
+        if self._prices is None or self._watcher is None:
+            return
+        now = datetime.now(UTC)
+        pending = self._watcher.db.signals_needing_liquidity(
+            self._today() - timedelta(days=FEED_DAYS),
+            now - REFRESH_AFTER,
+            first_types=sorted(LIQUIDITY_GATED_TYPES),
+            limit=limit,
+        )
+        done = set(self._measure(pending))
+        if not done:
+            return
+        with self._read_lock:
+            updated = [s for s in pending if s.id in done and not self._hidden(s)]
+            views = self._views(updated)
+        if views:
+            self.hub.publish_threadsafe(events.SIGNALS_UPDATE, views)
 
     def _sector_now(self, cik: str) -> str:
         """The issuer's sector, asking the SEC if needed. Collection thread only."""
@@ -269,9 +338,16 @@ class LiveEngine:
     def _visible(self, signals: list[Signal]) -> list[Signal]:
         return [s for s in signals if not self._hidden(s)]
 
-    def _view(self, signal: Signal, sector: str | None = None) -> dict[str, Any]:
+    def _view(
+        self,
+        signal: Signal,
+        sector: str | None = None,
+        liquidity: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         if sector is None:
             sector = self._reader.sector_of(signal.issuer_cik) or "" if signal.issuer_cik else ""
+        if liquidity is None and signal.id is not None:
+            liquidity = self._reader.signal_liquidity([signal.id]).get(signal.id)
         return signal_view(
             signal,
             signal_id=f"l{signal.id}",
@@ -279,7 +355,14 @@ class LiveEngine:
             sector=sector or "",
             logo=self._logo_ok(signal.issuer_cik, signal.ticker),
             cached_ai=self._reader.cached_ai_summaries(signal.trigger_accession, signal.type),
+            liquidity=liquidity,
+            dashboard=self.settings.dashboard,
         )
+
+    def _views(self, signals: list[Signal], sector: str | None = None) -> list[dict[str, Any]]:
+        """Views of several signals, reading their liquidity in one query (read lock held)."""
+        stored = self._reader.signal_liquidity(s.id for s in signals if s.id is not None)
+        return [self._view(s, sector, stored.get(s.id or -1, {})) for s in signals]
 
     def list_signals(
         self,
@@ -292,7 +375,7 @@ class LiveEngine:
         with self._read_lock:
             signals = self._visible(self._reader.list_signals(since=since, signal_type=signal_type))
             signals.sort(key=lambda s: (s.signal_date, s.id or 0), reverse=True)
-            return [self._view(s) for s in signals[:limit]]
+            return self._views(signals[:limit])
 
     def list_filings(self, limit: int = TAPE_LIMIT) -> list[dict[str, Any]]:
         with self._read_lock:
@@ -309,7 +392,7 @@ class LiveEngine:
             cik = signal.issuer_cik
             purchases = self._reader.issuer_purchases(cik) if cik else []
             others = self._visible(self._reader.issuer_signals(cik)) if cik else []
-            previous = [self._view(s) for s in others if s.id != signal.id]
+            previous = self._views([s for s in others if s.id != signal.id])
         today = self._today()
         return {
             **view,
@@ -327,7 +410,7 @@ class LiveEngine:
             signals = self._visible(self._reader.issuer_signals(cik))
             purchases = self._reader.issuer_purchases(cik)
             sector = self._reader.sector_of(cik) or UNKNOWN
-            views = [self._view(s, sector) for s in signals]
+            views = self._views(signals, sector)
         if not signals and not purchases:
             return None
         ticker = views[0]["ticker"] if views else ""
@@ -408,7 +491,7 @@ class LiveEngine:
             purchases = self._reader.issuer_purchases(cik)[:40]
             ticker = next((s.ticker for s in signals if s.ticker), "") or self._tickers.get(cik, "")
             context = company_context(self._source_store(), cik, ticker, today=self._today())
-            views = [self._view(s) for s in signals]
+            views = self._views(signals)
         return {**context, "ticker": ticker, "signals": views, "insiders": purchases}
 
     def status(self) -> dict[str, Any]:
@@ -451,6 +534,11 @@ class LiveEngine:
             },
             "totals": totals,
             "replay": None,
+            # Avoid signals below these are hidden by default on the dashboard.
+            "liquidity": {
+                "min_price": self.settings.dashboard.avoid_min_price,
+                "min_market_value": self.settings.dashboard.avoid_min_market_value,
+            },
             "sources": self._watcher.sources.statuses()
             if self._watcher is not None and self._watcher.sources is not None
             else [],
@@ -497,6 +585,13 @@ class _Listener:
 
     def signal(self, signal: Signal) -> None:
         engine = self.engine
+        # Price and market value first: an avoid card of a small company arrives hidden.
+        engine._measure([signal])
+        stored = (
+            engine._watcher.db.signal_liquidity([signal.id]).get(signal.id or -1)
+            if engine._watcher
+            else None
+        )
         view = signal_view(
             signal,
             signal_id=f"l{signal.id}",
@@ -506,5 +601,7 @@ class _Listener:
             cached_ai=engine._watcher.db.cached_ai_summaries(signal.trigger_accession, signal.type)
             if engine._watcher
             else None,
+            liquidity=stored,
+            dashboard=engine.settings.dashboard,
         )
         engine.hub.publish_threadsafe(events.SIGNAL_NEW, view)

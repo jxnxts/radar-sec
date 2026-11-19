@@ -28,6 +28,9 @@ INDICES: dict[str, str] = {
     "^VIX": "VIX",
 }
 SPARK_POINTS = 40
+# Latest prices asked by the liquidity check stay cached this long (seconds).
+LAST_PRICE_TTL = 12 * 3600
+LAST_PRICE_BATCH = 50
 
 
 @dataclass
@@ -132,6 +135,34 @@ class YahooPriceSource:
             )
         return out
 
+    def last_closes(self, symbols: list[str]) -> dict[str, tuple[float, str]]:
+        """Latest daily close of each symbol, with its date (lighter than `quotes`)."""
+        import pandas as pd
+        import yfinance as yf
+
+        if not symbols:
+            return {}
+        raw = yf.download(
+            symbols,
+            period="5d",
+            interval="1d",
+            group_by="ticker",
+            auto_adjust=False,
+            threads=True,
+            progress=False,
+        )
+        out: dict[str, tuple[float, str]] = {}
+        if raw is None or raw.empty or not isinstance(raw.columns, pd.MultiIndex):
+            return out
+        available = set(raw.columns.get_level_values(0))
+        for symbol in symbols:
+            if symbol not in available or "Close" not in raw[symbol]:
+                continue
+            close = raw[symbol]["Close"].dropna()
+            if not close.empty:
+                out[symbol] = (round(float(close.iloc[-1]), 4), close.index[-1].date().isoformat())
+        return out
+
     def history(self, symbol: str, start: date, end: date) -> list[Bar]:
         import yfinance as yf
 
@@ -190,6 +221,12 @@ class BacktestHistory:
             Bar(t=day.isoformat(), o=round(c, 4), h=round(c, 4), l=round(c, 4), c=round(c, 4))
             for day, c in rows
         ]
+
+
+def _last_close(fallback: BacktestHistory, symbol: str) -> tuple[float, str] | None:
+    today = date.today()
+    bars = fallback.history(symbol, today - timedelta(days=10), today)
+    return (bars[-1].c, bars[-1].t) if bars else None
 
 
 class PriceService:
@@ -281,6 +318,82 @@ class PriceService:
     def close(self) -> None:
         self.stop()
         self._executor.shutdown(wait=False, cancel_futures=True)
+
+    # ---------------------------------------------------------- latest prices
+
+    def _last_file(self) -> Path | None:
+        return self.cache_dir / "last-prices.json" if self.cache_dir is not None else None
+
+    def _read_last(self) -> dict[str, Any]:
+        path = self._last_file()
+        try:
+            data = json.loads(path.read_text(encoding="utf-8")) if path else {}
+        except (OSError, ValueError):
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def _write_last(self, data: dict[str, Any]) -> None:
+        path = self._last_file()
+        if path is None:
+            return
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(json.dumps(data, sort_keys=True), encoding="utf-8")
+        tmp.replace(path)
+
+    def _fetch_last(self, symbols: list[str]) -> dict[str, tuple[float, str]]:
+        """Asks the source (in the yfinance thread) for the latest price of each symbol."""
+        found: dict[str, tuple[float, str]] = {}
+        closes = getattr(self.source, "last_closes", None)
+        for start in range(0, len(symbols), LAST_PRICE_BATCH):
+            batch = symbols[start : start + LAST_PRICE_BATCH]
+            try:
+                if closes is not None:
+                    found.update(closes(batch))
+                else:
+                    found.update(
+                        {s: (q.price, q.as_of) for s, q in self.source.quotes(batch).items()}
+                    )
+            except Exception as exc:  # yfinance fails in many different ways
+                log.warning("latest prices unavailable: %s", exc)
+        return found
+
+    def latest_prices(self, symbols: list[str]) -> dict[str, tuple[float, str]]:
+        """Latest price and its date for each symbol: (price, as_of ISO).
+
+        In order: the quotes already polled, a disk cache of `LAST_PRICE_TTL`, the
+        source (one batched query) and, offline, the backtest's closing prices.
+        Symbols with no price anywhere are left out. Safe to call from any thread.
+        """
+        wanted = [s for s in dict.fromkeys(symbols) if s]
+        out: dict[str, tuple[float, str]] = {}
+        for symbol in wanted:
+            quote = self.quotes.get(symbol)
+            if quote and quote.get("price"):
+                out[symbol] = (float(quote["price"]), str(quote.get("as_of") or ""))
+        cache = self._read_last()
+        now = time.time()
+        for symbol in wanted:
+            entry = cache.get(symbol)
+            if symbol not in out and entry and now - entry.get("fetched_at", 0) < LAST_PRICE_TTL:
+                out[symbol] = (float(entry["price"]), str(entry.get("as_of") or ""))
+        missing = [s for s in wanted if s not in out]
+        if missing:
+            try:
+                fetched = self._executor.submit(self._fetch_last, missing).result(timeout=120)
+            except Exception as exc:
+                log.warning("latest prices unavailable: %s", exc)
+                fetched = {}
+            for symbol, (price, as_of) in fetched.items():
+                cache[symbol] = {"price": price, "as_of": as_of, "fetched_at": now}
+                out[symbol] = (price, as_of)
+            if fetched:
+                self._write_last(cache)
+            if self.fallback is not None:
+                for symbol in missing:
+                    if symbol not in out and (last := _last_close(self.fallback, symbol)):
+                        out[symbol] = last
+        return out
 
     # --------------------------------------------------------------- history
 

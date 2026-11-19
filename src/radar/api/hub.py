@@ -27,6 +27,8 @@ RANKING_UPDATE = "ranking.update"
 MARKET_EVENT_NEW = "market_event.new"
 # The server changed what the dashboard should show (replay jump, new reference data).
 FEED_RESET = "feed.reset"
+# Signals already on screen got new data (price and market value): a list of views.
+SIGNALS_UPDATE = "signals.update"
 
 
 class Subscription:

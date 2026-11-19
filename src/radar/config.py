@@ -74,6 +74,17 @@ class SourcesConfig:
 
 
 @dataclass(frozen=True)
+class DashboardConfig:
+    """What the dashboard shows by default."""
+
+    # The backtests only found the "avoid" filters useful on liquid stocks, so avoid
+    # signals of companies below either threshold (or of unknown liquidity) are hidden
+    # unless the operator turns on "Show small caps".
+    avoid_min_price: float = 5.0  # latest price (US$)
+    avoid_min_market_value: float = 300_000_000.0  # price × shares outstanding (US$)
+
+
+@dataclass(frozen=True)
 class BacktestConfig:
     cost_roundtrip: float = 0.002  # 0.2% round trip
     horizons_months: tuple[int, ...] = (1, 3, 6)
@@ -108,6 +119,7 @@ class Settings:
     ai: AIConfig = field(default_factory=AIConfig)
     backtest: BacktestConfig = field(default_factory=BacktestConfig)
     sources: SourcesConfig = field(default_factory=SourcesConfig)
+    dashboard: DashboardConfig = field(default_factory=DashboardConfig)
 
     @property
     def db_path(self) -> Path:

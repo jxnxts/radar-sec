@@ -11,7 +11,9 @@ from typing import Any
 from urllib.parse import quote
 
 from radar.backtest.datasets import normalize_symbol
+from radar.config import DashboardConfig
 from radar.edgar import filing_index_url
+from radar.liquidity import liquidity_fields
 from radar.models import Signal
 from radar.signals import (
     ACTIVIST_13D,
@@ -89,10 +91,13 @@ def signal_view(
     outcome: dict[str, Any] | None = None,
     logo: bool = True,
     cached_ai: dict[str, str] | None = None,
+    liquidity: dict[str, Any] | None = None,
+    dashboard: DashboardConfig | None = None,
 ) -> dict[str, Any]:
     """`logo=False` when it is not certain the ticker still belongs to this company:
     a monogram is better than another company's logo. `cached_ai` holds the AI
-    summaries already generated for this signal, by language."""
+    summaries already generated for this signal, by language. `liquidity` is the
+    stored price and market value of the company (see radar.liquidity)."""
     d = signal.details
     published = published_at or signal.created_at or datetime.now(UTC)
     accessions = d.get("accessions") or [signal.trigger_accession]
@@ -136,6 +141,8 @@ def signal_view(
         "outcome": outcome,
         # Source of the signal and, for the extra sources, their own card fields.
         **signal_extras(signal),
+        # Latest price, market value and whether the dashboard shows it by default.
+        **liquidity_fields(signal.type, liquidity, dashboard or DashboardConfig()),
     }
 
 

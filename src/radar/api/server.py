@@ -75,6 +75,8 @@ def build_app(settings: Settings, options: ServerOptions | None = None) -> FastA
             fallback=BacktestHistory(settings.cache_dir / "prices.duckdb"),
             tracked=engine.tracked_tickers,
         )
+        if isinstance(engine, LiveEngine):
+            engine.use_prices(prices.latest_prices)
     app = create_app(
         engine=engine,
         hub=hub,
