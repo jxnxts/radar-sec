@@ -54,6 +54,7 @@ uv run radar serve                         # API, WebSocket, collector and dashb
 | `RADAR_LANG` | no | Language for AI summaries, alerts and CLI output: `en` or `pt-BR`. Overrides `lang` in `radar.toml`. Default: `en`. |
 | `RADAR_DATA_DIR` | no | Where the database and cache live. Default: `./data`. |
 | `RADAR_CONFIG` | no | Parameters file. Default: `./radar.toml`. |
+| `TIINGO_API_KEY` | no | Paid. Turns on the Tiingo News feed of the news source (and `radar phase2 collect --prices tiingo`). Without it, nothing calls Tiingo. |
 
 ### `radar.toml`
 
@@ -83,6 +84,16 @@ uv run radar watch --interval 60   # repeat every 60 seconds until Ctrl+C
 Each cycle reads the EDGAR feeds, stores new filings (without duplicates), extracts their data, applies the rules and sends alerts. Useful options: `--alert console --alert macos` (channels for this run only), `--no-ai` (template summaries only), `--lang pt-BR` (language for this run) and `-v` (more logging).
 
 The first run downloads a few hundred of the day's filings, which takes about a minute. After that each cycle only fetches what is new and takes a few seconds. When the radar sees an open-market purchase it also fetches the issuer's Form 4 filings from the last 44 days, so `cluster_buy` sees purchases made before the monitor was started.
+
+### `radar news` and `radar forward-summary`
+
+```bash
+uv run radar news --limit 20          # poll the news feeds once; print the items matched to a ticker
+uv run radar forward-summary --days 7 # what the forward-test log recorded, per source and day
+```
+
+`radar watch` and `radar serve` already poll the news and write the forward-test log; these two
+commands are for checking them by hand. See [News and the forward-test log](#news-and-the-forward-test-log).
 
 ### `radar signals`
 
@@ -268,8 +279,9 @@ src/radar/
   research/         phase 2: SEC outcomes and price tape, price sources, variants, 10-K text,
                     calendar portfolios, report (`radar phase2`)
   sectors.py        issuer sector from the SIC code
-  sources/          extra sources (form144, eightk, thirteenf, short): rules, history, live
-                    pollers, source tables, new-signals backtest and report
+  sources/          extra sources (form144, eightk, thirteenf, short, news): rules, history,
+                    live pollers, source tables, new-signals backtest and report
+  forward.py        append-only forward-test log (data/forward/YYYY-MM-DD.jsonl.gz)
   api/              dashboard server (REST, WebSocket, live and replay engines, prices, logos)
 web/                dashboard (React, TypeScript, Vite)
 tests/              offline tests, with real filings in tests/fixtures
@@ -421,6 +433,54 @@ focused signal (insider buys, Form 144, 8-K, 13F, short interest, short volume a
 AI summaries cover the new signals within the same hourly cap. Turn sources on or off in
 `radar.toml` (`[sources] enabled`).
 
+## News and the forward-test log
+
+Phase 1 of the "beat the SPY" research: from now on, every day the radar runs is clean,
+look-ahead-free forward-test data. Two pieces do that.
+
+**News source** (`src/radar/sources/news/`, `[news]` in `radar.toml`). Free inputs only, by default:
+
+| Feed | URL | Status (checked 2026-11-19) |
+|---|---|---|
+| PR Newswire | `https://www.prnewswire.com/rss/news-releases-list.rss` | works; only the latest 20 releases (~35 min), hence the 5-minute pace |
+| Business Wire | `https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeEFpRXg==` | **off**: the feed answers, but `feed.businesswire.com/robots.txt` disallows `/rss/` for generic agents. The adapter exists (`wires = ["prnewswire", "businesswire"]`), and the client checks robots.txt before every wire, so it stays refused while that rule stands |
+| GlobeNewswire | public-company RSS | **dropped**: answers 403 to automated clients (also its `robots.txt`) |
+| GDELT DOC 2.0 | `https://api.gdeltproject.org/api/v2/doc/doc` | implemented, **off by default** (`gdelt = false`): it answered 429 to every request from the test machine; turn it on where it answers |
+| Tiingo News (paid) | `https://api.tiingo.com/tiingo/news` | only when `TIINGO_API_KEY` is set; the key goes in the `Authorization` header |
+
+Each item is stored (`news_items`) with its feed, URL, title, summary, `published_at` as the
+feed states it, `seen_at` (the UTC time the radar fetched it: the point-in-time timestamp for
+any backtest), the matched tickers and CIKs, keyword tags and a dedupe key (canonical URL plus
+normalized title; the same URL or the same headline is never stored twice).
+
+Ticker matching uses the SEC registry (`company_tickers.json`) and never guesses: explicit
+exchange tickers first (`(NASDAQ: XYZ)`, `NYSE: XYZ`, `NYSE symbol-XYZ`; non-US exchanges are
+ignored), then provider tickers (Tiingo) that the registry knows, then exact company names
+followed by a corporate suffix ("Matador Resources Company", "Matson, Inc.") whose name equals
+exactly one registrant. On a live sample, about 30% of the wire items named a listed company.
+Tags are deterministic keyword rules: `earnings`, `guidance`, `mna`, `offering`, `buyback`,
+`fda`, `lawsuit`, `exec_change`, `dividend`. No LLM scores the news yet; `news/scoring.py`
+holds the hook (`NewsScorer`), whose result is stored next to the item.
+
+Matched items become market events: they show on the bottom tape and in "this company across
+all sources" (last 30 days). The news hosts get their own polite client: a minimum of 5 s
+between requests to the same host, robots.txt checked for the RSS wires, conditional requests, no retries inside a poll and a growing
+pause (or the server's `Retry-After`) after a 403/429/5xx. The SEC rate limiter is not used for
+them.
+
+**Forward-test log** (`src/radar/forward.py`, `[forward]` in `radar.toml`). Every signal the
+radar stores (all sources), every market event, every news item (matched or not) and a daily
+closing-price snapshot (SPY, IWM and the tickers of recent signals and events, on the first
+cycle after 21:00 UTC on weekdays) are appended to `data/forward/YYYY-MM-DD.jsonl.gz`, one
+JSON record per line with `kind`, `source`, `key`, `seen_at` and `data`. The partition is the
+UTC day of `seen_at`. Files are only opened in append mode (each write is a new gzip member, so
+`zcat` reads them as one stream); a past day is never rewritten.
+
+```bash
+uv run radar forward-summary            # counts per source per day
+zcat data/forward/2026-11-19.jsonl.gz | head
+```
+
 ## Data sources and terms
 
 | Source | Used for | Terms |
@@ -431,6 +491,9 @@ AI summaries cover the new signals within the same hourly cap. Turn sources on o
 | [FINRA Query API](https://developer.finra.org) (consolidated short interest) and [daily short volume files](https://www.finra.org/finra-data/browse-catalog/short-sale-volume-data) | Short-data source | Public datasets, no credentials; a few requests per day, cached. |
 | [Yahoo Finance](https://finance.yahoo.com) via [yfinance](https://github.com/ranaroussi/yfinance) | Backtest prices, delayed dashboard quotes and charts | Unofficial API, not affiliated with Yahoo; data is for personal use under Yahoo's terms and comes with no guarantee. Quotes are delayed about 15 minutes. |
 | [Financial Modeling Prep](https://financialmodelingprep.com) public image endpoint, with [nvstly/icons](https://github.com/nvstly/icons) as fallback | Company logos on the dashboard | Logos are trademarks of their owners, fetched on demand and cached locally (`data/cache/logos/`), never committed. Only the ticker is sent. |
+| [PR Newswire](https://www.prnewswire.com/rss/) public RSS feed | News source | Public feed for personal use, allowed by its robots.txt; polled every 5 minutes with conditional requests, at most one request per host every 5 s. Headlines and links are stored locally; the dashboard links to the original. |
+| [GDELT DOC 2.0 API](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/) (off by default) | News source | Open data; at most one request every 5 s (GDELT's limit), backoff on 429. |
+| [Tiingo News](https://www.tiingo.com/documentation/news) (optional, paid) | News source | Your own Tiingo subscription and its terms; only with `TIINGO_API_KEY`. |
 | [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/python) | Optional AI summaries | Runs on your own Claude Code login/subscription and its terms. |
 
 ## Limitations

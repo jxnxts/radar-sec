@@ -52,6 +52,7 @@ O `.env` fica fora do git. Só uma variável é obrigatória.
 | `RADAR_LANG` | não | Idioma dos resumos com IA, dos alertas e da saída da CLI: `en` ou `pt-BR`. Tem prioridade sobre o `lang` do `radar.toml`. Padrão: `en`. |
 | `RADAR_DATA_DIR` | não | Onde guardar o banco e o cache. Padrão: `./data`. |
 | `RADAR_CONFIG` | não | Arquivo de parâmetros. Padrão: `./radar.toml`. |
+| `TIINGO_API_KEY` | não | Paga. Liga o feed Tiingo News da fonte de notícias (e o `radar phase2 collect --prices tiingo`). Sem ela, nada chama a Tiingo. |
 
 ### `radar.toml`
 
@@ -81,6 +82,16 @@ uv run radar watch --interval 60   # repete a cada 60 segundos, até Ctrl+C
 Cada ciclo lê os feeds do EDGAR, grava os filings novos (sem duplicar), extrai os dados, aplica as regras e dispara os alertas. Opções úteis: `--alert console --alert macos` (canais só para esta execução), `--no-ai` (resumo apenas por modelo fixo), `--lang pt-BR` (idioma desta execução) e `-v` (mais detalhes no log).
 
 Na primeira execução o radar baixa algumas centenas de filings do dia, o que leva por volta de um minuto. Depois disso cada ciclo busca só o que chegou de novo e dura poucos segundos. Ao ver uma compra a mercado, o radar também busca os Form 4 dos últimos 44 dias do mesmo emissor; assim o `cluster_buy` enxerga compras feitas antes de o monitor ser ligado.
+
+### `radar news` e `radar forward-summary`
+
+```bash
+uv run radar news --limit 20          # lê os feeds de notícias uma vez; mostra as associadas a um ticker
+uv run radar forward-summary --days 7 # o que o registro do teste prospectivo gravou, por fonte e dia
+```
+
+O `radar watch` e o `radar serve` já leem as notícias e gravam o registro prospectivo; estes dois
+comandos servem para conferir à mão. Veja [Notícias e o registro do teste prospectivo](#notícias-e-o-registro-do-teste-prospectivo).
 
 ### `radar signals`
 
@@ -266,8 +277,9 @@ src/radar/
   research/         fase 2: desfechos e fita de preços da SEC, fontes de preço, variantes,
                     texto do 10-K, carteiras de calendário, relatório (`radar phase2`)
   sectors.py        setor do emissor pelo código SIC
-  sources/          fontes extras (form144, eightk, thirteenf, short): regras, histórico,
+  sources/          fontes extras (form144, eightk, thirteenf, short, news): regras, histórico,
                     coletores ao vivo, tabelas, backtest e relatório dos novos sinais
+  forward.py        registro do teste prospectivo, só de acréscimo (data/forward/AAAA-MM-DD.jsonl.gz)
   api/              servidor do painel (REST, WebSocket, motores ao vivo e replay, preços, logos)
 web/                painel (React, TypeScript, Vite)
 tests/              testes sem rede, com filings reais em tests/fixtures
@@ -420,6 +432,57 @@ sinal em foco (compras de insiders, Form 144, 8-K, 13F, short interest, volume v
 Os resumos com IA cobrem os sinais novos dentro do mesmo teto por hora. Ligue ou desligue fontes
 no `radar.toml` (`[sources] enabled`).
 
+## Notícias e o registro do teste prospectivo
+
+Fase 1 da pesquisa "bater o SPY": daqui em diante, cada dia em que o radar roda vira dado de
+teste prospectivo limpo, sem olhar o futuro. Duas peças fazem isso.
+
+**Fonte de notícias** (`src/radar/sources/news/`, `[news]` no `radar.toml`). Por padrão, só
+entradas gratuitas:
+
+| Feed | URL | Situação (verificada em 2026-11-19) |
+|---|---|---|
+| PR Newswire | `https://www.prnewswire.com/rss/news-releases-list.rss` | funciona; só os 20 comunicados mais recentes (~35 min), por isso o ritmo de 5 minutos |
+| Business Wire | `https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeEFpRXg==` | **desligado**: o feed responde, mas o `feed.businesswire.com/robots.txt` proíbe `/rss/` para agentes genéricos. O adaptador existe (`wires = ["prnewswire", "businesswire"]`) e o cliente consulta o robots.txt antes de cada feed, então ele segue recusado enquanto a regra valer |
+| GlobeNewswire | RSS de empresas abertas | **descartado**: responde 403 a clientes automáticos (inclusive no `robots.txt`) |
+| GDELT DOC 2.0 | `https://api.gdeltproject.org/api/v2/doc/doc` | implementado, **desligado por padrão** (`gdelt = false`): respondeu 429 a todas as requisições da máquina de teste; ligue onde ele responder |
+| Tiingo News (pago) | `https://api.tiingo.com/tiingo/news` | só com `TIINGO_API_KEY` definida; a chave vai no cabeçalho `Authorization` |
+
+Cada notícia é guardada (`news_items`) com feed, URL, título, resumo, `published_at` como o feed
+informa, `seen_at` (o horário UTC em que o radar a buscou: a referência de tempo de qualquer
+backtest), os tickers e CIKs associados, etiquetas e uma chave de deduplicação (URL canônica mais
+título normalizado; a mesma URL ou a mesma manchete nunca é guardada duas vezes).
+
+A associação a tickers usa o cadastro da SEC (`company_tickers.json`) e nunca chuta: primeiro os
+tickers explícitos com a bolsa (`(NASDAQ: XYZ)`, `NYSE: XYZ`, `NYSE symbol-XYZ`; bolsas de fora
+dos EUA são ignoradas), depois os tickers do provedor (Tiingo) que o cadastro conhece, por fim
+nomes exatos de empresa seguidos de sufixo societário ("Matador Resources Company",
+"Matson, Inc.") que batem com exatamente um registrante. Numa amostra ao vivo, cerca de 30% dos
+comunicados citavam uma empresa listada. As etiquetas são regras fixas de palavras-chave:
+`earnings`, `guidance`, `mna`, `offering`, `buyback`, `fda`, `lawsuit`, `exec_change`,
+`dividend`. Nenhum LLM pontua as notícias ainda; `news/scoring.py` tem o gancho (`NewsScorer`),
+cujo resultado fica guardado junto da notícia.
+
+As notícias associadas viram eventos de mercado: aparecem na fita de baixo e em "esta empresa em
+todas as fontes" (últimos 30 dias). Os sites de notícia têm um cliente próprio e educado: no
+mínimo 5 s entre requisições ao mesmo site, robots.txt consultado para os feeds RSS, requisições condicionais, nenhuma nova tentativa
+dentro da mesma leitura e uma pausa crescente (ou o `Retry-After` do servidor) depois de um
+403/429/5xx. O limitador da SEC não se aplica a eles.
+
+**Registro do teste prospectivo** (`src/radar/forward.py`, `[forward]` no `radar.toml`). Todo
+sinal que o radar guarda (de todas as fontes), todo evento de mercado, toda notícia (associada ou
+não) e uma foto diária dos preços de fechamento (SPY, IWM e os tickers dos sinais e eventos
+recentes, no primeiro ciclo depois das 21:00 UTC em dias úteis) são acrescentados a
+`data/forward/AAAA-MM-DD.jsonl.gz`, um registro JSON por linha com `kind`, `source`, `key`,
+`seen_at` e `data`. A partição é o dia UTC do `seen_at`. Os arquivos só são abertos para
+acréscimo (cada gravação é um novo membro gzip, e o `zcat` lê tudo como um fluxo só); um dia
+passado nunca é reescrito.
+
+```bash
+uv run radar forward-summary            # contagem por fonte e por dia
+zcat data/forward/2026-11-19.jsonl.gz | head
+```
+
 ## Fontes de dados e termos de uso
 
 | Fonte | Para quê | Termos |
@@ -430,6 +493,9 @@ no `radar.toml` (`[sources] enabled`).
 | [API de consulta da FINRA](https://developer.finra.org) (short interest consolidado) e [arquivos diários de volume vendido](https://www.finra.org/finra-data/browse-catalog/short-sale-volume-data) | Fonte de short | Conjuntos públicos, sem credencial; poucas requisições por dia, com cache. |
 | [Yahoo Finance](https://finance.yahoo.com) via [yfinance](https://github.com/ranaroussi/yfinance) | Preços do backtest, cotações atrasadas e gráficos do painel | API não oficial, sem vínculo com o Yahoo; os dados são para uso pessoal, nos termos do Yahoo, e sem garantia. Cotações com cerca de 15 minutos de atraso. |
 | Endpoint público de imagens da [Financial Modeling Prep](https://financialmodelingprep.com), com o [nvstly/icons](https://github.com/nvstly/icons) como reserva | Logos das empresas no painel | Os logos são marcas dos seus donos, baixados sob demanda e guardados só localmente (`data/cache/logos/`), nunca versionados. A requisição leva só o ticker. |
+| Feed RSS público da [PR Newswire](https://www.prnewswire.com/rss/) | Fonte de notícias | Feed público para uso pessoal, permitido pelo robots.txt; lido a cada 5 minutos com requisições condicionais, no máximo uma requisição por site a cada 5 s. Manchetes e links ficam só no banco local; o painel leva ao original. |
+| [API GDELT DOC 2.0](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/) (desligada por padrão) | Fonte de notícias | Dados abertos; no máximo uma requisição a cada 5 s (o limite do GDELT), pausa em 429. |
+| [Tiingo News](https://www.tiingo.com/documentation/news) (opcional, pago) | Fonte de notícias | A sua assinatura da Tiingo e os termos dela; só com `TIINGO_API_KEY`. |
 | [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/python) | Resumos com IA (opcionais) | Usa o seu login/assinatura do Claude Code e os termos dele. |
 
 ## Limitações
