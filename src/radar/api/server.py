@@ -14,8 +14,10 @@ from radar.api.live import LiveEngine
 from radar.api.logos import LogoService
 from radar.api.prices import BacktestHistory, PriceService, YahooPriceSource
 from radar.api.replay import ReplayEngine
-from radar.backtest.replay import latest_replay
+from radar.backtest.replay import latest_replay, read_replay
 from radar.config import Settings, sec_user_agent
+from radar.funds import FUND_EXCLUDED_TYPES, FundClassifier
+from radar.sectors import cached_profiles
 
 # Default replay start: February 2020, just before the pandemic crash, when
 # insider buying took off.
@@ -45,9 +47,17 @@ def build_app(settings: Settings, options: ServerOptions | None = None) -> FastA
                 f"no replay file in {settings.reports_dir}/ "
                 "(backtest-*-replay.jsonl.gz). Run `radar backtest` or `radar replay-build`."
             )
-        engine: LiveEngine | ReplayEngine = ReplayEngine.from_file(
-            path,
+        # A replay file built before the fund exclusion still has their insider buys.
+        is_fund = FundClassifier(settings.signals, cached_profiles(settings.cache_dir))
+        records = [
+            r
+            for r in read_replay(path)
+            if r.type not in FUND_EXCLUDED_TYPES or not is_fund(r.cik, r.name)
+        ]
+        engine: LiveEngine | ReplayEngine = ReplayEngine(
+            records,
             hub,
+            source=path.name,
             start=options.replay_start or DEFAULT_REPLAY_START,
             days_per_minute=options.replay_days_per_minute,
         )

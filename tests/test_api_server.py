@@ -78,3 +78,27 @@ def test_replay_start_option_moves_the_clock(settings):
     )
     assert application.state.serves_panel is False
     assert application.state.engine.status()["replay"]["date"] == "2021-05-01"
+
+
+def test_replay_leaves_out_insider_buys_of_funds(settings):
+    import json
+
+    cache = settings.cache_dir
+    cache.mkdir(parents=True)
+    (cache / "sectors.json").write_text(json.dumps({"300": "", "200": "3721"}))
+    (cache / "investment-companies.json").write_text(json.dumps({"300": True}))
+    write_replay(
+        settings.reports_dir / "backtest-2026-01-01-replay.jsonl.gz",
+        [
+            record("2020-02-10"),
+            record("2020-02-11", cik="200", name="Beta Inc", ticker="BETA"),
+            record("2020-02-12", cik="300", name="Eagle Point Credit Co", ticker="ECC"),
+            record("2020-02-13", cik="400", name="Nuveen Municipal Value Fund", ticker="NUV"),
+            record("2020-03-20", cik="500", name="Later Inc", ticker="LATE"),  # the clock's end
+        ],
+    )
+    application = build_app(
+        settings, ServerOptions(replay=True, prices=False, replay_start=date(2020, 3, 1))
+    )
+    shown = {s["company"] for s in application.state.engine.list_signals()}
+    assert shown == {"Acme Corp", "Beta Inc"}

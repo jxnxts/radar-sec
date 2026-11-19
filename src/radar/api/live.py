@@ -19,9 +19,10 @@ from radar.api.views import filing_view, logo_url, price_symbol, signal_view
 from radar.config import Settings
 from radar.db import NEW, Database
 from radar.edgar import normalize_cik
+from radar.funds import FUND_EXCLUDED_TYPES, is_fund
 from radar.http import SecClient, cache_path_for
 from radar.models import FilingRef, Signal
-from radar.sectors import UNKNOWN, SectorLookup
+from radar.sectors import UNKNOWN, SectorLookup, sector_for_sic
 from radar.sources.base import MarketEvent
 from radar.sources.runner import build_runner
 from radar.sources.store import SourceStore
@@ -131,7 +132,8 @@ class LiveEngine:
         db = Database(self.settings.db_path)
         self._watcher = self._factory(db, _Listener(self))
         self._client = self._watcher.client
-        self._sectors = SectorLookup(self._client)
+        # One SIC cache per process: the monitor's (it also decides what is a fund).
+        self._sectors = getattr(self._watcher, "sectors", None) or SectorLookup(self._client)
         had_tickers = bool(self._tickers)
         self._tickers = dict(self._watcher.tickers._load()) or self._tickers
         if self._tickers and not had_tickers:
@@ -150,9 +152,9 @@ class LiveEngine:
         db = self._watcher.db
         since = self._today() - timedelta(days=max(WINDOWS) + 15)
         for cik in db.issuers_without_sector(since, limit):
-            found = self._sectors.lookup(cik)
+            found = self._sectors.profile(cik)
             if found is not None:
-                db.set_sector(cik, *found)
+                db.set_sector(cik, found.sic, sector_for_sic(found.sic), found.investment_company)
         self._sectors.flush()
 
     def _sector_now(self, cik: str) -> str:
@@ -254,6 +256,19 @@ class LiveEngine:
 
     # ----------------------------------------------------------------- reading
 
+    def _hidden(self, signal: Signal) -> bool:
+        """Insider buy signals of funds stored before the exclusion existed (or while the
+        SEC registry was not answering) stay in the database but off the dashboard.
+        Call with the read lock held."""
+        if signal.type not in FUND_EXCLUDED_TYPES:
+            return False
+        stored = self._reader.issuer_profile(signal.issuer_cik) if signal.issuer_cik else None
+        sic, investment_company = stored or (None, None)
+        return is_fund(signal.issuer_name, sic, investment_company, self.settings.signals)
+
+    def _visible(self, signals: list[Signal]) -> list[Signal]:
+        return [s for s in signals if not self._hidden(s)]
+
     def _view(self, signal: Signal, sector: str | None = None) -> dict[str, Any]:
         if sector is None:
             sector = self._reader.sector_of(signal.issuer_cik) or "" if signal.issuer_cik else ""
@@ -275,7 +290,7 @@ class LiveEngine:
     ) -> list[dict[str, Any]]:
         since = since or self._today() - timedelta(days=FEED_DAYS)
         with self._read_lock:
-            signals = self._reader.list_signals(since=since, signal_type=signal_type)
+            signals = self._visible(self._reader.list_signals(since=since, signal_type=signal_type))
             signals.sort(key=lambda s: (s.signal_date, s.id or 0), reverse=True)
             return [self._view(s) for s in signals[:limit]]
 
@@ -288,12 +303,12 @@ class LiveEngine:
             return None
         with self._read_lock:
             signal = self._reader.get_signal(int(signal_id[1:]))
-            if signal is None:
+            if signal is None or self._hidden(signal):
                 return None
             view = self._view(signal)
             cik = signal.issuer_cik
             purchases = self._reader.issuer_purchases(cik) if cik else []
-            others = self._reader.issuer_signals(cik) if cik else []
+            others = self._visible(self._reader.issuer_signals(cik)) if cik else []
             previous = [self._view(s) for s in others if s.id != signal.id]
         today = self._today()
         return {
@@ -309,7 +324,7 @@ class LiveEngine:
 
     def company(self, cik: str) -> dict[str, Any] | None:
         with self._read_lock:
-            signals = self._reader.issuer_signals(cik)
+            signals = self._visible(self._reader.issuer_signals(cik))
             purchases = self._reader.issuer_purchases(cik)
             sector = self._reader.sector_of(cik) or UNKNOWN
             views = [self._view(s, sector) for s in signals]
@@ -332,7 +347,13 @@ class LiveEngine:
         today = self._today()
         with self._read_lock:
             rows = self._reader.purchase_totals(today - timedelta(days=days))
+            profiles = self._reader.issuer_profiles()
             first = self._reader.first_seen()
+        # Funds are not ranked either: their directors' buying is not an insider bet.
+        cfg = self.settings.signals
+        rows = [
+            r for r in rows if not is_fund(r["name"], *profiles.get(r["cik"], (None, None)), cfg)
+        ]
         for row in rows:
             row["logo_ok"] = self._logo_ok(row["cik"], row["ticker"])
         return build_ranking(
@@ -349,7 +370,7 @@ class LiveEngine:
     def tracked_tickers(self) -> list[str]:
         since = self._today() - timedelta(days=TRACKED_DAYS)
         with self._read_lock:
-            signals = self._reader.list_signals(since=since)
+            signals = self._visible(self._reader.list_signals(since=since))
         symbols: list[str] = []
         for signal in sorted(signals, key=lambda s: (s.signal_date, s.id or 0), reverse=True):
             symbol = price_symbol(signal.ticker)
@@ -383,7 +404,7 @@ class LiveEngine:
     def company_context(self, cik: str) -> dict[str, Any]:
         """Everything the radar knows about one company, across all sources."""
         with self._read_lock:
-            signals = self._reader.issuer_signals(cik)
+            signals = self._visible(self._reader.issuer_signals(cik))
             purchases = self._reader.issuer_purchases(cik)[:40]
             ticker = next((s.ticker for s in signals if s.ticker), "") or self._tickers.get(cik, "")
             context = company_context(self._source_store(), cik, ticker, today=self._today())

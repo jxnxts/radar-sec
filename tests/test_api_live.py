@@ -174,3 +174,73 @@ def test_api_over_the_live_engine(engine, tmp_path):
 
 def test_date_helper_used_by_fixture():
     assert TODAY == date(2026, 11, 17)
+
+
+# ------------------------------------------------- funds and liquidity
+
+
+def stored_signal(engine, kind, cik, name, ticker, day=TODAY):
+    """Writes a signal straight to the database, as an older version would have."""
+    from radar.db import Database
+    from radar.models import Signal
+
+    with Database(engine.settings.db_path) as db:
+        signal = Signal(
+            type=kind,
+            dedupe_key=f"{kind}:{cik}:{day}",
+            issuer_cik=cik,
+            issuer_name=name,
+            ticker=ticker,
+            signal_date=day,
+            score=60.0,
+            explanation="Stored earlier.",
+            trigger_accession=f"0000000000-26-{int(cik):06d}",
+            details={"accessions": []},
+        )
+        db.add_signal(signal)
+        return signal
+
+
+def test_fund_signals_already_stored_are_hidden_but_kept(engine, monkeypatch):
+    engine.run_cycle()
+    leo = stored_signal(
+        engine, "cluster_buy", "818972", "BNY MELLON STRATEGIC MUNICIPALS, INC.", "LEO"
+    )
+    dsm = stored_signal(
+        engine, "cluster_buy", "855887", "BNY MELLON STRATEGIC MUNICIPAL BOND FUND, INC.", "DSM"
+    )
+    # A fund by its registry profile only (the name says nothing).
+    eagle = stored_signal(engine, "big_officer_buy", "1604174", "Eagle Point Credit Co", "ECC")
+    from radar.db import Database
+
+    with Database(engine.settings.db_path) as db:
+        db.set_sector("1604174", "", "Unclassified", True)
+        db.set_sector("855887", "0000", "Unclassified")  # never checked: the name decides
+
+    listed = {s["company"] for s in engine.list_signals()}
+    assert listed == {"MP Materials Corp. / DE", "Perfect Moment Ltd."}
+    for hidden in (leo, dsm, eagle):
+        assert engine.signal_detail(f"l{hidden.id}") is None
+    assert engine.company("818972") is None
+    assert "LEO" not in engine.tracked_tickers()
+    assert engine.status()["totals"]["signals"] == 5  # nothing was deleted
+
+    real = engine._reader.purchase_totals
+    monkeypatch.setattr(
+        engine._reader,
+        "purchase_totals",
+        lambda since: [
+            *real(since),
+            {
+                "cik": "818972",
+                "name": "BNY MELLON STRATEGIC MUNICIPALS, INC.",
+                "ticker": "LEO",
+                "sector": "",
+                "value": 9e9,
+                "insiders": 3,
+                "filings": 3,
+                "last_date": TODAY.isoformat(),
+            },
+        ],
+    )
+    assert "LEO" not in [c["ticker"] for c in engine.ranking(7)["companies"]]
