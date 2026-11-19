@@ -166,6 +166,8 @@ O painel abre cada sinal novo sozinho. Se você clicar em outro, ele espera dois
 
 **Small caps.** Os backtests só encontraram evidência para os filtros de *evitar* (atraso de balanço, venda a descoberto lotada, saída de CEO/CFO, troca de auditor, cluster e venda grande de Form 144, falhas de entrega persistentes, falência) em ações líquidas. Por isso, por padrão, esses sinais só aparecem quando o último preço da empresa é de pelo menos US$ 5 e o valor de mercado (preço × ações em circulação da capa do 10-Q/10-K) de pelo menos US$ 300 mi; empresa de tamanho desconhecido conta como pequena. "Mostrar small caps", no painel de sinais, revela o resto (a escolha fica guardada no navegador), e os cartões de evitar mostram preço e valor de mercado. Limites: `[dashboard]` no `radar.toml`. Sinais de compra e de contexto nunca são escondidos.
 
+![Sala ao vivo: "Mostrar small caps" abaixo da contagem; cartões de evitar com preço e valor de mercado](docs/screenshots/live-small-caps-1920x1080.png)
+
 **Idioma.** O painel é bilíngue: inglês (padrão) e português do Brasil. O seletor EN / PT na faixa superior troca tudo na hora, inclusive números, moeda e datas (`US$ 2,2 mi` / `18 nov` em vez de `$2.2M` / `Nov 18`). A escolha fica guardada no navegador; na primeira visita vale o idioma do navegador.
 
 ![Painel em inglês](docs/screenshots/replay-1920x1080.png)

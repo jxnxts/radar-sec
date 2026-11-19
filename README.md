@@ -168,6 +168,8 @@ The dashboard opens each new signal by itself. If you click another one, it wait
 
 **Small caps.** The backtests only found evidence for the *avoid* filters (late filings, crowded shorts, CEO/CFO exits, auditor changes, Form 144 clusters and large planned sales, persistent fails-to-deliver, bankruptcies) on liquid stocks. So, by default, these signals are shown only when the company's latest price is at least $5 and its market value (price × shares outstanding from the 10-Q/10-K cover) at least $300M; a company of unknown size counts as small. "Show small caps" in the signals panel reveals the rest (the choice is remembered in the browser), and avoid cards show the price and market value. Thresholds: `[dashboard]` in `radar.toml`. Long and context signals are never hidden.
 
+![Live room: "Show small caps" under the signal count; avoid cards with price and market value](docs/screenshots/live-small-caps-1920x1080.png)
+
 **Language.** The dashboard is bilingual: English (default) and Brazilian Portuguese. The EN / PT toggle in the top bar switches everything live, including numbers, currency and dates (`$2.2M` / `Nov 18` vs `US$ 2,2 mi` / `18 nov`). The choice is remembered in the browser; the first visit follows the browser language.
 
 ![Dashboard in Portuguese](docs/screenshots/replay-pt-BR-1920x1080.png)
