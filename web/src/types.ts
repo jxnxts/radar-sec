@@ -131,6 +131,15 @@ export interface Signal {
   direction?: 'long' | 'avoid' | 'context'
   /** False for rules shown live but never backtested. */
   tested?: boolean
+  /** Latest price of the company (US$), when known. Older servers omit it. */
+  price?: number | null
+  price_as_of?: string | null
+  /** Latest price × shares outstanding (US$), when known. */
+  market_value?: number | null
+  /** Price and market value at or above the server thresholds; unknown counts as false. */
+  liquid?: boolean
+  /** Avoid-type signal: shown by default only when `liquid` (see "Show small caps"). */
+  liquidity_gated?: boolean
 }
 
 /** Something an extra source saw (a Form 144, an 8-K, a 13F, a short-data release). */
@@ -335,6 +344,8 @@ export interface Status {
   version?: string
   ws?: { clients: number }
   prices?: PricesStatus
+  /** Liquidity thresholds of the avoid signals (LIVE servers that send them). */
+  liquidity?: { min_price: number; min_market_value: number }
   sources?: SourceStatus[]
 }
 
@@ -358,6 +369,7 @@ export type ServerMessage =
   | { type: 'system.status'; seq: number; ts: string; data: Partial<Status> }
   | { type: 'ranking.update'; seq: number; ts: string; data: Rankings }
   | { type: 'feed.reset'; seq: number; ts: string; data: Pick<Snapshot, 'signals' | 'filings' | 'ranking'> }
+  | { type: 'signals.update'; seq: number; ts: string; data: Signal[] }
 
 export interface Bar {
   t: string

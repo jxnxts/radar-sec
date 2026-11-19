@@ -248,6 +248,12 @@ export const ptBR: Messages = {
     new: 'Novo',
     todayTitle: 'Variação no pregão mais recente. Cotação atrasada cerca de 15 minutos.',
     todayDelayed: 'Hoje · atrasado',
+    price: 'Preço',
+    marketValue: 'Valor de mercado',
+    sizeUnknown: 'Preço ou valor de mercado desconhecido',
+    smallCap: 'Small cap',
+    smallCapTitle:
+      'Abaixo dos limites de liquidez (ou de tamanho desconhecido): os sinais de evitar só foram testados em ações líquidas.',
   },
 
   feed: {
@@ -266,6 +272,14 @@ export const ptBR: Messages = {
     emptyTitle: 'Nenhum sinal por aqui',
     emptyAll: 'O radar avisa assim que uma regra disparar. Sinais reais são raros: alguns por dia.',
     emptyFiltered: 'Nenhum sinal deste tipo no período. Troque o filtro para ver os outros.',
+    smallCaps: 'Mostrar small caps',
+    smallCapsHidden: (n) => `${n} ${n === 1 ? 'oculto' : 'ocultos'}`,
+    smallCapsTitle: (limits) =>
+      'Os sinais de evitar (atraso de balanço, venda a descoberto lotada, saída de executivos...) só se ' +
+      'sustentaram em ações líquidas' +
+      (limits ? ` (${limits})` : '') +
+      ', por isso os outros ficam ocultos. Ative para vê-los.',
+    smallCapsLimits: (price, value) => `preço a partir de ${price}, valor de mercado a partir de ${value}`,
   },
 
   detail: {

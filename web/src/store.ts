@@ -24,6 +24,24 @@ export const MAX_EVENTS = 80
 export const FRESH_MS = 45_000
 /** After an operator click, the panel waits this long before following new signals again. */
 export const PIN_MS = 120_000
+/** Where the "Show small caps" choice is saved. */
+export const SMALL_CAPS_KEY = 'radar.showSmallCaps'
+
+function readSmallCaps(): boolean {
+  try {
+    return globalThis.localStorage?.getItem(SMALL_CAPS_KEY) === '1'
+  } catch {
+    return false // storage blocked (private mode, sandboxed iframe): default off
+  }
+}
+
+function writeSmallCaps(value: boolean): void {
+  try {
+    globalThis.localStorage?.setItem(SMALL_CAPS_KEY, value ? '1' : '0')
+  } catch {
+    // Not persisted, but the toggle still works for this session.
+  }
+}
 
 export interface PanelState {
   connection: ConnectionInfo
@@ -47,6 +65,8 @@ export interface PanelState {
   /** Source chips of the signal feed. */
   source: Source | 'all'
   window: '7' | '30'
+  /** Show avoid signals of small or unknown-liquidity companies (hidden by default). */
+  showSmallCaps: boolean
 }
 
 export const initialState: PanelState = {
@@ -68,6 +88,7 @@ export const initialState: PanelState = {
   filter: 'all',
   source: 'all',
   window: '7',
+  showSmallCaps: false,
 }
 
 /** Source of a signal; older servers send none, and those are all insider signals. */
@@ -75,11 +96,35 @@ export function sourceOf(signal: Signal): Source {
   return signal.source ?? 'insiders'
 }
 
-/** Signals that pass the feed filters (source chips and signal type). */
-export function visibleSignals(state: Pick<PanelState, 'signals' | 'filter' | 'source'>): Signal[] {
+/**
+ * Avoid-type signal of a small or unknown-liquidity company: the backtests only found the
+ * avoid filters useful on liquid stocks, so these are hidden unless "Show small caps" is on.
+ */
+export function isSmallCapAvoid(signal: Signal): boolean {
+  return signal.liquidity_gated === true && signal.liquid !== true
+}
+
+/** Whether the signal is shown under the current small-caps choice. */
+export function shownBySize(signal: Signal, showSmallCaps: boolean | undefined): boolean {
+  return showSmallCaps === true || !isSmallCapAvoid(signal)
+}
+
+/** Signals that pass the feed filters (source chips, signal type and company size). */
+export function visibleSignals(
+  state: Pick<PanelState, 'signals' | 'filter' | 'source'> & Partial<Pick<PanelState, 'showSmallCaps'>>,
+): Signal[] {
   return state.signals.filter(
-    (s) => (state.source === 'all' || sourceOf(s) === state.source) && (state.filter === 'all' || s.type === state.filter),
+    (s) =>
+      (state.source === 'all' || sourceOf(s) === state.source) &&
+      (state.filter === 'all' || s.type === state.filter) &&
+      shownBySize(s, state.showSmallCaps),
   )
+}
+
+/** Signals of the current source/type filters hidden only because they are small caps. */
+export function hiddenSmallCaps(state: Pick<PanelState, 'signals' | 'filter' | 'source' | 'showSmallCaps'>): number {
+  if (state.showSmallCaps) return 0
+  return visibleSignals({ ...state, showSmallCaps: true }).filter(isSmallCapAvoid).length
 }
 
 function mergeEvents(current: MarketEvent[], incoming: MarketEvent[]): MarketEvent[] {
@@ -104,9 +149,13 @@ function mergeFilings(current: Filing[], incoming: Filing[]): Filing[] {
   return merged.slice(0, MAX_FILINGS)
 }
 
+function firstShown(signals: Signal[], showSmallCaps: boolean): string | null {
+  return signals.find((s) => shownBySize(s, showSmallCaps))?.id ?? null
+}
+
 function keepSelection(state: PanelState, signals: Signal[]): string | null {
   if (state.selectedId && signals.some((s) => s.id === state.selectedId)) return state.selectedId
-  return signals[0]?.id ?? null
+  return firstShown(signals, state.showSmallCaps)
 }
 
 export function applySnapshot(
@@ -158,7 +207,9 @@ export function applyEvent(
       const signal = message.data
       if (state.signals.some((s) => s.id === signal.id)) return { seq }
       const signals = [signal, ...state.signals].slice(0, MAX_SIGNALS)
-      const follow = now >= state.pinnedUntil || state.selectedId === null
+      // A hidden small-cap avoid signal never takes the focus.
+      const follow =
+        shownBySize(signal, state.showSmallCaps) && (now >= state.pinnedUntil || state.selectedId === null)
       return {
         seq,
         signals,
@@ -188,9 +239,14 @@ export function applyEvent(
         filings: mergeFilings([], message.data.filings),
         ranking: message.data.ranking,
         arrivals: {},
-        selectedId: signals[0]?.id ?? null,
+        selectedId: firstShown(signals, state.showSmallCaps),
         pinnedUntil: 0,
       }
+    }
+    case 'signals.update': {
+      const updated = new Map(message.data.map((signal) => [signal.id, signal]))
+      if (!state.signals.some((s) => updated.has(s.id))) return { seq }
+      return { seq, signals: state.signals.map((s) => updated.get(s.id) ?? s) }
     }
     default:
       return { seq }
@@ -205,10 +261,12 @@ interface Actions {
   setFilter: (filter: SignalType | 'all') => void
   setSource: (source: Source | 'all') => void
   setWindow: (window: '7' | '30') => void
+  setShowSmallCaps: (show: boolean) => void
 }
 
 export const usePanel = create<PanelState & Actions>((set) => ({
   ...initialState,
+  showSmallCaps: readSmallCaps(),
   receive: (message) =>
     set((state) =>
       message.type === 'snapshot'
@@ -217,10 +275,19 @@ export const usePanel = create<PanelState & Actions>((set) => ({
     ),
   setConnection: (connection) => set({ connection }),
   select: (id) => set({ selectedId: id, pinnedUntil: Date.now() + PIN_MS }),
-  follow: () => set((state) => ({ pinnedUntil: 0, selectedId: state.signals[0]?.id ?? null })),
+  follow: () => set((state) => ({ pinnedUntil: 0, selectedId: firstShown(state.signals, state.showSmallCaps) })),
   setFilter: (filter) => set({ filter }),
   setSource: (source) => set({ source }),
   setWindow: (window) => set({ window }),
+  setShowSmallCaps: (showSmallCaps) => {
+    writeSmallCaps(showSmallCaps)
+    set((state) => {
+      const selected = state.signals.find((s) => s.id === state.selectedId)
+      // Hiding the signal in focus moves the focus to the first one still shown.
+      const keep = selected !== undefined && shownBySize(selected, showSmallCaps)
+      return { showSmallCaps, selectedId: keep ? state.selectedId : firstShown(state.signals, showSmallCaps) }
+    })
+  },
 }))
 
 export function isFresh(arrivals: Record<string, number>, id: string, now: number): boolean {

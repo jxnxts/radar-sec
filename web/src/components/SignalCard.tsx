@@ -36,6 +36,35 @@ export function OutcomeBadge({ outcome }: { outcome: Outcome }) {
   )
 }
 
+/** Price and market value on avoid cards: they are shown by default only for liquid companies. */
+function LiquidityLine({ signal }: { signal: Signal }) {
+  const { t, f } = useI18n()
+  const known = signal.price != null || signal.market_value != null
+  return (
+    <span className="card__liq">
+      {known ? (
+        <>
+          <span className="liq">
+            <span className="liq__label">{t.card.price}</span>
+            <span className="liq__value">{f.money(signal.price)}</span>
+          </span>
+          <span className="liq">
+            <span className="liq__label">{t.card.marketValue}</span>
+            <span className="liq__value">{f.usd(signal.market_value)}</span>
+          </span>
+        </>
+      ) : (
+        <span className="liq liq--unknown">{t.card.sizeUnknown}</span>
+      )}
+      {signal.liquid ? null : (
+        <span className="tag tag--smallcap" title={t.card.smallCapTitle}>
+          {t.card.smallCap}
+        </span>
+      )}
+    </span>
+  )
+}
+
 interface SignalCardProps {
   signal: Signal
   quote?: Quote
@@ -110,6 +139,8 @@ export function SignalCard({ signal, quote, selected, fresh, now, onSelect }: Si
           <span className="card__value">{headline}</span>
           <span className="card__count">{countLine}</span>
         </span>
+
+        {signal.liquidity_gated ? <LiquidityLine signal={signal} /> : null}
 
         <span className="card__people">
           {people.map((person) => (

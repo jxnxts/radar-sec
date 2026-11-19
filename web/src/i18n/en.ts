@@ -252,6 +252,12 @@ export const en = {
     new: 'New',
     todayTitle: 'Change in the latest session. Quote delayed about 15 minutes.',
     todayDelayed: 'Today · delayed',
+    price: 'Price',
+    marketValue: 'Mkt value',
+    sizeUnknown: 'Price or market value unknown',
+    smallCap: 'Small cap',
+    smallCapTitle:
+      'Below the liquidity thresholds (or of unknown size): avoid signals were only tested on liquid stocks.',
   },
 
   feed: {
@@ -269,6 +275,13 @@ export const en = {
     emptyTitle: 'No signals here',
     emptyAll: 'The radar alerts you as soon as a rule fires. Real signals are rare: a few a day.',
     emptyFiltered: 'No signals of this type in the period. Change the filter to see the others.',
+    smallCaps: 'Show small caps',
+    smallCapsHidden: (n: number) => `${n} hidden`,
+    smallCapsTitle: (limits: string | null) =>
+      'Avoid signals (late filings, crowded shorts, executive exits...) only held up on liquid stocks' +
+      (limits ? ` (${limits})` : '') +
+      ', so the others are hidden. Turn this on to see them.',
+    smallCapsLimits: (price: string, value: string) => `price from ${price}, market value from ${value}`,
   },
 
   detail: {

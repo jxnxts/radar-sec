@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useI18n } from '../i18n'
 import { useNow } from '../lib/hooks'
-import { isFresh, usePanel, visibleSignals } from '../store'
+import { hiddenSmallCaps, isFresh, shownBySize, usePanel, visibleSignals } from '../store'
 import { SOURCES, TYPES_BY_SOURCE, type Source } from '../types'
 import { SourceGlyph } from './glyphs'
 import { Panel } from './Panel'
@@ -10,7 +10,7 @@ import { SignalCard } from './SignalCard'
 const FILTERS: Array<Source | 'all'> = ['all', ...SOURCES]
 
 export function SignalFeed() {
-  const { t } = useI18n()
+  const { t, f } = useI18n()
   const signals = usePanel((s) => s.signals)
   const arrivals = usePanel((s) => s.arrivals)
   const quotes = usePanel((s) => s.quotes)
@@ -23,14 +23,23 @@ export function SignalFeed() {
   const select = usePanel((s) => s.select)
   const follow = usePanel((s) => s.follow)
   const setFilter = usePanel((s) => s.setFilter)
+  const showSmallCaps = usePanel((s) => s.showSmallCaps)
+  const setShowSmallCaps = usePanel((s) => s.setShowSmallCaps)
+  const liquidity = usePanel((s) => s.status?.liquidity)
   const now = useNow(1000)
   const list = useRef<HTMLOListElement>(null)
 
   const visible = useMemo(
-    () => visibleSignals({ signals, filter, source }),
-    [signals, filter, source],
+    () => visibleSignals({ signals, filter, source, showSmallCaps }),
+    [signals, filter, source, showSmallCaps],
   )
-  const newest = signals[0]
+  const hidden = useMemo(
+    () => hiddenSmallCaps({ signals, filter, source, showSmallCaps }),
+    [signals, filter, source, showSmallCaps],
+  )
+  // The toggle only shows up when there is something for it to do.
+  const hasGated = useMemo(() => signals.some((s) => s.liquidity_gated), [signals])
+  const newest = signals.find((s) => shownBySize(s, showSmallCaps))
   const newestFresh = newest ? isFresh(arrivals, newest.id, now) : false
   const pinned = pinnedUntil > now
 
@@ -94,6 +103,24 @@ export function SignalFeed() {
           {pinned ? t.feed.pinned(Math.ceil((pinnedUntil - now) / 1000)) : t.feed.following}
         </button>
       </div>
+
+      {hasGated ? (
+        <div className="feed__caps">
+          <button
+            type="button"
+            className="caps-toggle"
+            aria-pressed={showSmallCaps}
+            onClick={() => setShowSmallCaps(!showSmallCaps)}
+            title={t.feed.smallCapsTitle(
+              liquidity ? t.feed.smallCapsLimits(f.money(liquidity.min_price, 0), f.usd(liquidity.min_market_value)) : null,
+            )}
+          >
+            <span className="caps-toggle__box" aria-hidden="true" />
+            {t.feed.smallCaps}
+          </button>
+          {hidden > 0 ? <span className="feed__hidden">{t.feed.smallCapsHidden(hidden)}</span> : null}
+        </div>
+      ) : null}
 
       <p className="sr-only" role="status" aria-live="polite">
         {announcement}
