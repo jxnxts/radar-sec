@@ -164,6 +164,8 @@ Uma tela cheia, escura e densa, com os sinais chegando por WebSocket.
 
 O painel abre cada sinal novo sozinho. Se você clicar em outro, ele espera dois minutos antes de voltar a seguir os novos (ou clique em "Fixado" para voltar já). As setas para cima e para baixo percorrem os sinais.
 
+**Small caps.** Os backtests só encontraram evidência para os filtros de *evitar* (atraso de balanço, venda a descoberto lotada, saída de CEO/CFO, troca de auditor, cluster e venda grande de Form 144, falhas de entrega persistentes, falência) em ações líquidas. Por isso, por padrão, esses sinais só aparecem quando o último preço da empresa é de pelo menos US$ 5 e o valor de mercado (preço × ações em circulação da capa do 10-Q/10-K) de pelo menos US$ 300 mi; empresa de tamanho desconhecido conta como pequena. "Mostrar small caps", no painel de sinais, revela o resto (a escolha fica guardada no navegador), e os cartões de evitar mostram preço e valor de mercado. Limites: `[dashboard]` no `radar.toml`. Sinais de compra e de contexto nunca são escondidos.
+
 **Idioma.** O painel é bilíngue: inglês (padrão) e português do Brasil. O seletor EN / PT na faixa superior troca tudo na hora, inclusive números, moeda e datas (`US$ 2,2 mi` / `18 nov` em vez de `$2.2M` / `Nov 18`). A escolha fica guardada no navegador; na primeira visita vale o idioma do navegador.
 
 ![Painel em inglês](docs/screenshots/replay-1920x1080.png)
@@ -198,7 +200,9 @@ No replay cada sinal traz o **desfecho medido pelo backtest**: o retorno em 1, 3
 | `GET /api/company/{cik}/context` | Uma empresa em todas as fontes: sinais, compras de insiders, Form 144, 8-K, 13F e short. |
 | `POST /api/replay/control` | REPLAY: `{"paused": true}`, `{"speed": 5}` ou `{"seek": "2021-03-01"}`. |
 
-O WebSocket fica em `/ws`. Ao conectar, o servidor envia um `snapshot` com tudo o que a tela precisa; depois, eventos numerados (`seq`): `signal.new`, `filing.new`, `price.tick`, `system.status`, `ranking.update`, `feed.reset` e `market_event.new` (um evento das fontes extras). O cliente reconecta sozinho, com espera crescente, e recebe um snapshot novo: nada se perde. O servidor manda códigos (tipos de filing, setores, cargos, estados) e mapas `{"en", "pt-BR"}` para os textos gerados (explicações, resumos, veredito), e por isso o painel troca de idioma sem buscar nada de novo.
+Os sinais AO VIVO também trazem `price`, `price_as_of`, `market_value`, `liquid` e `liquidity_gated` (sinal de evitar escondido por padrão se não for `liquid`). O preço vem do serviço de cotações (cache de 12 horas); as ações em circulação, da API "company concept" da SEC, no máximo uma vez por dia por empresa.
+
+O WebSocket fica em `/ws`. Ao conectar, o servidor envia um `snapshot` com tudo o que a tela precisa; depois, eventos numerados (`seq`): `signal.new`, `filing.new`, `price.tick`, `system.status`, `ranking.update`, `feed.reset`, `market_event.new` (um evento das fontes extras) e `signals.update` (sinais já na tela com preço e valor de mercado novos). O cliente reconecta sozinho, com espera crescente, e recebe um snapshot novo: nada se perde. O servidor manda códigos (tipos de filing, setores, cargos, estados) e mapas `{"en", "pt-BR"}` para os textos gerados (explicações, resumos, veredito), e por isso o painel troca de idioma sem buscar nada de novo.
 
 ## Arquitetura
 
@@ -284,6 +288,7 @@ Detalhes que mudam o resultado:
 - **O sinal nasce no arquivamento.** A data do sinal é o dia em que o Form 4 chegou à SEC, nunca o dia da transação. O cluster olha as compras feitas nos 14 dias anteriores, e só as que já estavam públicas.
 - **"Distintos" é para valer.** Um Form 4 conjunto (fundo, gestora e sócio) conta como um insider. Dois Form 4 que relatam a mesma transação com a mesma posição final também.
 - **Emendas não contam.** Form 4/A e 13D/A repetem informação já divulgada.
+- **Fundos ficam de fora.** `cluster_buy` e `big_officer_buy` ignoram fundos fechados e veículos parecidos: conselheiros e gestora comprando cotas do fundo não é uma aposta de insider no negócio. Um emissor é fundo quando o SIC (do cadastro da SEC) é 6722 ou 6726 (escritórios de investimento; 6798, REITs, continua) ou quando não tem SIC (fundos registrados como o BNY Mellon Strategic Municipals aparecem com `0000`) e entrega relatórios de fundo registrado (N-CSR, NPORT-P, N-CEN...). Sem resposta do cadastro, decide uma heurística de nome bem restrita ("Municipal Income Fund", "Credit Trust"). BDCs entregam 10-Q e continuam. A mesma regra vale ao vivo, no backtest e no painel (sinais de fundos já gravados ficam escondidos, não apagados). Ajustes: `exclude_funds`, `fund_sic_codes` e `fund_name_heuristic` em `[signals]`.
 - **Cooldown de 30 dias.** Depois de disparar, o mesmo tipo de sinal não repete para o mesmo emissor nesse período.
 - **Score de 0 a 100.** É uma heurística para ordenar os alertas (mais insiders, valor maior, presença de CEO/CFO, participação maior). O relatório do backtest mostra se ele tem relação com o retorno (não tem).
 
@@ -291,7 +296,7 @@ O 13D mudou de formato em dezembro de 2024: desde então é XML estruturado, lid
 
 ## Resultado do backtest
 
-Execução de referência: 2020-01-01 a 2025-12-31, com as regras padrão. Relatório completo: [`reports/backtest-2026-11-18.pt-BR.md`](reports/backtest-2026-11-18.pt-BR.md) ([em inglês](reports/backtest-2026-11-18.md)).
+Execução de referência: 2020-01-01 a 2025-12-31, com as regras padrão. Ela é anterior à exclusão de fundos e não foi refeita: o próximo `radar backtest` (ou `radar report`, que tira as linhas de fundos de um CSV existente) lista no funil dos dados os sinais excluídos. Relatório completo: [`reports/backtest-2026-11-18.pt-BR.md`](reports/backtest-2026-11-18.pt-BR.md) ([em inglês](reports/backtest-2026-11-18.md)).
 
 **Os sinais não bateram o SPY.** O sinal típico perdeu para o índice em todos os prazos, e menos da metade dos sinais ficou acima dele.
 

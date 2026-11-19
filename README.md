@@ -166,6 +166,8 @@ A full-screen, dark, dense screen, with signals arriving over WebSocket.
 
 The dashboard opens each new signal by itself. If you click another one, it waits two minutes before following new signals again (or click "Pinned" to resume right away). Arrow keys move through the signals.
 
+**Small caps.** The backtests only found evidence for the *avoid* filters (late filings, crowded shorts, CEO/CFO exits, auditor changes, Form 144 clusters and large planned sales, persistent fails-to-deliver, bankruptcies) on liquid stocks. So, by default, these signals are shown only when the company's latest price is at least $5 and its market value (price × shares outstanding from the 10-Q/10-K cover) at least $300M; a company of unknown size counts as small. "Show small caps" in the signals panel reveals the rest (the choice is remembered in the browser), and avoid cards show the price and market value. Thresholds: `[dashboard]` in `radar.toml`. Long and context signals are never hidden.
+
 **Language.** The dashboard is bilingual: English (default) and Brazilian Portuguese. The EN / PT toggle in the top bar switches everything live, including numbers, currency and dates (`$2.2M` / `Nov 18` vs `US$ 2,2 mi` / `18 nov`). The choice is remembered in the browser; the first visit follows the browser language.
 
 ![Dashboard in Portuguese](docs/screenshots/replay-pt-BR-1920x1080.png)
@@ -200,7 +202,9 @@ In replay each signal carries the **outcome measured by the backtest**: the 1, 3
 | `GET /api/company/{cik}/context` | A company across all sources: signals, insider buys, Form 144, 8-K, 13F and short data. |
 | `POST /api/replay/control` | REPLAY: `{"paused": true}`, `{"speed": 5}` or `{"seek": "2021-03-01"}`. |
 
-The WebSocket lives at `/ws`. On connect the server sends a `snapshot` with everything the screen needs, then numbered events (`seq`): `signal.new`, `filing.new`, `price.tick`, `system.status`, `ranking.update`, `feed.reset` and `market_event.new` (an event of the extra sources). The client reconnects on its own with exponential backoff and receives a fresh snapshot, so nothing is lost. The server sends codes (filing kinds, sectors, roles, states) and `{"en", "pt-BR"}` maps for generated text (explanations, summaries, verdict), so the dashboard can switch language without refetching.
+LIVE signals also carry `price`, `price_as_of`, `market_value`, `liquid` and `liquidity_gated` (an avoid signal hidden by default unless `liquid`). Prices come from the quote service (cached for 12 hours); shares outstanding from the SEC company concept API, at most once a day per company.
+
+The WebSocket lives at `/ws`. On connect the server sends a `snapshot` with everything the screen needs, then numbered events (`seq`): `signal.new`, `filing.new`, `price.tick`, `system.status`, `ranking.update`, `feed.reset`, `market_event.new` (an event of the extra sources) and `signals.update` (signals already on screen with a new price and market value). The client reconnects on its own with exponential backoff and receives a fresh snapshot, so nothing is lost. The server sends codes (filing kinds, sectors, roles, states) and `{"en", "pt-BR"}` maps for generated text (explanations, summaries, verdict), so the dashboard can switch language without refetching.
 
 ## Architecture
 
@@ -286,6 +290,7 @@ Details that change the result:
 - **A signal is born on the filing date.** The signal date is the day the Form 4 reached the SEC, never the transaction date. The cluster looks at purchases from the previous 14 days, and only those already public.
 - **"Distinct" means distinct.** A joint Form 4 (fund, manager and partner) counts as one insider. So do two Form 4s reporting the same transaction with the same resulting position.
 - **Amendments don't count.** Form 4/A and 13D/A repeat information already disclosed.
+- **Funds are left out.** `cluster_buy` and `big_officer_buy` ignore closed-end funds and similar vehicles, whose directors and adviser buying fund shares is not an insider bet on a business. An issuer is a fund when its SIC (from the SEC registry) is 6722 or 6726 (investment offices; 6798, REITs, stays in), or when it has no SIC (registered funds such as BNY Mellon Strategic Municipals show `0000`) and files registered-fund reports (N-CSR, NPORT-P, N-CEN...). When the registry gives no answer, a tight name heuristic ("Municipal Income Fund", "Credit Trust") decides. BDCs file 10-Qs and stay in. Same rule live, in the backtest and on the dashboard (stored fund signals are hidden, not deleted). Settings: `exclude_funds`, `fund_sic_codes` and `fund_name_heuristic` under `[signals]`.
 - **30-day cooldown.** After firing, the same signal type doesn't repeat for the same issuer within that period.
 - **Score from 0 to 100.** A heuristic to rank alerts (more insiders, larger value, CEO/CFO present, larger stake). The backtest report shows whether it relates to returns (it doesn't).
 
@@ -293,7 +298,7 @@ The 13D format changed in December 2024: since then it is structured XML, read f
 
 ## Backtest result
 
-Reference run: 2020-01-01 to 2025-12-31, default rules. Full report: [`reports/backtest-2026-11-18.md`](reports/backtest-2026-11-18.md) ([pt-BR](reports/backtest-2026-11-18.pt-BR.md)).
+Reference run: 2020-01-01 to 2025-12-31, default rules. It predates the fund exclusion and was not rerun: the next `radar backtest` (or `radar report`, which drops fund rows from an existing CSV) lists the excluded signals in the data funnel. Full report: [`reports/backtest-2026-11-18.md`](reports/backtest-2026-11-18.md) ([pt-BR](reports/backtest-2026-11-18.pt-BR.md)).
 
 **The signals did not beat SPY.** The typical signal lost to the index at every horizon, and fewer than half of the signals ended above it.
 
