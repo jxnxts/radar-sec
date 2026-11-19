@@ -28,6 +28,8 @@ export type SignalType = InsiderSignalType | SourceSignalType
 /** Where a signal or an event comes from. */
 export type Source = 'insiders' | 'form144' | 'thirteenf' | 'eightk' | 'short'
 export const SOURCES: readonly Source[] = ['insiders', 'form144', 'thirteenf', 'eightk', 'short']
+/** Where a market event comes from: the signal sources plus news (events only, no signals yet). */
+export type EventSource = Source | 'news'
 export const TYPES_BY_SOURCE: Record<Source, readonly SignalType[]> = {
   insiders: ['cluster_buy', 'big_officer_buy', 'activist_13d'],
   form144: ['form144_cluster', 'form144_large'],
@@ -142,10 +144,10 @@ export interface Signal {
   liquidity_gated?: boolean
 }
 
-/** Something an extra source saw (a Form 144, an 8-K, a 13F, a short-data release). */
+/** Something an extra source saw (a Form 144, an 8-K, a 13F, a short-data release, a news item). */
 export interface MarketEvent {
   id: string
-  source: Source
+  source: EventSource
   kind: string
   date: string
   cik: string
@@ -168,6 +170,8 @@ export interface CompanyContext {
   form144: MarketEvent[]
   eightk: MarketEvent[]
   thirteenf: MarketEvent[]
+  /** News items that name the company (absent from servers without the news source). */
+  news?: MarketEvent[]
   short: {
     interest: { settlement_date: string; short_shares: number; days_to_cover: number | null; avg_volume: number | null }[]
     volume: { day: string; ratio: number | null }[]

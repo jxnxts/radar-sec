@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { CompanyContext } from '../components/CompanyContext'
 import { tapeEntries, FilingTape } from '../components/FilingTape'
 import { SignalCard } from '../components/SignalCard'
 import { SignalFeed } from '../components/SignalFeed'
@@ -15,6 +16,22 @@ const plain = (text: string | null | undefined) => (text ?? '').replace(/[  ]/g,
 beforeEach(() => {
   usePanel.setState({ ...initialState })
   useLang.getState().setLang('en')
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+const newsEvent = marketEvent('n1', {
+  source: 'news',
+  kind: 'news',
+  ticker: 'MTDR',
+  symbol: 'MTDR',
+  cik: '100',
+  title: { en: 'Matador Resources Company Announces Closing of Notes Offering', 'pt-BR': 'Matador Resources Company Announces Closing of Notes Offering' },
+  data: { feed: 'businesswire', tags: ['offering', 'mna'], method: 'exchange' },
+  url: 'https://www.businesswire.com/news/home/1/en/x',
+  seen_at: '2026-11-18T16:00:00+00:00',
 })
 
 describe('store: extra sources', () => {
@@ -102,5 +119,49 @@ describe('source signals on screen', () => {
       [marketEvent('e1'), marketEvent('e0', { seen_at: '2026-11-18T13:00:00+00:00' })],
     )
     expect(entries.map((e) => e.key)).toEqual(['e-e1', 'f-f1', 'e-e0'])
+  })
+
+  it('shows matched news on the tape with its own badge, in both languages', () => {
+    usePanel.setState({ filings: [], events: [newsEvent] })
+    render(<FilingTape />)
+    expect(screen.getAllByText('News').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('MTDR').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Matador Resources Company Announces/).length).toBeGreaterThan(0)
+    act(() => useLang.getState().setLang('pt-BR'))
+    expect(screen.getAllByText('Notícia').length).toBeGreaterThan(0)
+  })
+})
+
+describe('company context: news', () => {
+  const context = {
+    cik: '100',
+    symbol: 'ACME',
+    ticker: 'ACME',
+    signals: [],
+    insiders: [],
+    form144: [],
+    eightk: [],
+    thirteenf: [],
+    news: [newsEvent],
+    short: { interest: [], volume: [], fails: [] },
+  }
+
+  it('lists the news that name the company, with translated tags', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(context), { status: 200 })))
+    usePanel.setState({ mode: 'live' })
+    render(<CompanyContext signal={signal('a', { mode: 'live', cik: '100' })} />)
+    expect(await screen.findByText(/Matador Resources Company Announces/)).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Recent news' })).toBeTruthy()
+    expect(screen.getByText('Offering · M&A')).toBeTruthy()
+    act(() => useLang.getState().setLang('pt-BR'))
+    expect(screen.getByText('Oferta · Fusões e aquisições')).toBeTruthy()
+  })
+
+  it('tolerates servers without the news source', async () => {
+    const { news: _news, ...old } = context
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(old), { status: 200 })))
+    usePanel.setState({ mode: 'live' })
+    render(<CompanyContext signal={signal('a', { mode: 'live', cik: '100' })} />)
+    expect(await screen.findByRole('region', { name: 'Recent news' })).toBeTruthy()
   })
 })

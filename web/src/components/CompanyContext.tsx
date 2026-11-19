@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { localized, useI18n } from '../i18n'
+import { labelOf, localized, useI18n } from '../i18n'
 import { useCompanyContext } from '../lib/hooks'
 import { personName } from '../lib/format'
 import { sourceOf, usePanel } from '../store'
@@ -7,6 +7,11 @@ import type { CompanyContext as Context, MarketEvent, Signal } from '../types'
 import { SignalGlyph, SourceGlyph } from './glyphs'
 
 const MAX_ROWS = 4
+
+function newsTags(event: MarketEvent): string[] {
+  const tags = event.source === 'news' ? event.data.tags : null
+  return Array.isArray(tags) ? tags.filter((tag): tag is string => typeof tag === 'string') : []
+}
 
 function EventList({ events }: { events: MarketEvent[] }) {
   const { t, f, lang } = useI18n()
@@ -23,6 +28,9 @@ function EventList({ events }: { events: MarketEvent[] }) {
           ) : (
             <span className="ctx__text">{localized(event.title, lang)}</span>
           )}
+          {newsTags(event).length > 0 ? (
+            <span className="ctx__tags">{newsTags(event).map((tag) => labelOf(t.sources.newsTags, tag)).join(' · ')}</span>
+          ) : null}
         </li>
       ))}
     </ul>
@@ -114,7 +122,7 @@ function SignalsRow({ signals, current }: { signals: Signal[]; current: string }
   )
 }
 
-/** The company in focus seen through every source: insiders, Form 144, 8-K, 13F and short data. */
+/** The company in focus seen through every source: insiders, Form 144, 8-K, 13F, news and short data. */
 export function CompanyContext({ signal }: { signal: Signal }) {
   const { t, f } = useI18n()
   const mode = usePanel((s) => s.mode)
@@ -163,6 +171,9 @@ export function CompanyContext({ signal }: { signal: Signal }) {
           </Section>
           <Section source="thirteenf" title={t.context.thirteenf} count={context.data.thirteenf.length}>
             <EventList events={context.data.thirteenf} />
+          </Section>
+          <Section source="news" title={t.context.news} count={context.data.news?.length ?? 0}>
+            <EventList events={context.data.news ?? []} />
           </Section>
           <Section source="short" title={t.context.short} count={context.data.short.interest.length}>
             <ShortData context={context.data} />

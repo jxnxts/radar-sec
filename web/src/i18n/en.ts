@@ -369,7 +369,7 @@ export const en = {
       `Sector radar: ${companies} companies with insider buys in the last ${days} days, ${total} in total. Sector with the most buying: ${leader}.`,
   },
 
-  /** Extra signal sources: Form 144, 13F, 8-K and short data. */
+  /** Extra signal sources: Form 144, 13F, 8-K and short data (and news, events only). */
   sources: {
     group: 'Filter by source',
     all: 'All',
@@ -379,6 +379,7 @@ export const en = {
       thirteenf: '13F',
       eightk: '8-K',
       short: 'Short',
+      news: 'News',
     } as Record<string, string>,
     title: {
       insiders: 'Insider buys (Form 4) and new stakes (13D)',
@@ -386,6 +387,7 @@ export const en = {
       thirteenf: 'Fund holdings (13F)',
       eightk: 'Current reports (8-K) and late-filing notices (NT)',
       short: 'Short interest, short volume and fails-to-deliver',
+      news: 'Press releases and news that name a listed company',
     } as Record<string, string>,
     direction: { long: 'Bullish', avoid: 'Avoid', context: 'Context' } as Record<string, string>,
     directionTitle: {
@@ -441,6 +443,19 @@ export const en = {
       '13f_consensus': '13F',
       short_interest_release: 'FINRA',
       ftd_release: 'FTD',
+      news: 'News',
+    } as Record<string, string>,
+    /** Keyword tags of a news item (see src/radar/sources/news/tags.py). */
+    newsTags: {
+      earnings: 'Earnings',
+      guidance: 'Guidance',
+      mna: 'M&A',
+      offering: 'Offering',
+      buyback: 'Buyback',
+      fda: 'FDA',
+      lawsuit: 'Lawsuit',
+      exec_change: 'Executive change',
+      dividend: 'Dividend',
     } as Record<string, string>,
     shares: (amount: string) => `${amount} sh.`,
     million: (amount: string) => `${amount}M`,
@@ -458,6 +473,7 @@ export const en = {
     eightk: 'Current reports (8-K, NT)',
     thirteenf: 'Funds (13F)',
     short: 'Short data',
+    news: 'Recent news',
     signals: 'Signals from every source',
     shortInterest: 'Short interest',
     daysToCover: (days: string) => `${days} days to cover`,

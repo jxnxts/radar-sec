@@ -106,6 +106,17 @@ export function ReportGlyph(props: IconProps) {
   )
 }
 
+/** News: a folded newspaper. */
+export function NewsGlyph(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M5 5.5h11v13H6.5A1.5 1.5 0 0 1 5 17V5.5Z" />
+      <path d="M16 9h3v8.5a1 1 0 0 1-1 1h-2" />
+      <path d="M8 9h5M8 12h5M8 15h3" opacity=".7" />
+    </Svg>
+  )
+}
+
 /** Short data: a falling line over a bar. */
 export function ShortGlyph(props: IconProps) {
   return (
@@ -137,6 +148,7 @@ export function SourceGlyph({ source, ...props }: IconProps & { source: Source |
   if (source === 'thirteenf') return <FundGlyph {...props} />
   if (source === 'eightk') return <ReportGlyph {...props} />
   if (source === 'short') return <ShortGlyph {...props} />
+  if (source === 'news') return <NewsGlyph {...props} />
   return <ClusterGlyph {...props} />
 }
 

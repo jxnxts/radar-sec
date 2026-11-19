@@ -5,6 +5,7 @@
   --src-thirteenf: var(--up);
   --src-eightk: #d9c27a;
   --src-short: var(--down);
+  --src-news: var(--violet);
 }
 
 .card--src-form144,
@@ -137,6 +138,11 @@
   border-color: color-mix(in srgb, var(--src-short) 45%, transparent);
 }
 
+.tape__form--news {
+  color: var(--src-news);
+  border-color: color-mix(in srgb, var(--src-news) 45%, transparent);
+}
+
 .tape__event {
   max-width: 34rem;
   overflow: hidden;
@@ -201,6 +207,16 @@
 
 .ctx__section--short .ctx__title svg {
   color: var(--src-short);
+}
+
+.ctx__section--news .ctx__title svg {
+  color: var(--src-news);
+}
+
+.ctx__tags {
+  grid-column: 2;
+  font-size: 0.6875rem;
+  color: var(--tx-3);
 }
 
 .ctx__list {
