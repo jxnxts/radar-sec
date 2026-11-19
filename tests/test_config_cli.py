@@ -22,6 +22,7 @@ def test_shipped_config_file_matches_the_defaults():
     assert loaded.backtest == defaults.backtest
     assert loaded.sources == defaults.sources
     assert loaded.news == defaults.news
+    assert loaded.forward == defaults.forward
     assert loaded.lang == defaults.lang == "en"
 
 
@@ -106,6 +107,7 @@ def test_help_lists_the_commands():
         "serve",
         "replay-build",
         "news",
+        "forward-summary",
     ):
         assert command in result.output
 

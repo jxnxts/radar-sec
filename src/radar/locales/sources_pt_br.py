@@ -311,4 +311,9 @@ MESSAGES: dict[str, str] = {
         "Não foi possível carregar a lista de tickers da SEC: as notícias foram guardadas sem "
         "associação."
     ),
+    "cli.forward.empty": "Nada registrado ainda em {path}. Rode `radar watch` ou `radar serve`.",
+    "cli.forward.title": "Registro do teste prospectivo: {path}",
+    "cli.forward.day": "Dia (UTC)",
+    "cli.forward.total": "Total",
+    "cli.forward.records": "{n} registros em {days} dia(s)",
 }

@@ -106,6 +106,7 @@ class SourceRunner:
         sources: list | None = None,
         finra: FinraClient | None = None,
         news_config=None,
+        recorder=None,
     ):
         self.store = SourceStore(conn)
         self.client = client
@@ -114,6 +115,8 @@ class SourceRunner:
         self._momentum = momentum or (lambda ticker, day: None)
         self._prior = prior_signal_dates or (lambda kind, cik: [])
         self._finra = finra or FinraClient(self._cache_dir)
+        # Forward-test log (radar.forward.ForwardRecorder): every new event and record.
+        self.recorder = recorder
         catalog = {
             "form144": Form144Source,
             "eightk": EightKSource,
@@ -207,14 +210,17 @@ class SourceRunner:
                 status.state = "ok"
                 status.last_error = None
                 status.note = result.note
+                stored: list[tuple[int, MarketEvent]] = []
                 for event in result.events:
                     event_id = self.store.add_event(event)
                     if event_id is None:
                         continue
                     status.events += 1
+                    stored.append((event_id, event))
                     out.events.append((event_id, event))
                     if on_event is not None:
                         on_event(event_id, event)
+                self._record(source.name, result, stored)
                 status.signals += len(result.signals)
                 out.signals += result.signals
             finally:
@@ -222,6 +228,16 @@ class SourceRunner:
                 status.last_run_at = datetime.now(UTC)
                 self._next[source.name] = time.monotonic() + source.interval_s
         return out
+
+    def _record(self, name: str, result: PollResult, stored: list[tuple[int, MarketEvent]]) -> None:
+        """Hand the new events and raw records to the forward-test log, if any."""
+        if self.recorder is None:
+            return
+        try:
+            self.recorder.records(result.records)
+            self.recorder.events(stored)
+        except Exception:  # noqa: BLE001 - the log never stops collection
+            log.exception("forward log failed for source %s", name)
 
     def statuses(self) -> list[dict[str, Any]]:
         return [s.view() for s in self.status.values()]
@@ -254,7 +270,7 @@ def yahoo_momentum(ticker: str, day: date, sessions: int = 10) -> float | None:
     return float(closes[-1] / closes[-1 - sessions] - 1.0)
 
 
-def build_runner(settings, db, client) -> SourceRunner | None:
+def build_runner(settings, db, client, recorder=None) -> SourceRunner | None:
     """The live runner for `settings.sources.enabled`, on the radar database; None if off."""
     enabled = tuple(settings.sources.enabled)
     if not enabled:
@@ -267,4 +283,5 @@ def build_runner(settings, db, client) -> SourceRunner | None:
         momentum=yahoo_momentum,
         prior_signal_dates=db.prior_signal_dates,
         news_config=settings.news,
+        recorder=recorder,
     )

@@ -19,6 +19,7 @@ from radar.api.views import filing_view, logo_url, price_symbol, signal_view
 from radar.config import Settings
 from radar.db import NEW, Database
 from radar.edgar import normalize_cik
+from radar.forward import build_recorder
 from radar.funds import FUND_EXCLUDED_TYPES, is_fund
 from radar.http import SecClient, cache_path_for
 from radar.liquidity import (
@@ -109,6 +110,7 @@ class LiveEngine:
 
     def _default_factory(self, db: Database, listener: WatchListener) -> Watcher:
         client = SecClient(self.settings.cache_dir, config=self.settings.sec)
+        recorder = build_recorder(self.settings, db)
         return Watcher(
             self.settings,
             db,
@@ -116,7 +118,8 @@ class LiveEngine:
             build_alerters(self._alerts, lang=self.settings.lang),
             Summarizer(db, self.settings.ai, lang=self.settings.lang),
             listener=listener,
-            sources=build_runner(self.settings, db, client),
+            sources=build_runner(self.settings, db, client, recorder),
+            recorder=recorder,
         )
 
     def _cached_tickers(self) -> dict[str, str]:

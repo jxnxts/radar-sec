@@ -11,6 +11,7 @@ import httpx
 import pytest
 
 from radar.config import NewsConfig
+from radar.forward import ForwardLog, ForwardRecorder
 from radar.sources.base import NEWS
 from radar.sources.news.client import NewsClient, NewsHttpError
 from radar.sources.news.feeds import (
@@ -515,20 +516,30 @@ def test_scorer_hook_result_is_stored(registry):
     assert ctx.store.recent_news(limit=1)[0]["score"]["model"] == "fake"
 
 
-# ------------------------------------------------------------ runner, views
+# ------------------------------------------------- runner, views, forward log
 
 
-def test_runner_stores_news_events_for_the_tape_and_the_company_context(make_client, registry):
+def test_runner_stores_news_events_and_feeds_the_forward_log(make_client, registry, tmp_path):
     conn = sqlite3.connect(":memory:")
+    log_ = ForwardLog(tmp_path / "forward")
     source = _source(
         {PRN: (NEWS_DIR / "prnewswire.rss.xml").read_bytes()},
         feeds=[WireFeed(WIRES["prnewswire"], 300)],
     )
-    runner = SourceRunner(conn, make_client(), sources=[source])
+    runner = SourceRunner(
+        conn, make_client(), sources=[source], recorder=ForwardRecorder(log_, conn=conn)
+    )
     runner._registry = registry
     tick = runner.tick(force=True)
     assert runner.status[NEWS].state == "ok" and len(tick.events) == 5
 
+    records = list(log_.read(NOW.date()))
+    kinds = {(r["kind"], r["source"]) for r in records}
+    assert kinds == {("news", "prnewswire"), ("event", NEWS)}
+    assert sum(r["kind"] == "news" for r in records) == 20
+    assert all(r["seen_at"] == NOW.isoformat() for r in records)
+
+    # The tape view and the company context show the item.
     row = runner.store.recent_events(source=NEWS, limit=10)[0]
     view = event_view(row)
     assert view["source"] == NEWS and view["title"]["en"] == view["title"]["pt-BR"] == row["title"]

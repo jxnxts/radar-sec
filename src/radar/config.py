@@ -103,6 +103,22 @@ class NewsConfig:
 
 
 @dataclass(frozen=True)
+class ForwardConfig:
+    """Append-only forward-test log (radar.forward): every live signal and event, as seen."""
+
+    enabled: bool = True
+    # One snapshot a day of the closing prices needed to evaluate the signals later,
+    # taken on the first cycle after this UTC hour (21 = after the US close).
+    price_snapshot: bool = True
+    snapshot_after_utc_hour: int = 21
+    # Tickers with a signal within these many days, or a market event within
+    # `price_event_days`, get a price in the snapshot (plus the benchmarks).
+    price_signal_days: int = 200
+    price_event_days: int = 30
+    price_max_symbols: int = 3000
+
+
+@dataclass(frozen=True)
 class DashboardConfig:
     """What the dashboard shows by default."""
 
@@ -149,6 +165,7 @@ class Settings:
     backtest: BacktestConfig = field(default_factory=BacktestConfig)
     sources: SourcesConfig = field(default_factory=SourcesConfig)
     news: NewsConfig = field(default_factory=NewsConfig)
+    forward: ForwardConfig = field(default_factory=ForwardConfig)
     dashboard: DashboardConfig = field(default_factory=DashboardConfig)
 
     @property
@@ -158,6 +175,10 @@ class Settings:
     @property
     def cache_dir(self) -> Path:
         return self.data_dir / "cache"
+
+    @property
+    def forward_dir(self) -> Path:
+        return self.data_dir / "forward"
 
 
 _ENV_LOADED = False

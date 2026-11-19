@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import replace
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
@@ -347,3 +347,21 @@ def test_listener_gets_the_new_recent_signals_in_one_batch_before_they_go_out(wo
     order.clear()
     watcher.run_once()  # nothing new: no batch
     assert order == []
+
+
+def test_every_stored_signal_goes_to_the_forward_log(world, tmp_path):
+    from radar.forward import ForwardLog, ForwardRecorder
+
+    seen_at = datetime(2026, 11, 17, 23, 0, tzinfo=UTC)
+    log_ = ForwardLog(tmp_path / "forward")
+    recorder = ForwardRecorder(log_, conn=world.db.conn, price_snapshot=False, now=lambda: seen_at)
+    watcher = world.build()
+    watcher.recorder = recorder
+    result = watcher.run_once()
+
+    records = list(log_.read(seen_at.date()))
+    assert sorted(r["data"]["type"] for r in records) == sorted(s.type for s in result.signals)
+    assert all(r["kind"] == "signal" and r["source"] == "insiders" for r in records)
+    assert all(r["seen_at"] == "2026-11-17T23:00:00+00:00" and r["data"]["fresh"] for r in records)
+    watcher.run_once()  # nothing new: nothing appended
+    assert len(list(log_.read(seen_at.date()))) == len(records)

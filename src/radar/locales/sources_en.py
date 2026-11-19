@@ -308,4 +308,9 @@ MESSAGES: dict[str, str] = {
     "cli.news.no_registry": (
         "The SEC ticker list could not be loaded: items were stored without matches."
     ),
+    "cli.forward.empty": "Nothing recorded yet in {path}. Run `radar watch` or `radar serve`.",
+    "cli.forward.title": "Forward-test log: {path}",
+    "cli.forward.day": "Day (UTC)",
+    "cli.forward.total": "Total",
+    "cli.forward.records": "{n} records over {days} day(s)",
 }

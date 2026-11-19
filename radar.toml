@@ -76,3 +76,13 @@ user_agent = "radar-sec/0.1 (news reader)"
 timeout_seconds = 30.0
 context_days = 30               # days of news in the dashboard's company context
 
+[forward]
+# Append-only forward-test log: data/forward/YYYY-MM-DD.jsonl.gz, one record per signal,
+# market event and news item, with the UTC time the radar saw it. `radar forward-summary`
+# counts what was recorded.
+enabled = true
+price_snapshot = true           # once a day, the closes needed to evaluate the signals later
+snapshot_after_utc_hour = 21    # first cycle after this UTC hour (after the US close), weekdays
+price_signal_days = 200         # tickers with a signal in this many days get a daily close...
+price_event_days = 30           # ...and tickers with a market event (8-K, news...) in these days
+price_max_symbols = 3000

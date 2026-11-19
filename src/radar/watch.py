@@ -30,6 +30,7 @@ from radar.summary import Summarizer
 from radar.tickers import TickerMap
 
 if TYPE_CHECKING:
+    from radar.forward import ForwardRecorder
     from radar.sources.runner import SourceRunner
 
 log = logging.getLogger(__name__)
@@ -82,9 +83,12 @@ class Watcher:
         today: date | None = None,
         listener: WatchListener | None = None,
         sources: SourceRunner | None = None,
+        recorder: ForwardRecorder | None = None,
     ):
         self.listener = listener
         self.sources = sources
+        # Forward-test log: every stored signal, plus the daily price snapshot.
+        self.recorder = recorder
         self.settings = settings
         self.db = db
         self.client = client
@@ -135,6 +139,11 @@ class Watcher:
             candidates += tick.signals
 
         self._publish(candidates, result)
+        if self.recorder is not None:
+            try:
+                self.recorder.maybe_snapshot()
+            except Exception:  # the forward log never stops the cycle
+                log.exception("forward price snapshot failed")
         return result
 
     def _notify(self, event: str, *args: object) -> None:
@@ -365,7 +374,10 @@ class Watcher:
         for signal in sorted(candidates, key=lambda s: (s.signal_date, -s.score)):
             if not self.db.add_signal(signal):
                 continue
-            if self.today - signal.signal_date > max_age:
+            stale = self.today - signal.signal_date > max_age
+            if self.recorder is not None:
+                self.recorder.signal(signal, alerted=not stale)
+            if stale:
                 result.stored_only += 1
                 continue
             self.summarizer.summarize(signal, self._filing_context(signal))

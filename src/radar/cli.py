@@ -13,6 +13,7 @@ import typer
 from rich.console import Console
 
 from radar.config import ConfigError, Settings, load_settings
+from radar.forward import build_recorder
 from radar.i18n import LANGS, normalize_lang, signal_label, t
 from radar.signals import SIGNAL_TYPES as INSIDER_TYPES
 from radar.sources.runner import build_runner
@@ -119,13 +120,15 @@ def watch(
         _fail(str(exc))
 
     with client, Database(settings.db_path) as db:
+        recorder = build_recorder(settings, db)
         watcher = Watcher(
             settings,
             db,
             client,
             build_alerters(alert, lang=settings.lang),
             Summarizer(db, settings.ai, lang=settings.lang),
-            sources=build_runner(settings, db, client),
+            sources=build_runner(settings, db, client, recorder),
+            recorder=recorder,
         )
         if once or interval is None:
             _cycle(watcher, settings)
@@ -509,8 +512,11 @@ def news(
     except ConfigError as exc:
         _fail(str(exc))
     with client, Database(settings.db_path) as db:
+        recorder = build_recorder(settings, db)
         source = NewsSource(settings.news)
-        runner = SourceRunner(db.conn, client, sources=[source], cache_dir=settings.cache_dir)
+        runner = SourceRunner(
+            db.conn, client, sources=[source], cache_dir=settings.cache_dir, recorder=recorder
+        )
         try:
             before = sum(runner.store.count_news().values())
             runner.tick(force=True)
@@ -542,6 +548,42 @@ def news(
             f"{row['title'][:110]}{tags}",
             highlight=False,
         )
+
+
+@app.command("forward-summary")
+def forward_summary(
+    days: Annotated[int, typer.Option("--days", min=1, help="Most recent days to show.")] = 14,
+    lang: LangOption = None,
+    config: ConfigOption = None,
+) -> None:
+    """Counts what the forward-test log recorded, per source and per day."""
+    from rich.table import Table
+
+    from radar.forward import ForwardLog
+
+    settings = _setup(False, config, lang)
+    lang = settings.lang
+    log_ = ForwardLog(settings.forward_dir)
+    all_days = log_.days()
+    if not all_days:
+        _say(settings, "forward.empty", path=settings.forward_dir)
+        return
+    shown = all_days[-days:]
+    summary = log_.summary(since=shown[0])
+    columns = sorted({key for counts in summary.values() for key in counts})
+    table = Table(title=t("cli.forward.title", lang, path=settings.forward_dir))
+    table.add_column(t("cli.forward.day", lang))
+    for column in columns:
+        table.add_column(column, justify="right")
+    table.add_column(t("cli.forward.total", lang), justify="right")
+    total = 0
+    for day in shown:
+        counts = summary.get(day, {})
+        row_total = sum(counts.values())
+        total += row_total
+        table.add_row(day.isoformat(), *[str(counts.get(c, 0)) for c in columns], str(row_total))
+    console.print(table)
+    _say(settings, "forward.records", n=total, days=len(shown))
 
 
 phase2_app = typer.Typer(
