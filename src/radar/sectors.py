@@ -10,15 +10,20 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from pathlib import Path
 
 from radar.edgar import normalize_cik
+from radar.funds import NO_SIC, IssuerProfile, files_as_investment_company
 from radar.http import SecClient, SecHttpError
 
 log = logging.getLogger(__name__)
 
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 CACHE_NAME = "sectors.json"
+# CIK → whether the filer files registered-fund reports (only looked up for issuers
+# without a SIC, see radar.funds).
+FUND_CACHE_NAME = "investment-companies.json"
 LEGACY_CACHE_NAME = "setores.json"  # name used by the first version
 
 UNKNOWN = "Unclassified"
@@ -101,36 +106,59 @@ class SectorLookup:
     """Looks up the SIC in the SEC registry, one request per company.
 
     Each company's registry entry is a JSON of hundreds of kilobytes of which only
-    the SIC matters. So the response does not go to the download cache: what stays
-    on disk is a small file with the SIC of every CIK already looked up.
+    the SIC matters (plus, for issuers without a SIC, whether they file the reports
+    of a registered fund). So the response does not go to the download cache: what
+    stays on disk are two small files keyed by CIK.
     """
 
     def __init__(self, client: SecClient, *, cache_file: Path | None = None, flush_every: int = 25):
         self._client = client
         self._file = cache_file or client.cache_dir / CACHE_NAME
+        self._fund_file = self._file.with_name(FUND_CACHE_NAME)
         if cache_file is None:
             _adopt_legacy_cache(client.cache_dir / LEGACY_CACHE_NAME, self._file)
         self._flush_every = flush_every
         self._sic: dict[str, str] | None = None
+        self._funds: dict[str, bool] | None = None
         self._dirty = 0
 
     def _load(self) -> dict[str, str]:
         if self._sic is None:
-            try:
-                self._sic = json.loads(self._file.read_text(encoding="utf-8"))
-            except (OSError, ValueError):
-                self._sic = {}
+            self._sic = _read_json(self._file)
         return self._sic
+
+    def _load_funds(self) -> dict[str, bool]:
+        if self._funds is None:
+            self._funds = _read_json(self._fund_file)
+        return self._funds
 
     def flush(self) -> None:
         """Writes to disk what was looked up since the last write."""
         if self._sic is None or not self._dirty:
             return
-        self._file.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self._file.with_name(self._file.name + ".tmp")
-        tmp.write_text(json.dumps(self._sic, sort_keys=True), encoding="utf-8")
-        tmp.replace(self._file)
+        _write_json(self._file, self._sic)
+        if self._funds is not None:
+            _write_json(self._fund_file, self._funds)
         self._dirty = 0
+
+    def _fetch(self, key: str) -> bool:
+        """Asks the SEC registry about `key`; False when it did not answer."""
+        try:
+            raw = self._client.get_bytes(
+                SUBMISSIONS_URL.format(cik=int(key)), max_age=0, retries=1, store=False
+            )
+            data = json.loads(raw)
+            sic = str(data.get("sic") or "")
+            forms = ((data.get("filings") or {}).get("recent") or {}).get("form") or []
+        except (SecHttpError, ValueError, AttributeError) as exc:
+            log.debug("no SIC for CIK %s: %s", key, exc)
+            return False
+        self._load()[key] = sic
+        self._load_funds()[key] = files_as_investment_company(forms)
+        self._dirty += 1
+        if self._dirty >= self._flush_every:
+            self.flush()
+        return True
 
     def lookup(self, cik: str) -> tuple[str, str] | None:
         """Returns (sic, sector), or None if the SEC did not answer (worth retrying later)."""
@@ -138,23 +166,60 @@ class SectorLookup:
         if not key.isdigit():
             return "", UNKNOWN
         known = self._load()
-        if key not in known:
-            try:
-                raw = self._client.get_bytes(
-                    SUBMISSIONS_URL.format(cik=int(key)), max_age=0, retries=1, store=False
-                )
-                known[key] = str(json.loads(raw).get("sic") or "")
-            except (SecHttpError, ValueError, AttributeError) as exc:
-                log.debug("no SIC for CIK %s: %s", cik, exc)
-                return None
-            self._dirty += 1
-            if self._dirty >= self._flush_every:
-                self.flush()
+        if key not in known and not self._fetch(key):
+            return None
         return known[key], sector_for_sic(known[key])
 
     def get(self, cik: str) -> tuple[str, str]:
         """Like `lookup`, but without an SEC answer returns ("", "Unclassified")."""
         return self.lookup(cik) or ("", UNKNOWN)
+
+    def profile(self, cik: str) -> IssuerProfile | None:
+        """SIC and fund-like filings of the issuer; None if the SEC did not answer.
+
+        An issuer with a real SIC is never asked again; one without a SIC cached by an
+        older version (before the fund check existed) is asked once more.
+        """
+        key = normalize_cik(cik)
+        if not key.isdigit():
+            return None
+        known = self._load()
+        funds = self._load_funds()
+        sic = known.get(key)
+        if sic is None or (sic.strip() in NO_SIC and key not in funds):
+            if not self._fetch(key):
+                return None
+            sic = known[key]
+        return IssuerProfile(sic=sic, investment_company=funds.get(key))
+
+
+def cached_profiles(cache_dir: Path) -> Callable[[str], IssuerProfile | None]:
+    """Profile lookup from the SIC caches on disk only, never asking the SEC (REPLAY)."""
+    sic = _read_json(cache_dir / CACHE_NAME)
+    funds = _read_json(cache_dir / FUND_CACHE_NAME)
+
+    def profile(cik: str) -> IssuerProfile | None:
+        key = normalize_cik(cik)
+        if key not in sic:
+            return None
+        return IssuerProfile(sic=str(sic[key] or ""), investment_company=funds.get(key))
+
+    return profile
+
+
+def _read_json(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _write_json(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, sort_keys=True), encoding="utf-8")
+    tmp.replace(path)
 
 
 def _adopt_legacy_cache(old: Path, new: Path) -> None:

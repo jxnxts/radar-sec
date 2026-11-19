@@ -24,7 +24,7 @@ from radar.models import (
 from radar.parsers.form4 import NO_TICKER_PLACEHOLDERS
 from radar.roles import classify_title
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # filings.status
 NEW = "new"
@@ -158,13 +158,16 @@ CREATE TABLE IF NOT EXISTS ai_calls (
 );
 CREATE INDEX IF NOT EXISTS idx_ai_calls_at ON ai_calls(called_at);
 
--- Sector of each issuer (SIC code from the SEC registry), for the dashboard ranking.
+-- Sector of each issuer (SIC code from the SEC registry), for the dashboard ranking,
+-- and whether it files the reports of a registered fund (NULL = not looked up).
 CREATE TABLE IF NOT EXISTS issuers (
-    cik        TEXT PRIMARY KEY,
-    sic        TEXT,
-    sector     TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    cik                TEXT PRIMARY KEY,
+    sic                TEXT,
+    sector             TEXT NOT NULL,
+    updated_at         TEXT NOT NULL,
+    investment_company INTEGER
 );
+
 """
 )
 
@@ -618,14 +621,46 @@ class Database:
         row = self.conn.execute("SELECT sector FROM issuers WHERE cik = ?", (cik,)).fetchone()
         return row["sector"] if row else None
 
-    def set_sector(self, cik: str, sic: str, sector: str) -> None:
+    def set_sector(
+        self, cik: str, sic: str, sector: str, investment_company: bool | None = None
+    ) -> None:
         self.conn.execute(
-            "INSERT OR REPLACE INTO issuers VALUES (?, ?, ?, ?)", (cik, sic, sector, _now())
+            "INSERT OR REPLACE INTO issuers (cik, sic, sector, updated_at, investment_company)"
+            " VALUES (?, ?, ?, ?, ?)",
+            (
+                cik,
+                sic,
+                sector,
+                _now(),
+                None if investment_company is None else int(investment_company),
+            ),
         )
         self.conn.commit()
 
+    def issuer_profile(self, cik: str) -> tuple[str, bool | None] | None:
+        """(sic, investment_company) as stored, or None if the issuer was never looked up."""
+        row = self.conn.execute(
+            "SELECT sic, investment_company FROM issuers WHERE cik = ?", (cik,)
+        ).fetchone()
+        if row is None:
+            return None
+        flag = row["investment_company"]
+        return row["sic"] or "", None if flag is None else bool(flag)
+
+    def issuer_profiles(self) -> dict[str, tuple[str, bool | None]]:
+        """Every stored (sic, investment_company), by CIK."""
+        rows = self.conn.execute("SELECT cik, sic, investment_company FROM issuers").fetchall()
+        return {
+            r["cik"]: (
+                r["sic"] or "",
+                None if r["investment_company"] is None else bool(r["investment_company"]),
+            )
+            for r in rows
+        }
+
     def issuers_without_sector(self, since: date, limit: int = 40) -> list[str]:
-        """Issuers with a recent buy (or signal) whose sector has not been looked up yet."""
+        """Issuers with a recent buy (or signal) whose sector has not been looked up yet,
+        or that have no SIC and were never checked for fund filings."""
         rows = self.conn.execute(
             """SELECT DISTINCT cik FROM (
                    SELECT f.issuer_cik AS cik FROM form4 f
@@ -635,7 +670,12 @@ class Database:
                    SELECT issuer_cik AS cik FROM signals WHERE signal_date >= ?
                )
                WHERE cik <> '' AND cik IS NOT NULL
-                 AND cik NOT IN (SELECT cik FROM issuers) LIMIT ?""",
+                 AND cik NOT IN (
+                     SELECT cik FROM issuers
+                     WHERE investment_company IS NOT NULL
+                        OR COALESCE(TRIM(sic), '') NOT IN ('', '0000')
+                 )
+               LIMIT ?""",
             (since.isoformat(), since.isoformat(), limit),
         ).fetchall()
         return [r["cik"] for r in rows]
@@ -855,6 +895,8 @@ def migrate(conn: sqlite3.Connection, version: int) -> None:
                 _migrate_v1(conn)
             if version < 2:
                 _migrate_v2(conn)
+            if version < 3:
+                _migrate_v3(conn)
             conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
             conn.execute("COMMIT")
         except BaseException:
@@ -882,6 +924,15 @@ def _migrate_v2(conn: sqlite3.Connection) -> None:
         conn.execute(
             f"UPDATE {table} SET ticker = '' WHERE UPPER(TRIM(ticker)) IN ({placeholders})"
         )
+
+
+def _migrate_v3(conn: sqlite3.Connection) -> None:
+    """v2 → v3: issuers learn whether they file as a registered fund (NULL until checked)."""
+    if not _has_table(conn, "issuers"):
+        return
+    columns = [r[1] for r in conn.execute("PRAGMA table_info(issuers)")]
+    if "investment_company" not in columns:
+        conn.execute("ALTER TABLE issuers ADD COLUMN investment_company INTEGER")
 
 
 def _migrate_v1(conn: sqlite3.Connection) -> None:

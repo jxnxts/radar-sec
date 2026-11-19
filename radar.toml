@@ -10,6 +10,9 @@ cluster_min_value = 100000.0    # minimum total of the cluster's purchases (US$)
 officer_min_value = 250000.0    # minimum CEO/CFO purchase for big_officer_buy (US$)
 activist_min_percent = 5.0      # minimum stake in a new 13D for activist_13d (%)
 cooldown_days = 30              # days before the same signal repeats for the same issuer
+exclude_funds = true            # drop closed-end funds and similar vehicles from cluster_buy/big_officer_buy
+fund_sic_codes = ["6722", "6726"]  # SIC codes treated as funds (6798, REITs, is not one)
+fund_name_heuristic = true      # without a SIC, also drop obvious fund names ("Municipal Income Fund")
 
 [sec]
 requests_per_second = 8.0       # the SEC limit is 10 per second

@@ -29,6 +29,14 @@ class SignalConfig:
     # After a signal, the same type does not fire again for the same issuer during
     # this period (avoids counting the same wave of purchases several times).
     cooldown_days: int = 30
+    # Drop closed-end funds and similar vehicles from cluster_buy and big_officer_buy
+    # (see radar.funds): their directors buying fund shares is not an insider bet.
+    exclude_funds: bool = True
+    # SIC codes treated as funds: 6722 (open-end investment offices) and 6726 (unit
+    # investment trusts and closed-end investment offices). 6798 (REITs) is not a fund.
+    fund_sic_codes: tuple[str, ...] = ("6722", "6726")
+    # When the SIC is missing, also recognize obvious fund names ("Municipal Income Fund").
+    fund_name_heuristic: bool = True
 
 
 @dataclass(frozen=True)
