@@ -1,0 +1,49 @@
+name: Bug report
+description: Something does not work as described.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please remove any personal data (your `SEC_USER_AGENT` email, tokens, local paths) from logs before pasting them.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. `./dev --replay`
+        2. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Collector / SEC EDGAR
+        - Extra sources (Form 144, 8-K, 13F, short data)
+        - Signals / rules
+        - Backtest / reports
+        - API / WebSocket
+        - Dashboard (web)
+        - AI summaries
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      render: text
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: macOS 15, Python 3.13, Node 22, radar-sec 0.1.0
