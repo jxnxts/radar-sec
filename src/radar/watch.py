@@ -13,10 +13,12 @@ from radar.config import Settings
 from radar.db import ERROR, PROCESSED, SKIPPED, Database
 from radar.edgar import filing_index_url, normalize_cik, parse_submission, submission_txt_url
 from radar.feed import feed_url, fetch_current
+from radar.funds import NO_SIC, FundClassifier, IssuerProfile, split_funds
 from radar.http import SecClient, SecHttpError, decode
 from radar.models import FORM4_TYPES, SC13D_TYPES, FilingRef, Signal
 from radar.parsers.form4 import Form4ParseError, parse_form4
 from radar.parsers.sc13d import Sc13dParseError, parse_13d
+from radar.sectors import SectorLookup, sector_for_sic
 from radar.signals import (
     BIG_OFFICER_BUY,
     CLUSTER_BUY,
@@ -62,6 +64,7 @@ class WatchResult:
     signals: list[Signal] = field(default_factory=list)
     stored_only: int = 0  # old signals stored without alerting
     source_events: int = 0  # new events of the extra sources (radar.sources)
+    excluded_funds: int = 0  # insider buy signals dropped because the issuer is a fund
 
 
 class Watcher:
@@ -85,6 +88,9 @@ class Watcher:
         self.alerters = alerters
         self.summarizer = summarizer
         self.tickers = TickerMap(client)
+        # SIC and fund filings of each issuer (also the dashboard's sectors).
+        self.sectors = SectorLookup(client)
+        self.funds = FundClassifier(settings.signals, self.issuer_profile)
         self._today = today
 
     @property
@@ -115,7 +121,7 @@ class Watcher:
         for issuer in sorted(touched_issuers):
             if self.settings.sec.backfill_issuer:
                 self._backfill_issuer(issuer, result)
-            candidates += self._form4_signals(issuer)
+            candidates += self._form4_signals(issuer, result)
 
         if self.sources is not None:
             self._notify("stage", "sources", 0)
@@ -300,10 +306,22 @@ class Watcher:
 
     # ----------------------------------------------------------------- signals
 
-    def _form4_signals(self, issuer_cik: str) -> list[Signal]:
+    def issuer_profile(self, cik: str) -> IssuerProfile | None:
+        """SIC and fund filings of an issuer: from the database, else from the SEC registry."""
+        stored = self.db.issuer_profile(cik)
+        if stored is not None and (stored[0].strip() not in NO_SIC or stored[1] is not None):
+            return IssuerProfile(*stored)
+        found = self.sectors.profile(cik)
+        if found is None:
+            return None
+        self.db.set_sector(cik, found.sic, sector_for_sic(found.sic), found.investment_company)
+        self.sectors.flush()
+        return found
+
+    def _form4_signals(self, issuer_cik: str, result: WatchResult | None = None) -> list[Signal]:
         filings = self.db.purchase_filings(issuer_cik)
         cfg = self.settings.signals
-        return detect_cluster_buys(
+        signals = detect_cluster_buys(
             filings,
             cfg,
             prior_signals={issuer_cik: self.db.prior_signal_dates(CLUSTER_BUY, issuer_cik)},
@@ -312,6 +330,18 @@ class Watcher:
             cfg,
             prior_signals={issuer_cik: self.db.prior_signal_dates(BIG_OFFICER_BUY, issuer_cik)},
         )
+        if not signals:
+            return signals
+        kept, dropped = split_funds(signals, self.funds)
+        if dropped:
+            log.info(
+                "%d insider buy signal(s) of %s dropped: the issuer is a fund",
+                len(dropped),
+                dropped[0].issuer_name or issuer_cik,
+            )
+            if result is not None:
+                result.excluded_funds += len(dropped)
+        return kept
 
     def _publish(self, candidates: list[Signal], result: WatchResult) -> None:
         """Stores new signals; summarizes and alerts only the recent ones.

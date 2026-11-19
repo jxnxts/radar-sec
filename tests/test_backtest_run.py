@@ -371,3 +371,40 @@ def test_a_csv_from_the_first_version_is_converted(outcome, settings, sec):
     assert "type" in converted and "tipo" not in converted
     assert converted["explanation"].str.contains("on the open market").all()
     assert "1 de 5 sinais (20%) foram descartados" in paths["pt-BR"].read_text(encoding="utf-8")
+
+
+def test_backtest_drops_insider_buys_of_funds_and_says_so(settings, sec, recorder):
+    # Matador registered as a closed-end investment office (SIC 6726) in the fake registry.
+    recorder.add(
+        "https://data.sec.gov/submissions/CIK0001520006.json",
+        json.dumps({"sic": "6726", "filings": {"recent": {"form": ["10-Q"]}}}),
+    )
+    result = run_backtest(
+        settings, sec, START, END, console=Console(quiet=True), provider=FakeYahoo(), today=TODAY
+    )
+    assert "MTDR" not in set(result.signals["ticker"])
+    assert len(result.signals) == 4
+    report = result.report_path.read_text(encoding="utf-8")
+    assert (
+        "| Insider buy signals dropped: issuer is a fund or similar vehicle "
+        "(big_officer_buy: 0, cluster_buy: 1) | 1 |" in report
+    )
+    report_pt = result.report_paths["pt-BR"].read_text(encoding="utf-8")
+    assert "emissor é um fundo ou veículo similar (big_officer_buy: 0, cluster_buy: 1) | 1 |" in (
+        report_pt
+    )
+
+
+def test_rerendering_an_old_csv_drops_the_funds_it_still_has(outcome, settings, sec, recorder):
+    from radar.backtest.runner import rerender_reports
+
+    recorder.add(
+        "https://data.sec.gov/submissions/CIK0001520006.json",
+        json.dumps({"sic": "", "filings": {"recent": {"form": ["NPORT-P"]}}}),
+    )
+    _, paths = rerender_reports(
+        settings, sec, START, END, csv_path=outcome.csv_path, console=Console(quiet=True)
+    )
+    report = paths["en"].read_text(encoding="utf-8")
+    assert "(big_officer_buy: 0, cluster_buy: 1) | 1 |" in report
+    assert "MTDR" not in report

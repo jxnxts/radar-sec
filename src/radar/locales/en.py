@@ -197,6 +197,9 @@ MESSAGES: dict[str, str] = {
     "report.funnel.non_common": "— dropped: security is not common stock",
     "report.funnel.bad_dates": "— dropped: date missing or after the filing",
     "report.funnel.valid": "Form 4s with a valid P buy",
+    "report.funnel.funds": (
+        "Insider buy signals dropped: issuer is a fund or similar vehicle ({detail})"
+    ),
     "report.col.generated": "Signals generated",
     "report.col.measured": "Measured",
     "report.col.no_ticker": "No ticker",
@@ -405,6 +408,7 @@ MESSAGES: dict[str, str] = {
     "backtest.step.datasets": "[bold]1/5[/bold] SEC datasets: {first} to {last} ({n} quarters)",
     "backtest.loaded": "    {form4} Form 4s read, {valid} with a valid P buy",
     "backtest.step.rules": "[bold]2/5[/bold] Applying the signal rules",
+    "backtest.excluded_funds": "    {n} insider buy signals of funds dropped",
     "backtest.step.prices": "[bold]3/5[/bold] Prices for {n} tickers (from {start})",
     "backtest.prices.progress": "    {done}/{total} tickers queried",
     "backtest.prices.done": (

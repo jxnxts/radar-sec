@@ -302,3 +302,27 @@ def test_legacy_13d_feed_can_be_enabled_in_config(world):
     result = world.build(settings).run_once()
     assert result.new_filings == 5 and result.errors == 0
     assert any("type=SC+13D" in url for url in world.recorder.urls())
+
+
+def test_insider_buys_of_a_fund_are_not_signaled(world):
+    # MP Materials posing as a closed-end fund: no SIC and N-CSR reports in the registry.
+    world.recorder.add(
+        "https://data.sec.gov/submissions/CIK0001801368.json",
+        json.dumps({"sic": "0000", "filings": {"recent": {"form": ["N-CSR", "4"]}}}),
+    )
+    result = world.build().run_once()
+
+    assert [s.type for s in result.signals] == ["activist_13d"]  # the 13D is not affected
+    assert result.excluded_funds == 1
+    assert [s.type for s in world.db.list_signals()] == ["activist_13d"]
+    assert world.db.issuer_profile("1801368") == ("0000", True)
+
+
+def test_an_operating_company_with_a_real_sic_keeps_its_signals(world):
+    world.recorder.add(
+        "https://data.sec.gov/submissions/CIK0001801368.json",
+        json.dumps({"sic": "1040", "filings": {"recent": {"form": ["10-Q", "4"]}}}),
+    )
+    result = world.build().run_once()
+    assert {s.type for s in result.signals} == {"big_officer_buy", "activist_13d"}
+    assert result.excluded_funds == 0

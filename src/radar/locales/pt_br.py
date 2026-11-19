@@ -193,6 +193,9 @@ MESSAGES: dict[str, str] = {
     "report.funnel.non_common": "— descartadas: papel que não é ação ordinária",
     "report.funnel.bad_dates": "— descartadas: data ausente ou posterior ao arquivamento",
     "report.funnel.valid": "Form 4 com compra P válida",
+    "report.funnel.funds": (
+        "Sinais de compra de insiders descartados: emissor é um fundo ou veículo similar ({detail})"
+    ),
     "report.col.generated": "Sinais gerados",
     "report.col.measured": "Medidos",
     "report.col.no_ticker": "Sem ticker",
@@ -405,6 +408,7 @@ MESSAGES: dict[str, str] = {
     ),
     "backtest.loaded": "    {form4} Form 4 lidos, {valid} com compra P válida",
     "backtest.step.rules": "[bold]2/5[/bold] Aplicando as regras de sinal",
+    "backtest.excluded_funds": "    {n} sinais de compra de insiders em fundos descartados",
     "backtest.step.prices": "[bold]3/5[/bold] Preços de {n} tickers (a partir de {start})",
     "backtest.prices.progress": "    {done}/{total} tickers consultados",
     "backtest.prices.done": (

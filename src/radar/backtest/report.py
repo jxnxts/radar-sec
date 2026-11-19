@@ -50,6 +50,8 @@ class ReportContext:
     price_failures: int = 0
     generated_at: datetime | None = None
     csv_name: str = ""
+    # Insider buy signals dropped because the issuer is a fund, by type (None: not checked).
+    excluded_funds: dict[str, int] | None = None
 
 
 def report_name(stamp: str, lang: str = DEFAULT_LANG) -> str:
@@ -394,6 +396,9 @@ def _funnel(tx: _Text, ctx: ReportContext) -> str:
         [tx("funnel.bad_dates"), tx.n(load.excluded_bad_dates)],
         [tx("funnel.valid"), tx.n(load.purchase_filings)],
     ]
+    if ctx.excluded_funds is not None:
+        detail = ", ".join(f"{kind}: {tx.n(n)}" for kind, n in sorted(ctx.excluded_funds.items()))
+        rows.append([tx("funnel.funds", detail=detail), tx.n(sum(ctx.excluded_funds.values()))])
     table = tx.table([tx("col.step"), tx("col.count")], rows)
 
     by_type = []

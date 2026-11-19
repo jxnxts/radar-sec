@@ -26,6 +26,7 @@ from radar.backtest.report import (
 )
 from radar.backtest.returns import NO_TICKER, OK, benchmark_return, measure
 from radar.config import Settings
+from radar.funds import FUND_EXCLUDED_TYPES, FundCheck, FundClassifier, split_funds
 from radar.http import SecClient
 from radar.i18n import DEFAULT_LANG, LANGS, t
 from radar.models import PurchaseFiling, Signal
@@ -64,6 +65,31 @@ def generate_signals(
         (s for s in signals if start <= s.signal_date <= end),
         key=lambda s: (s.signal_date, s.type, s.issuer_cik),
     )
+
+
+def fund_classifier(settings: Settings, sectors: SectorLookup) -> FundClassifier:
+    """The live monitor's fund check, backed by the cached SEC registry lookups."""
+    return FundClassifier(settings.signals, sectors.profile)
+
+
+def count_by_type(signals: list[Signal]) -> dict[str, int]:
+    counts = dict.fromkeys(sorted(FUND_EXCLUDED_TYPES), 0)
+    for signal in signals:
+        counts[signal.type] = counts.get(signal.type, 0) + 1
+    return counts
+
+
+def drop_fund_rows(frame: pd.DataFrame, is_fund: FundCheck) -> tuple[pd.DataFrame, dict[str, int]]:
+    """Drops the rows of a measured signals CSV whose issuer is a fund (older CSVs had them)."""
+    mask = [
+        kind in FUND_EXCLUDED_TYPES and is_fund(str(cik or ""), str(issuer or ""))
+        for kind, cik, issuer in zip(frame["type"], frame["cik"], frame["issuer"], strict=True)
+    ]
+    dropped = frame[mask]
+    counts = dict.fromkeys(sorted(FUND_EXCLUDED_TYPES), 0)
+    for kind, n in dropped.groupby("type").size().items():
+        counts[str(kind)] = int(n)
+    return frame[[not m for m in mask]].reset_index(drop=True), counts
 
 
 def resolve_ticker(signal: Signal, current: dict[str, str]) -> tuple[str, str]:
@@ -282,7 +308,13 @@ def run_backtest(
     say("loaded", form4=f"{load.form4_filings:,}", valid=f"{load.purchase_filings:,}")
 
     say("step.rules")
-    signals = generate_signals(filings, settings, start, end)
+    sectors = SectorLookup(client)
+    signals, funds = split_funds(
+        generate_signals(filings, settings, start, end), fund_classifier(settings, sectors)
+    )
+    sectors.flush()
+    excluded_funds = count_by_type(funds)
+    say("excluded_funds", n=f"{len(funds):,}")
     frame = signals_frame(signals, TickerMap(client)._load())
     if frame.empty:
         raise RuntimeError("no signal generated in the period: check the dates and thresholds")
@@ -353,6 +385,7 @@ def run_backtest(
         price_failures=len(fetch.failed),
         generated_at=datetime.now(),
         csv_name=csv_path.name,
+        excluded_funds=excluded_funds,
     )
     report_paths = write_reports(context, settings.reports_dir, stamp, langs)
 
@@ -361,7 +394,6 @@ def run_backtest(
     replay_path = settings.reports_dir / f"backtest-{stamp}{REPLAY_SUFFIX}"
     if with_sectors:
         say("sectors")
-    sectors = SectorLookup(client)
     records = build_records(
         signals,
         measured,
@@ -405,6 +437,8 @@ def rerender_reports(
     stamp = signals_csv_stamp(csv_path)
     measured = read_signals_csv(csv_path)
     _, quarters, filings, load = _load_history(settings, client, start, end)
+    sectors = SectorLookup(client)
+    is_fund = fund_classifier(settings, sectors)
 
     target = settings.reports_dir / f"backtest-{stamp}{SIGNALS_SUFFIX}"
     if csv_path.resolve() != target.resolve() or "explanation" not in measured:
@@ -420,6 +454,10 @@ def rerender_reports(
         console.print(t("backtest.csv_converted", settings.lang, path=target), highlight=False)
         measured = read_signals_csv(target)
 
+    # A CSV written before the fund exclusion still has their signals: drop them here
+    # too, so the report matches what the rules produce now.
+    measured, excluded_funds = drop_fund_rows(measured, is_fund)
+    sectors.flush()
     if generated_at is None:
         generated_at = datetime.fromtimestamp(csv_path.stat().st_mtime)
     context = ReportContext(
@@ -431,6 +469,7 @@ def rerender_reports(
         signals=measured,
         generated_at=generated_at,
         csv_name=target.name,
+        excluded_funds=excluded_funds,
     )
     return target, write_reports(context, settings.reports_dir, stamp, langs)
 
@@ -452,7 +491,10 @@ def rebuild_replay(
     console = console or Console()
     lang = settings.lang
     _, _, filings, _ = _load_history(settings, client, start, end)
-    signals = generate_signals(filings, settings, start, end)
+    sectors = SectorLookup(client)
+    signals, _ = split_funds(
+        generate_signals(filings, settings, start, end), fund_classifier(settings, sectors)
+    )
     measured = read_signals_csv(csv_path)
     console.print(
         t("backtest.replay_source", lang, n=f"{len(signals):,}", csv=csv_path.name),
@@ -460,7 +502,6 @@ def rebuild_replay(
     )
     if with_sectors:
         console.print(t("backtest.replay_sectors", lang), highlight=False)
-    sectors = SectorLookup(client)
     records = build_records(
         signals,
         measured,
