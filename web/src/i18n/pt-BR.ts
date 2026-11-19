@@ -353,32 +353,6 @@ export const ptBR: Messages = {
       `Radar de setores: ${companies} empresas com compras de insiders nos últimos ${days} dias, ${total} no total. Setor com mais compras: ${leader}.`,
   },
 
-  backtest: {
-    title: 'O que o backtest diz',
-    reading: 'Lendo o relatório',
-    unavailable: 'Relatório indisponível',
-    runHint: 'Rode `radar backtest` para gerar o relatório em reports/.',
-    against: (years, benchmark) => `${years} · contra o ${benchmark}`,
-    beat: 'Os sinais bateram o SPY',
-    notBeat: 'Os sinais não bateram o SPY',
-    sub: 'O sinal típico perdeu para o índice em todos os prazos.',
-    caption: (benchmark) =>
-      `Excesso mediano sobre o ${benchmark} e fração de sinais que bateram o índice, por tipo de sinal e prazo`,
-    medianExcess: 'Excesso mediano',
-    signals: (n) => `${n} sinais`,
-    beatShare: (share) => `${share} batem`,
-    yearsCaption: 'Excesso mediano em 6 meses, por ano do sinal',
-    maxT: 't máx.',
-    evidence: '(evidência pede 2)',
-    unmeasured: 'sem medição',
-    scoreNoHelp: 'score não ajudou',
-    inThisReplay: 'Neste replay',
-    noneMeasured: 'ainda sem sinais medidos',
-    beatOf: (beat, measured) => `${beat} de ${measured}`,
-    beatSpy: ' bateram o SPY em 6 m · mediana ',
-    unmeasuredCount: (n) => ` · ${n} sem medição`,
-  },
-
   sources: {
     group: 'Filtrar por fonte',
     all: 'Todas',

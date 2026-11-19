@@ -356,32 +356,6 @@ export const en = {
       `Sector radar: ${companies} companies with insider buys in the last ${days} days, ${total} in total. Sector with the most buying: ${leader}.`,
   },
 
-  backtest: {
-    title: 'What the backtest says',
-    reading: 'Reading the report',
-    unavailable: 'Report unavailable',
-    runHint: 'Run `radar backtest` to generate the report in reports/.',
-    against: (years: string, benchmark: string) => `${years} · vs ${benchmark}`,
-    beat: 'The signals beat the SPY',
-    notBeat: 'The signals did not beat the SPY',
-    sub: 'The typical signal lost to the index at every horizon.',
-    caption: (benchmark: string) =>
-      `Median excess over ${benchmark} and share of signals that beat the index, by signal type and horizon`,
-    medianExcess: 'Median excess',
-    signals: (n: string) => `${n} signals`,
-    beatShare: (share: string) => `${share} beat`,
-    yearsCaption: '6-month median excess, by signal year',
-    maxT: 't max.',
-    evidence: '(evidence needs 2)',
-    unmeasured: 'not measured',
-    scoreNoHelp: 'score did not help',
-    inThisReplay: 'In this replay',
-    noneMeasured: 'no measured signals yet',
-    beatOf: (beat: string, measured: string) => `${beat} of ${measured}`,
-    beatSpy: ' beat the SPY at 6 mo · median ',
-    unmeasuredCount: (n: string) => ` · ${n} not measured`,
-  },
-
   /** Extra signal sources: Form 144, 13F, 8-K and short data. */
   sources: {
     group: 'Filter by source',

@@ -15,6 +15,16 @@ class Form4ParseError(ValueError):
     pass
 
 
+# Placeholders filers type when the issuer has no traded ticker.
+NO_TICKER_PLACEHOLDERS = frozenset({"NONE", "N/A", "N.A.", "NULL", "-", "--", "(NONE)"})
+
+
+def _ticker(raw: str) -> str:
+    """Upper-cased ticker, or an empty string when the filer wrote a placeholder."""
+    ticker = raw.strip().upper()
+    return "" if ticker in NO_TICKER_PLACEHOLDERS else ticker
+
+
 def _text(node: Element | None, path: str) -> str:
     """Text of an element, accepting both `<x>v</x>` and `<x><value>v</value></x>`."""
     if node is None:
@@ -96,7 +106,7 @@ def parse_form4(xml: str | bytes) -> Form4:
         document_type=_text(root, "documentType"),
         issuer_cik=normalize_cik(_text(issuer, "issuerCik")),
         issuer_name=_text(issuer, "issuerName"),
-        issuer_ticker=_text(issuer, "issuerTradingSymbol").upper(),
+        issuer_ticker=_ticker(_text(issuer, "issuerTradingSymbol")),
         period_of_report=_date(_text(root, "periodOfReport")),
         owners=tuple(owners),
         transactions=tuple(transactions),

@@ -359,49 +359,6 @@ export type ServerMessage =
   | { type: 'ranking.update'; seq: number; ts: string; data: Rankings }
   | { type: 'feed.reset'; seq: number; ts: string; data: Pick<Snapshot, 'signals' | 'filings' | 'ranking'> }
 
-export interface BacktestRow {
-  type: string
-  /** English label; the dashboard translates by `type` instead. */
-  label: string
-  horizon_months: number
-  n: number
-  hit_rate: number | null
-  beats: number | null
-  ret_mean: number | null
-  ret_median: number | null
-  bench_mean: number | null
-  excess_mean: number | null
-  excess_median: number | null
-  t_stat: number | null
-}
-
-export interface BacktestYear {
-  type: string
-  year: number
-  n: number
-  excess_mean_6m: number | null
-  excess_median_6m: number | null
-  [key: string]: string | number | null
-}
-
-export interface Backtest {
-  report: string
-  period: { start: string; end: string } | null
-  generated_at: string | null
-  benchmark: string
-  beats_benchmark: boolean
-  verdict: LocalizedText
-  caveat: LocalizedText
-  rows: BacktestRow[]
-  rows_iwm: BacktestRow[]
-  rows_liquid: BacktestRow[]
-  by_year: BacktestYear[]
-  funnel: { generated: number; measured: number; unmeasured: number; unmeasured_share: number } | Record<string, never>
-  max_t: number | null
-  best_beats: number | null
-  cost_roundtrip: number
-}
-
 export interface Bar {
   t: string
   o: number

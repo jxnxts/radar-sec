@@ -160,7 +160,6 @@ Uma tela cheia, escura e densa, com os sinais chegando por WebSocket.
 | 01 Sinais | Um cartão por sinal: logo, ticker, tipo, insiders (nome, cargo e valor), valor comprado, score e setor. O sinal novo entra no topo em destaque. |
 | 02 Sinal em foco | Gráfico de preço com o dia do filing e as compras dos insiders marcados, o preço médio pago, o resumo (da IA ou do modelo fixo), a regra que disparou e o histórico de compras da empresa. |
 | 03 Radar de compras | Visor de radar por setor (cada ponto é uma empresa, o tamanho é o valor comprado, a borda é hoje) e as empresas com mais compras em 7 ou 30 dias. |
-| 04 O que o backtest diz | Duas abas. **Fase 2** (padrão): cada variante pré-registrada com o excesso mediano fora da amostra, o t contra SPY e IWM e o veredito (usar, talvez, descartar), mais o efeito de trazer de volta as empresas deslistadas. **Fase 1**: o veredito do relatório original por tipo de sinal, prazo e ano. Fica sempre à vista para o operador não se iludir. |
 | Fita | Os filings novos (Form 4 e 13D) passando, com o mais recente fixo à esquerda. |
 
 O painel abre cada sinal novo sozinho. Se você clicar em outro, ele espera dois minutos antes de voltar a seguir os novos (ou clique em "Fixado" para voltar já). As setas para cima e para baixo percorrem os sinais.
@@ -174,7 +173,7 @@ O painel abre cada sinal novo sozinho. Se você clicar em outro, ele espera dois
 - **AO VIVO** roda o mesmo ciclo do `radar watch` dentro do servidor, a cada 60 segundos, e publica cada filing e cada sinal assim que termina de tratá-lo. Selo vermelho com a luz piscando.
 - **REPLAY** reproduz os 9.018 sinais do backtest de 2020 a 2025, dois dias simulados por minuto. Serve para demonstração e para a sala nunca ficar parada: sinais reais são poucos por dia. Selo âmbar, faixa zebrada no topo da tela e a data simulada em destaque. Dá para pausar e acelerar pelo próprio painel.
 
-No replay cada sinal traz o **desfecho medido pelo backtest**: o retorno em 1, 3 e 6 meses contra o SPY, ou o motivo de não ter sido medido. O quadro 04 mantém o placar dos sinais já reproduzidos. O replay lê o arquivo `reports/backtest-<data>-replay.jsonl.gz`, que é versionado (≈2,4 MB).
+No replay cada sinal traz o **desfecho medido pelo backtest**: o retorno em 1, 3 e 6 meses contra o SPY, ou o motivo de não ter sido medido. O replay lê o arquivo `reports/backtest-<data>-replay.jsonl.gz`, que é versionado (≈2,4 MB).
 
 | AO VIVO | REPLAY (2560×1440) |
 |---|---|
@@ -342,7 +341,7 @@ Plano pré-registrado: [`research/phase2-plan.md`](research/phase2-plan.md) (com
 | `cluster_buy` (fase 1) | sem mudança | −4,3% / −3,1% | −1,6 / −0,6 | descartar |
 | `big_officer_buy` (fase 1) | sem mudança | −4,5% / −2,3% | −0,3 / 2,3 | descartar |
 
-O caso mais próximo, `big_officer_buy`, bateu o IWM em 0,5% ao mês (t 2,3), mas perdeu para o SPY e o sinal típico perdeu para os dois; no treino também foi negativo. O sinal de texto do 10-K inverteu entre treino e teste. Como nenhuma variante passou, **nenhum tipo de sinal novo entrou no monitor ao vivo**; o quadro do backtest no painel mostra o veredito da fase 2. Um estudo de viabilidade para o Brasil (dados da CVM/B3) está em [`research/b3-feasibility.md`](research/b3-feasibility.md).
+O caso mais próximo, `big_officer_buy`, bateu o IWM em 0,5% ao mês (t 2,3), mas perdeu para o SPY e o sinal típico perdeu para os dois; no treino também foi negativo. O sinal de texto do 10-K inverteu entre treino e teste. Como nenhuma variante passou, **nenhum tipo de sinal novo entrou no monitor ao vivo**; o veredito completo está em [`reports/phase2-2026-11-18.md`](reports/phase2-2026-11-18.md). Um estudo de viabilidade para o Brasil (dados da CVM/B3) está em [`research/b3-feasibility.md`](research/b3-feasibility.md).
 
 ### Como cada sinal é medido
 

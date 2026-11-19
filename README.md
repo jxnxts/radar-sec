@@ -162,7 +162,6 @@ A full-screen, dark, dense screen, with signals arriving over WebSocket.
 | 01 Signals | One card per signal: logo, ticker, type, insiders (name, role and value), amount bought, score and sector. New signals enter at the top, highlighted. |
 | 02 Signal in focus | Price chart with the filing day and the insider purchases marked, the average price paid, the summary (AI or template), the rule that fired and the company's purchase history. |
 | 03 Buying radar | A radar scope by sector (each blip is a company, size is the amount bought, the rim is today) and the companies with the most buying in 7 or 30 days. |
-| 04 What the backtest says | Two tabs. **Phase 2** (default): every pre-registered variant with its out-of-sample median excess, t-stats against SPY and IWM and verdict (use, maybe, discard), plus the effect of putting delisted companies back. **Phase 1**: the original report's verdict by signal type, horizon and year. Always visible, so the operator doesn't fool themselves. |
 | Tape | New filings (Form 4 and 13D) scrolling by, with the latest pinned on the left. |
 
 The dashboard opens each new signal by itself. If you click another one, it waits two minutes before following new signals again (or click "Pinned" to resume right away). Arrow keys move through the signals.
@@ -176,7 +175,7 @@ The dashboard opens each new signal by itself. If you click another one, it wait
 - **LIVE** runs the same cycle as `radar watch` inside the server, every 60 seconds, and publishes each filing and signal as soon as it is processed. Red badge with a blinking light.
 - **REPLAY** plays back the 9,018 backtest signals from 2020 to 2025, two simulated days per minute. It is meant for demos and to keep the room alive: real signals are few per day. Amber badge, a striped band at the top and the simulated date front and center. You can pause and speed it up from the dashboard.
 
-In replay each signal carries the **outcome measured by the backtest**: the 1, 3 and 6 month return against SPY, or why it couldn't be measured. Panel 04 keeps a scoreboard of the signals replayed so far. The replay reads `reports/backtest-<date>-replay.jsonl.gz`, which is versioned (≈2.4 MB).
+In replay each signal carries the **outcome measured by the backtest**: the 1, 3 and 6 month return against SPY, or why it couldn't be measured. The replay reads `reports/backtest-<date>-replay.jsonl.gz`, which is versioned (≈2.4 MB).
 
 | LIVE | REPLAY (2560×1440) |
 |---|---|
@@ -344,7 +343,7 @@ Pre-registered plan: [`research/phase2-plan.md`](research/phase2-plan.md) (commi
 | `cluster_buy` (phase 1) | unchanged | −4.3% / −3.1% | −1.6 / −0.6 | discard |
 | `big_officer_buy` (phase 1) | unchanged | −4.5% / −2.3% | −0.3 / 2.3 | discard |
 
-The closest call, `big_officer_buy`, beat IWM by 0.5% a month (t 2.3) but lost to SPY and its typical signal lost to both; it was also negative in train. The 10-K text signal reversed between train and test. Because no variant passed, **no new signal type was added to the live monitor**; the dashboard's backtest panel shows the phase-2 verdict instead. A feasibility study for Brazil (CVM/B3 data) is in [`research/b3-feasibility.md`](research/b3-feasibility.md).
+The closest call, `big_officer_buy`, beat IWM by 0.5% a month (t 2.3) but lost to SPY and its typical signal lost to both; it was also negative in train. The 10-K text signal reversed between train and test. Because no variant passed, **no new signal type was added to the live monitor**; the full verdict is in [`reports/phase2-2026-11-18.md`](reports/phase2-2026-11-18.md). A feasibility study for Brazil (CVM/B3 data) is in [`research/b3-feasibility.md`](research/b3-feasibility.md).
 
 ### How each signal is measured
 

@@ -4,6 +4,9 @@ import { Logo } from './Logo'
 import { Panel } from './Panel'
 import { RadarScope } from './RadarScope'
 
+/** The radar has the whole side column, so the ranking can list more companies. */
+const RANK_ROWS = 10
+
 export function RadarPanel() {
   const { t, f } = useI18n()
   const window = usePanel((s) => s.window)
@@ -68,7 +71,7 @@ export function RadarPanel() {
           </p>
 
           <ol className="rank" aria-label={t.radar.rankGroup(ranking.days)}>
-            {ranking.companies.slice(0, 4).map((company, index) => (
+            {ranking.companies.slice(0, RANK_ROWS).map((company, index) => (
               <li key={company.cik || company.name} className="rank__row">
                 <span className="rank__pos">{index + 1}</span>
                 <Logo src={company.logo} ticker={company.symbol || company.ticker} company={company.name} size="sm" />

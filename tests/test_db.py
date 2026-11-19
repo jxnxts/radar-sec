@@ -6,7 +6,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
-from radar.db import Database
+from radar.db import SCHEMA_VERSION, Database
 from radar.edgar import parse_submission
 from radar.models import FilingRef, Signal
 from radar.parsers.form4 import parse_form4
@@ -267,7 +267,7 @@ def test_a_database_from_the_first_version_is_migrated(tmp_path):
 
     with Database(path) as db:
         conn = db.conn
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 1
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
         statuses = dict(conn.execute("SELECT accession, status FROM filings").fetchall())
         assert statuses == {
             "acc-1": "processed",
@@ -347,7 +347,7 @@ def test_migration_is_idempotent(tmp_path):
         first = [(s.dedupe_key, s.details, s.explanation, s.summary) for s in db.list_signals()]
     with Database(path) as db:
         again = [(s.dedupe_key, s.details, s.explanation, s.summary) for s in db.list_signals()]
-        assert db.conn.execute("PRAGMA user_version").fetchone()[0] == 1
+        assert db.conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
     assert first == again
 
 
@@ -374,4 +374,19 @@ def test_a_failed_migration_leaves_the_database_untouched(tmp_path, monkeypatch)
 
 def test_a_new_database_starts_at_the_current_version(tmp_path):
     with Database(tmp_path / "fresh.sqlite") as db:
-        assert db.conn.execute("PRAGMA user_version").fetchone()[0] == 1
+        assert db.conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
+
+
+def test_placeholder_tickers_are_cleared_when_migrating_to_v2(tmp_path):
+    path = tmp_path / "radar.sqlite"
+    accession = "0001831686-26-000014"
+    sub = parse_submission(read_fixture(f"{accession}.txt"))
+    with Database(path) as db:
+        db.add_filing(ref(accession))
+        db.save_form4(accession, sub.filed_date, parse_form4(sub.primary_document.xml))
+        db.conn.execute("UPDATE form4 SET ticker = 'NONE'")
+        db.conn.execute("PRAGMA user_version = 1")
+        db.conn.commit()
+    with Database(path) as db:
+        assert db.conn.execute("SELECT ticker FROM form4").fetchone()[0] == ""
+        assert db.conn.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION

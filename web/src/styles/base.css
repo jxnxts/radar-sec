@@ -149,7 +149,7 @@ svg {
 
 .side {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: var(--gap);
   min-height: 0;
 }

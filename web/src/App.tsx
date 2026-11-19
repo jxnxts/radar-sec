@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { BacktestPanel } from './components/BacktestPanel'
 import { FilingTape } from './components/FilingTape'
 import { RadarPanel } from './components/RadarPanel'
 import { SignalDetail } from './components/SignalDetail'
@@ -80,7 +79,6 @@ export function App() {
         <SignalDetail />
         <div className="side">
           <RadarPanel />
-          <BacktestPanel />
         </div>
       </main>
       <FilingTape />

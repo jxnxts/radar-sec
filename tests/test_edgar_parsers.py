@@ -171,3 +171,12 @@ def test_13d_legacy_html_extracts_what_it_can():
 def test_13d_xml_rejects_other_documents():
     with pytest.raises(Sc13dParseError):
         parse_13d_xml("<ownershipDocument/>")
+
+
+@pytest.mark.parametrize("placeholder", ["NONE", "none", " N/A ", "N.A.", "--", "(NONE)"])
+def test_form4_placeholder_ticker_becomes_empty(placeholder):
+    xml = load("0001831686-26-000014").primary_document.xml.replace(
+        "<issuerTradingSymbol>MP</issuerTradingSymbol>",
+        f"<issuerTradingSymbol>{placeholder}</issuerTradingSymbol>",
+    )
+    assert parse_form4(xml).issuer_ticker == ""

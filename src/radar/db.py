@@ -21,9 +21,10 @@ from radar.models import (
     Schedule13D,
     Signal,
 )
+from radar.parsers.form4 import NO_TICKER_PLACEHOLDERS
 from radar.roles import classify_title
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # filings.status
 NEW = "new"
@@ -852,6 +853,8 @@ def migrate(conn: sqlite3.Connection, version: int) -> None:
         try:
             if version < 1:
                 _migrate_v1(conn)
+            if version < 2:
+                _migrate_v2(conn)
             conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
             conn.execute("COMMIT")
         except BaseException:
@@ -870,6 +873,15 @@ def _value_case(column: str, mapping: dict[str, str]) -> str:
 
 def _quote(text: str) -> str:
     return "'" + text.replace("'", "''") + "'"
+
+
+def _migrate_v2(conn: sqlite3.Connection) -> None:
+    """v1 → v2: placeholder tickers typed by filers ("NONE", "N/A", ...) become empty."""
+    placeholders = ", ".join(_quote(p) for p in sorted(NO_TICKER_PLACEHOLDERS))
+    for table in ("form4", "signals"):
+        conn.execute(
+            f"UPDATE {table} SET ticker = '' WHERE UPPER(TRIM(ticker)) IN ({placeholders})"
+        )
 
 
 def _migrate_v1(conn: sqlite3.Connection) -> None:
