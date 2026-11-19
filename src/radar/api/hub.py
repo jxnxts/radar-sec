@@ -23,6 +23,8 @@ SIGNAL_NEW = "signal.new"
 PRICE_TICK = "price.tick"
 SYSTEM_STATUS = "system.status"
 RANKING_UPDATE = "ranking.update"
+# A new event of an extra source (Form 144, 8-K, 13F, short data) for the tape.
+MARKET_EVENT_NEW = "market_event.new"
 # The server changed what the dashboard should show (replay jump, new reference data).
 FEED_RESET = "feed.reset"
 

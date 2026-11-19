@@ -22,6 +22,7 @@ from radar.signals import (
     SIGNAL_LABELS,
     explanations,
 )
+from radar.sources.views import signal_extras
 from radar.summary import localized_summaries
 
 KIND_LABELS = {
@@ -133,6 +134,8 @@ def signal_view(
         "n_filings": len(accessions),
         "logo": logo_url(signal.ticker) if logo else None,
         "outcome": outcome,
+        # Source of the signal and, for the extra sources, their own card fields.
+        **signal_extras(signal),
     }
 
 

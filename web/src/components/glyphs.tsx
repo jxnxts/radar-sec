@@ -1,7 +1,7 @@
 // Dashboard icons, drawn here (no icon library and no third-party images).
 
 import type { SVGProps } from 'react'
-import type { FilingKind, SignalType } from '../types'
+import type { FilingKind, SignalType, Source } from '../types'
 
 type IconProps = SVGProps<SVGSVGElement> & { title?: string }
 
@@ -74,9 +74,77 @@ export function StakeGlyph(props: IconProps) {
   )
 }
 
+/** Form 144: a notice with an arrow down (planned sale). */
+export function NoticeGlyph(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M6 3.5h8l4 4V20.5H6Z" />
+      <path d="M14 3.5v4h4" opacity=".55" />
+      <path d="M12 10.5v6.5M9.2 14.4 12 17l2.8-2.6" />
+    </Svg>
+  )
+}
+
+/** 13F: stacked holdings of a fund. */
+export function FundGlyph(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 19.5h16" />
+      <path d="M6.5 19.5V12h3v7.5M10.5 19.5V7h3v12.5M14.5 19.5v-9.5h3v9.5" />
+    </Svg>
+  )
+}
+
+/** 8-K: a report with an exclamation mark (something happened). */
+export function ReportGlyph(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="5" y="3.5" width="14" height="17" rx="1.5" />
+      <path d="M12 8v5.5" />
+      <circle cx="12" cy="16.6" r=".9" fill="currentColor" stroke="none" />
+    </Svg>
+  )
+}
+
+/** Short data: a falling line over a bar. */
+export function ShortGlyph(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 6.5 9.5 12l3-3L20 16.5" />
+      <path d="M15.5 16.5H20V12" />
+      <path d="M4 20h16" opacity=".55" />
+    </Svg>
+  )
+}
+
+const SOURCE_OF_TYPE: Partial<Record<SignalType, Source>> = {
+  form144_cluster: 'form144',
+  form144_large: 'form144',
+  fund_consensus_13f: 'thirteenf',
+  notable_fund_new_13f: 'thirteenf',
+  buyback_8k: 'eightk',
+  ceo_cfo_exit_8k: 'eightk',
+  bankruptcy_8k: 'eightk',
+  auditor_change_8k: 'eightk',
+  late_filing_nt: 'eightk',
+  short_crowded: 'short',
+  squeeze_setup: 'short',
+  ftd_persistent: 'short',
+}
+
+export function SourceGlyph({ source, ...props }: IconProps & { source: Source | (string & {}) }) {
+  if (source === 'form144') return <NoticeGlyph {...props} />
+  if (source === 'thirteenf') return <FundGlyph {...props} />
+  if (source === 'eightk') return <ReportGlyph {...props} />
+  if (source === 'short') return <ShortGlyph {...props} />
+  return <ClusterGlyph {...props} />
+}
+
 export function SignalGlyph({ type, ...props }: IconProps & { type: SignalType }) {
   if (type === 'cluster_buy') return <ClusterGlyph {...props} />
   if (type === 'big_officer_buy') return <OfficerGlyph {...props} />
+  const source = SOURCE_OF_TYPE[type]
+  if (source) return <SourceGlyph source={source} {...props} />
   return <StakeGlyph {...props} />
 }
 

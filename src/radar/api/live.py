@@ -22,6 +22,10 @@ from radar.edgar import normalize_cik
 from radar.http import SecClient, cache_path_for
 from radar.models import FilingRef, Signal
 from radar.sectors import UNKNOWN, SectorLookup
+from radar.sources.base import MarketEvent
+from radar.sources.runner import build_runner
+from radar.sources.store import SourceStore
+from radar.sources.views import company_context, event_view
 from radar.summary import Summarizer
 from radar.tickers import TICKERS_URL
 from radar.watch import Watcher, WatchListener, WatchResult
@@ -67,6 +71,7 @@ class LiveEngine:
         self._reader = Database(settings.db_path, check_same_thread=False)
         self._read_lock = threading.Lock()
         self._watcher: Watcher | None = None
+        self._events: SourceStore | None = None
         self._client: SecClient | None = None
         self._sectors: SectorLookup | None = None
         self._stop: asyncio.Event | None = None
@@ -95,6 +100,7 @@ class LiveEngine:
             build_alerters(self._alerts, lang=self.settings.lang),
             Summarizer(db, self.settings.ai, lang=self.settings.lang),
             listener=listener,
+            sources=build_runner(self.settings, db, client),
         )
 
     def _cached_tickers(self) -> dict[str, str]:
@@ -356,7 +362,33 @@ class LiveEngine:
             "signals": self.list_signals(),
             "filings": self.list_filings(),
             "ranking": self.rankings(),
+            "market_events": self.list_events(),
         }
+
+    # ------------------------------------------------------- extra sources
+
+    def _source_store(self) -> SourceStore:
+        """The source tables over the read connection (call with the read lock held)."""
+        if self._events is None:
+            self._events = SourceStore(self._reader.conn)
+        return self._events
+
+    def list_events(
+        self, *, limit: int = TAPE_LIMIT, source: str | None = None, since: date | None = None
+    ) -> list[dict[str, Any]]:
+        with self._read_lock:
+            rows = self._source_store().recent_events(limit=limit, source=source, since=since)
+        return [event_view(row) for row in rows]
+
+    def company_context(self, cik: str) -> dict[str, Any]:
+        """Everything the radar knows about one company, across all sources."""
+        with self._read_lock:
+            signals = self._reader.issuer_signals(cik)
+            purchases = self._reader.issuer_purchases(cik)[:40]
+            ticker = next((s.ticker for s in signals if s.ticker), "") or self._tickers.get(cik, "")
+            context = company_context(self._source_store(), cik, ticker, today=self._today())
+            views = [self._view(s) for s in signals]
+        return {**context, "ticker": ticker, "signals": views, "insiders": purchases}
 
     def status(self) -> dict[str, Any]:
         ai = self.settings.ai
@@ -398,6 +430,9 @@ class LiveEngine:
             },
             "totals": totals,
             "replay": None,
+            "sources": self._watcher.sources.statuses()
+            if self._watcher is not None and self._watcher.sources is not None
+            else [],
         }
 
 
@@ -422,6 +457,22 @@ class _Listener:
         brief = engine._watcher.db.filing_brief(ref.accession)
         if brief is not None and brief["status"] != NEW:
             engine.hub.publish_threadsafe(events.FILING_NEW, filing_view(brief))
+
+    def market_event(self, event_id: int, event: MarketEvent) -> None:
+        row = {
+            "id": event_id,
+            "source": event.source,
+            "kind": event.kind,
+            "date": event.event_date.isoformat(),
+            "cik": event.issuer_cik,
+            "company": event.issuer_name,
+            "ticker": event.ticker,
+            "title": event.title,
+            "data": event.data,
+            "url": event.url,
+            "seen_at": (event.seen_at or datetime.now(UTC)).isoformat(timespec="seconds"),
+        }
+        self.engine.hub.publish_threadsafe(events.MARKET_EVENT_NEW, event_view(row))
 
     def signal(self, signal: Signal) -> None:
         engine = self.engine

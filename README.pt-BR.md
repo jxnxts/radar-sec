@@ -183,9 +183,11 @@ No replay cada sinal traz o **desfecho medido pelo backtest**: o retorno em 1, 3
 | `GET /api/quotes` | As últimas cotações. |
 | `GET /api/prices/{ticker}/history?start=&end=` | Barras diárias. |
 | `GET /api/logo/{ticker}` | O logo em PNG, ou 404. |
+| `GET /api/events?limit=&source=` | Eventos das fontes extras (Form 144, 8-K, 13F, short). |
+| `GET /api/company/{cik}/context` | Uma empresa em todas as fontes: sinais, compras de insiders, Form 144, 8-K, 13F e short. |
 | `POST /api/replay/control` | REPLAY: `{"paused": true}`, `{"speed": 5}` ou `{"seek": "2021-03-01"}`. |
 
-O WebSocket fica em `/ws`. Ao conectar, o servidor envia um `snapshot` com tudo o que a tela precisa; depois, eventos numerados (`seq`): `signal.new`, `filing.new`, `price.tick`, `system.status`, `ranking.update` e `feed.reset`. O cliente reconecta sozinho, com espera crescente, e recebe um snapshot novo: nada se perde. O servidor manda códigos (tipos de filing, setores, cargos, estados) e mapas `{"en", "pt-BR"}` para os textos gerados (explicações, resumos, veredito), e por isso o painel troca de idioma sem buscar nada de novo.
+O WebSocket fica em `/ws`. Ao conectar, o servidor envia um `snapshot` com tudo o que a tela precisa; depois, eventos numerados (`seq`): `signal.new`, `filing.new`, `price.tick`, `system.status`, `ranking.update`, `feed.reset` e `market_event.new` (um evento das fontes extras). O cliente reconecta sozinho, com espera crescente, e recebe um snapshot novo: nada se perde. O servidor manda códigos (tipos de filing, setores, cargos, estados) e mapas `{"en", "pt-BR"}` para os textos gerados (explicações, resumos, veredito), e por isso o painel troca de idioma sem buscar nada de novo.
 
 ## Arquitetura
 
@@ -245,6 +247,8 @@ src/radar/
   watch.py          o ciclo do monitor
   backtest/         datasets, preços, retornos, estatísticas, relatório e arquivo de replay
   sectors.py        setor do emissor pelo código SIC
+  sources/          fontes extras (form144, eightk, thirteenf, short): regras, histórico,
+                    coletores ao vivo, tabelas, backtest e relatório dos novos sinais
   api/              servidor do painel (REST, WebSocket, motores ao vivo e replay, preços, logos)
 web/                painel (React, TypeScript, Vite)
 tests/              testes sem rede, com filings reais em tests/fixtures
@@ -310,12 +314,74 @@ Conclusão prática: seguir estes sinais mecanicamente, com estas regras, não j
 
 O que olhar, nesta ordem: **excesso mediano** (o sinal típico), **bate SPY** (fração dos sinais com excesso positivo), **t (safra mensal)** (acima de 2 é evidência), as **tabelas filtradas por liquidez**, a **quebra por ano** e o **funil dos dados** (quantos sinais ficaram sem medição e por quê).
 
+## Fontes extras de sinal
+
+Além do Form 4 e do 13D, o radar acompanha mais quatro fontes públicas e gratuitas. Cada uma
+fica em `src/radar/sources/<fonte>/` com as mesmas partes (parser, regras puras usadas igualmente
+ao vivo e no backtest, histórico sem olhar o futuro, coletor ao vivo) e aparece no painel com
+chips, cartões, eventos na fita e contexto da empresa.
+
+| Fonte | O que acompanha | Sinais | Ritmo ao vivo |
+|---|---|---|---|
+| **Form 144** | Avisos de venda planejada de afiliados (eletrônico desde 2023-04) | `form144_cluster` (3+ vendedores em 10 dias), `form144_large` (≥ US$ 10 mi ou ≥ 1% das ações; contexto, não testado) | todo ciclo |
+| **8-K / NT** | Fatos relevantes classificados pelo item do EDGAR; avisos de atraso | `buyback_8k`, `ceo_cfo_exit_8k` (5.02), `bankruptcy_8k` (1.03), `auditor_change_8k` (4.01), `late_filing_nt`; acordos de fusão, aquisições concluídas e divulgação de resultado como contexto | todo ciclo (NT a cada 15 min) |
+| **13F** | Carteiras trimestrais de gestores com mais de US$ 100 mi | `fund_consensus_13f` (alcance da posse, datado no prazo de 45 dias), `notable_fund_new_13f` (posições novas de uma lista fixa de gestores) | a cada 15 min; consenso depois de cada prazo |
+| **Short** | Short interest e volume vendido diário da FINRA, falhas de entrega da SEC | `short_crowded`, `squeeze_setup`, `ftd_persistent`; volume vendido como contexto | verificação de hora em hora |
+
+Negociações de parlamentares dos EUA (Câmara e Senado, STOCK Act) e calendários de eventos (fim
+de lockup, datas de resultado) foram avaliados e **ficaram de fora**: as operações estão em PDFs de
+layout livre, o site do Senado exige sessão automatizada e não há calendário estruturado gratuito.
+O raciocínio está em [`research/new-signals-plan.md`](research/new-signals-plan.md).
+
+```bash
+uv run radar backtest-sources                 # reports/new-signals-<data>.md e .pt-BR.md
+```
+
+Regras, períodos (treino 2020–2022, teste 2023–2025) e critérios de veredito foram fixados no
+plano **antes** de qualquer backtest. Mesmo motor de preços e mesmos índices do backtest de
+insiders; custo de 0,2% ida e volta, 1% abaixo de US$ 5. Veredito no prazo principal, período de
+teste, excesso sobre o SPY (relatório completo:
+[`reports/new-signals-2026-11-18.pt-BR.md`](reports/new-signals-2026-11-18.pt-BR.md)):
+
+| Sinal | Hipótese | N teste | Excesso médio / mediano | t | Veredito | Recorte líquido¹ |
+|---|---|---|---|---|---|---|
+| `buyback_8k` (6m) | bate | 1.276 | -4,2% / -5,9% | -3,5 | descartar | descartar |
+| `ceo_cfo_exit_8k` (3m) | fica atrás | 508 | -6,2% / -13,6% | -1,0 | talvez (evitar) | talvez (evitar) |
+| `bankruptcy_8k` (1m) | fica atrás | 54 | -30,4% / -38,9% | -3,0 | talvez (evitar) | dados insuficientes |
+| `auditor_change_8k` (3m) | fica atrás | 1.860 | +160%² / -12,4% | 1,3 | descartar² | talvez (evitar) |
+| `late_filing_nt` (3m) | fica atrás | 4.949 | +864%² / -16,9% | 1,2 | descartar² | **evitar** |
+| `form144_cluster` (3m) | fica atrás | 6.130 | -1,0% / -3,7% | -0,9 | talvez (evitar) | talvez (evitar) |
+| `fund_consensus_13f` (3m) | bate | 349 | +2,0% / -0,2% | 1,7 | descartar | talvez |
+| `notable_fund_new_13f` (3m) | bate | 619 | -0,1% / -1,1% | 0,0 | descartar | descartar |
+| `short_crowded` (1m) | fica atrás | 916 | -1,3% / -1,7% | -1,0 | talvez (evitar) | **evitar** |
+| `squeeze_setup` (1m) | bate | 93 | -4,8% / -8,3% | -2,5 | descartar | dados insuficientes |
+| `ftd_persistent` (1m) | fica atrás | 587 | -12,8% / -16,5% | -5,3 | talvez (evitar) | talvez (evitar) |
+
+¹ Preço de entrada ≥ US$ 5 e valor de mercado ≥ US$ 300 mi: visão fixada no plano, não a base do
+veredito. ² A média é dominada por cotações de balcão abaixo de um centavo (US$ 0,0001 que saltam
+para dólares); a mediana é o número que importa. **Nenhum sinal novo chegou a "usar".** Os úteis
+são filtros: relatório atrasado e short alto e subindo ficaram atrás do índice entre os papéis
+líquidos; falhas de entrega, saída de CEO/CFO e falência ficaram muito atrás, mas sem treino
+coerente ou significância. O viés de sobrevivência (o Yahoo quase não tem deslistadas) deixa todo
+número de *evitar* menos negativo do que foi.
+
+![Sala ao vivo com as fontes extras](docs/screenshots/live-sources-pt-BR-1920x1080.png)
+
+No painel: chips de fonte acima do feed de sinais (e, escolhida a fonte, chips de tipo), cartões
+com selo da fonte, ícone e etiquetas em texto para a hipótese (**Evitar**, **Alta**) e para
+**Não testado**, os eventos das fontes na fita e um bloco "esta empresa em todas as fontes" no
+sinal em foco (compras de insiders, Form 144, 8-K, 13F, short interest, volume vendido e falhas).
+Os resumos com IA cobrem os sinais novos dentro do mesmo teto por hora. Ligue ou desligue fontes
+no `radar.toml` (`[sources] enabled`).
+
 ## Fontes de dados e termos de uso
 
 | Fonte | Para quê | Termos |
 |---|---|---|
 | [SEC EDGAR](https://www.sec.gov/edgar) (feeds "getcurrent", arquivos dos filings, cadastro das empresas) | Monitoramento ao vivo, setores | Dados públicos. O radar segue a [política de acesso justo](https://www.sec.gov/os/accessing-edgar-data) da SEC: `User-Agent` declarado, no máximo 8 requisições por segundo (o teto é 10), espera crescente em 429/5xx e cache local para nada ser baixado duas vezes. |
 | [Datasets de transações de insiders da SEC](https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets) | Backtest | Dados públicos, mesma política de acesso. |
+| [Busca textual do EDGAR](https://efts.sec.gov/LATEST/search-index) e conjuntos de dados da SEC de [13F](https://www.sec.gov/data-research/sec-markets-data/form-13f-data-sets) e [falhas de entrega](https://www.sec.gov/data-research/sec-markets-data/fails-deliver-data) | Fontes extras: histórico e ao vivo | Dados públicos, mesma política de acesso e mesmo limitador. |
+| [API de consulta da FINRA](https://developer.finra.org) (short interest consolidado) e [arquivos diários de volume vendido](https://www.finra.org/finra-data/browse-catalog/short-sale-volume-data) | Fonte de short | Conjuntos públicos, sem credencial; poucas requisições por dia, com cache. |
 | [Yahoo Finance](https://finance.yahoo.com) via [yfinance](https://github.com/ranaroussi/yfinance) | Preços do backtest, cotações atrasadas e gráficos do painel | API não oficial, sem vínculo com o Yahoo; os dados são para uso pessoal, nos termos do Yahoo, e sem garantia. Cotações com cerca de 15 minutos de atraso. |
 | Endpoint público de imagens da [Financial Modeling Prep](https://financialmodelingprep.com), com o [nvstly/icons](https://github.com/nvstly/icons) como reserva | Logos das empresas no painel | Os logos são marcas dos seus donos, baixados sob demanda e guardados só localmente (`data/cache/logos/`), nunca versionados. A requisição leva só o ticker. |
 | [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/python) | Resumos com IA (opcionais) | Usa o seu login/assinatura do Claude Code e os termos dele. |

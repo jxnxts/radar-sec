@@ -8,7 +8,52 @@ export type Localized<T extends string = string> = { en: T } & { [lang: string]:
 /** A localized map or, from older servers, a plain string. */
 export type LocalizedText<T extends string = string> = Localized<T> | T
 
-export type SignalType = 'cluster_buy' | 'big_officer_buy' | 'activist_13d'
+export type InsiderSignalType = 'cluster_buy' | 'big_officer_buy' | 'activist_13d'
+/** Signal types of the extra sources (src/radar/sources). */
+export type SourceSignalType =
+  | 'form144_cluster'
+  | 'form144_large'
+  | 'fund_consensus_13f'
+  | 'notable_fund_new_13f'
+  | 'buyback_8k'
+  | 'ceo_cfo_exit_8k'
+  | 'bankruptcy_8k'
+  | 'auditor_change_8k'
+  | 'late_filing_nt'
+  | 'short_crowded'
+  | 'squeeze_setup'
+  | 'ftd_persistent'
+export type SignalType = InsiderSignalType | SourceSignalType
+
+/** Where a signal or an event comes from. */
+export type Source = 'insiders' | 'form144' | 'thirteenf' | 'eightk' | 'short'
+export const SOURCES: readonly Source[] = ['insiders', 'form144', 'thirteenf', 'eightk', 'short']
+export const TYPES_BY_SOURCE: Record<Source, readonly SignalType[]> = {
+  insiders: ['cluster_buy', 'big_officer_buy', 'activist_13d'],
+  form144: ['form144_cluster', 'form144_large'],
+  thirteenf: ['fund_consensus_13f', 'notable_fund_new_13f'],
+  eightk: ['buyback_8k', 'ceo_cfo_exit_8k', 'bankruptcy_8k', 'auditor_change_8k', 'late_filing_nt'],
+  short: ['short_crowded', 'squeeze_setup', 'ftd_persistent'],
+}
+
+export type FactKind =
+  | 'number'
+  | 'decimal'
+  | 'usd'
+  | 'pct'
+  | 'points'
+  | 'shares'
+  | 'date'
+  | 'text'
+  | 'items'
+  | 'quote'
+
+/** One labeled number of a signal of the extra sources; labeled by `key`, formatted by `kind`. */
+export interface Fact {
+  key: string
+  value: number | string | string[]
+  kind: FactKind | (string & {})
+}
 export type Mode = 'live' | 'replay'
 
 export interface Insider {
@@ -78,6 +123,59 @@ export interface Signal {
   n_filings: number
   logo: string | null
   outcome: Outcome | null
+  /** Older servers omit it: then the signal is from the insiders source. */
+  source?: Source
+  /** Card fields of the extra sources (empty for insider signals). */
+  facts?: Fact[]
+  /** Hypothesis of the rule: beat the index, lag it (a filter), or context only. */
+  direction?: 'long' | 'avoid' | 'context'
+  /** False for rules shown live but never backtested. */
+  tested?: boolean
+}
+
+/** Something an extra source saw (a Form 144, an 8-K, a 13F, a short-data release). */
+export interface MarketEvent {
+  id: string
+  source: Source
+  kind: string
+  date: string
+  cik: string
+  company: string
+  ticker: string
+  symbol: string
+  title: LocalizedText
+  data: Record<string, unknown>
+  url: string | null
+  seen_at: string | null
+}
+
+/** Everything the radar knows about one company, across sources (`/api/company/{cik}/context`). */
+export interface CompanyContext {
+  cik: string
+  symbol: string
+  ticker: string
+  signals: Signal[]
+  insiders: Purchase[]
+  form144: MarketEvent[]
+  eightk: MarketEvent[]
+  thirteenf: MarketEvent[]
+  short: {
+    interest: { settlement_date: string; short_shares: number; days_to_cover: number | null; avg_volume: number | null }[]
+    volume: { day: string; ratio: number | null }[]
+    fails: { settlement_date: string; quantity: number; price: number | null }[]
+  }
+}
+
+export interface SourceStatus {
+  name: string
+  state: 'waiting' | 'ok' | 'error' | (string & {})
+  interval_s: number
+  last_run_at: string | null
+  last_ms: number | null
+  last_error: string | null
+  events: number
+  signals: number
+  note: string
 }
 
 export interface Purchase {
@@ -237,6 +335,7 @@ export interface Status {
   version?: string
   ws?: { clients: number }
   prices?: PricesStatus
+  sources?: SourceStatus[]
 }
 
 export interface Snapshot {
@@ -246,12 +345,15 @@ export interface Snapshot {
   signals: Signal[]
   filings: Filing[]
   ranking: Rankings
+  /** Events of the extra sources (absent on older servers and empty in replay). */
+  market_events?: MarketEvent[]
 }
 
 export type ServerMessage =
   | { type: 'snapshot'; seq: number; boot: string; ts: string; data: Snapshot }
   | { type: 'signal.new'; seq: number; ts: string; data: Signal }
   | { type: 'filing.new'; seq: number; ts: string; data: Filing }
+  | { type: 'market_event.new'; seq: number; ts: string; data: MarketEvent }
   | { type: 'price.tick'; seq: number; ts: string; data: PricesStatus & { quotes: Record<string, Quote> } }
   | { type: 'system.status'; seq: number; ts: string; data: Partial<Status> }
   | { type: 'ranking.update'; seq: number; ts: string; data: Rankings }

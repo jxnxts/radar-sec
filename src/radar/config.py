@@ -58,6 +58,14 @@ class AIConfig:
 
 
 @dataclass(frozen=True)
+class SourcesConfig:
+    """Extra signal sources polled by `radar watch` and `radar serve` (see radar.sources)."""
+
+    # Any of "form144", "eightk", "thirteenf", "short"; an empty list turns them all off.
+    enabled: tuple[str, ...] = ("form144", "eightk", "thirteenf", "short")
+
+
+@dataclass(frozen=True)
 class BacktestConfig:
     cost_roundtrip: float = 0.002  # 0.2% round trip
     horizons_months: tuple[int, ...] = (1, 3, 6)
@@ -91,6 +99,7 @@ class Settings:
     sec: SecConfig = field(default_factory=SecConfig)
     ai: AIConfig = field(default_factory=AIConfig)
     backtest: BacktestConfig = field(default_factory=BacktestConfig)
+    sources: SourcesConfig = field(default_factory=SourcesConfig)
 
     @property
     def db_path(self) -> Path:

@@ -185,9 +185,11 @@ In replay each signal carries the **outcome measured by the backtest**: the 1, 3
 | `GET /api/quotes` | Latest quotes. |
 | `GET /api/prices/{ticker}/history?start=&end=` | Daily bars. |
 | `GET /api/logo/{ticker}` | The PNG logo, or 404. |
+| `GET /api/events?limit=&source=` | Events of the extra sources (Form 144, 8-K, 13F, short data). |
+| `GET /api/company/{cik}/context` | A company across all sources: signals, insider buys, Form 144, 8-K, 13F and short data. |
 | `POST /api/replay/control` | REPLAY: `{"paused": true}`, `{"speed": 5}` or `{"seek": "2021-03-01"}`. |
 
-The WebSocket lives at `/ws`. On connect the server sends a `snapshot` with everything the screen needs, then numbered events (`seq`): `signal.new`, `filing.new`, `price.tick`, `system.status`, `ranking.update` and `feed.reset`. The client reconnects on its own with exponential backoff and receives a fresh snapshot, so nothing is lost. The server sends codes (filing kinds, sectors, roles, states) and `{"en", "pt-BR"}` maps for generated text (explanations, summaries, verdict), so the dashboard can switch language without refetching.
+The WebSocket lives at `/ws`. On connect the server sends a `snapshot` with everything the screen needs, then numbered events (`seq`): `signal.new`, `filing.new`, `price.tick`, `system.status`, `ranking.update`, `feed.reset` and `market_event.new` (an event of the extra sources). The client reconnects on its own with exponential backoff and receives a fresh snapshot, so nothing is lost. The server sends codes (filing kinds, sectors, roles, states) and `{"en", "pt-BR"}` maps for generated text (explanations, summaries, verdict), so the dashboard can switch language without refetching.
 
 ## Architecture
 
@@ -247,6 +249,8 @@ src/radar/
   watch.py          the monitor cycle
   backtest/         datasets, prices, returns, statistics, report and replay file
   sectors.py        issuer sector from the SIC code
+  sources/          extra sources (form144, eightk, thirteenf, short): rules, history, live
+                    pollers, source tables, new-signals backtest and report
   api/              dashboard server (REST, WebSocket, live and replay engines, prices, logos)
 web/                dashboard (React, TypeScript, Vite)
 tests/              offline tests, with real filings in tests/fixtures
@@ -312,12 +316,73 @@ Bottom line: following these signals mechanically, with these rules, did not jus
 
 Read, in this order: **median excess** (the typical signal), **beats SPY** (share of signals with positive excess), **t (monthly cohort)** (above 2 is evidence), the **liquidity-filtered tables**, the **per-year breakdown** and the **data funnel** (how many signals went unmeasured and why).
 
+## Extra signal sources
+
+Besides Form 4 and 13D, the radar watches four more free, public sources. Each one lives in
+`src/radar/sources/<source>/` with the same parts (parser, pure rules shared by live and backtest,
+point-in-time history, live poller) and is shown on the dashboard with its own chips, cards,
+tape events and company context.
+
+| Source | What it watches | Signals | Live pace |
+|---|---|---|---|
+| **Form 144** | Notices of planned sales by affiliates (electronic since 2023-04) | `form144_cluster` (3+ sellers in 10 days), `form144_large` (≥ US$ 10 mi or ≥ 1% of shares; context, not tested) | every cycle |
+| **8-K / NT** | Current reports classified by EDGAR item; late-filing notices | `buyback_8k`, `ceo_cfo_exit_8k` (5.02), `bankruptcy_8k` (1.03), `auditor_change_8k` (4.01), `late_filing_nt`; merger agreements, completed deals and earnings releases as context | every cycle (NT every 15 min) |
+| **13F** | Quarterly holdings of managers > US$ 100 mi | `fund_consensus_13f` (breadth of ownership, dated at the 45-day deadline), `notable_fund_new_13f` (new positions of a fixed list of managers) | every 15 min; consensus job after each deadline |
+| **Short data** | FINRA short interest and daily short volume, SEC fails-to-deliver | `short_crowded`, `squeeze_setup`, `ftd_persistent`; short volume as context | hourly checks |
+
+US Congress trades (House/Senate STOCK Act filings) and event calendars (IPO lock-ups,
+earnings dates) were evaluated and **skipped**: trades live in free-layout PDFs, the Senate site
+needs a scripted session, and there is no free structured calendar. The reasoning is in
+[`research/new-signals-plan.md`](research/new-signals-plan.md).
+
+```bash
+uv run radar backtest-sources                 # reports/new-signals-<date>.md and .pt-BR.md
+```
+
+The rules, periods (train 2020–2022, test 2023–2025) and verdict criteria were fixed in the plan
+**before** any backtest ran. Same price engine and benchmarks as the insider backtest; costs
+0.2% round trip, 1% under US$ 5. Verdict at the primary horizon, test period, excess over SPY
+(full report: [`reports/new-signals-2026-11-18.md`](reports/new-signals-2026-11-18.md)):
+
+| Signal | Hypothesis | Test N | Excess mean / median | t | Verdict | Liquid subset¹ |
+|---|---|---|---|---|---|---|
+| `buyback_8k` (6m) | beats | 1,276 | -4.2% / -5.9% | -3.5 | discard | discard |
+| `ceo_cfo_exit_8k` (3m) | lags | 508 | -6.2% / -13.6% | -1.0 | maybe (avoid) | maybe (avoid) |
+| `bankruptcy_8k` (1m) | lags | 54 | -30.4% / -38.9% | -3.0 | maybe (avoid) | insufficient data |
+| `auditor_change_8k` (3m) | lags | 1,860 | +160%² / -12.4% | 1.3 | discard² | maybe (avoid) |
+| `late_filing_nt` (3m) | lags | 4,949 | +864%² / -16.9% | 1.2 | discard² | **avoid** |
+| `form144_cluster` (3m) | lags | 6,130 | -1.0% / -3.7% | -0.9 | maybe (avoid) | maybe (avoid) |
+| `fund_consensus_13f` (3m) | beats | 349 | +2.0% / -0.2% | 1.7 | discard | maybe |
+| `notable_fund_new_13f` (3m) | beats | 619 | -0.1% / -1.1% | 0.0 | discard | discard |
+| `short_crowded` (1m) | lags | 916 | -1.3% / -1.7% | -1.0 | maybe (avoid) | **avoid** |
+| `squeeze_setup` (1m) | beats | 93 | -4.8% / -8.3% | -2.5 | discard | insufficient data |
+| `ftd_persistent` (1m) | lags | 587 | -12.8% / -16.5% | -5.3 | maybe (avoid) | maybe (avoid) |
+
+¹ Entry price ≥ US$ 5 and market value ≥ US$ 300 mi: a view fixed in the plan, not the basis of
+the verdict. ² The mean is dominated by sub-penny OTC quotes (US$ 0.0001 jumping to dollars);
+the median is the meaningful number. **No new signal earned "use".** The useful ones are
+filters: late filings and crowded, rising short interest lagged the index among liquid stocks,
+and fails-to-deliver, CEO/CFO exits and bankruptcies lagged strongly but without a consistent
+train period or significance. Survivorship (Yahoo has almost no delisted tickers) makes every
+*avoid* number look less negative than it was.
+
+![Live room with the extra sources](docs/screenshots/live-sources-1920x1080.png)
+
+On the dashboard: source chips above the signal feed (then type chips for the chosen source),
+cards with a source badge, an icon and text tags for the hypothesis (**Avoid**, **Bullish**) and
+**Not tested**, the source events on the tape, and a "company across all sources" block in the
+focused signal (insider buys, Form 144, 8-K, 13F, short interest, short volume and fails).
+AI summaries cover the new signals within the same hourly cap. Turn sources on or off in
+`radar.toml` (`[sources] enabled`).
+
 ## Data sources and terms
 
 | Source | Used for | Terms |
 |---|---|---|
 | [SEC EDGAR](https://www.sec.gov/edgar) ("getcurrent" feeds, filing archives, company submissions) | Live monitoring, sectors | Public data. The radar follows the SEC [fair access policy](https://www.sec.gov/os/accessing-edgar-data): a declared `User-Agent`, at most 8 requests per second (the limit is 10), backoff on 429/5xx and a local cache so nothing is downloaded twice. |
 | [SEC insider transactions data sets](https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets) | Backtest | Public data, same fair access policy. |
+| [EDGAR full-text search](https://efts.sec.gov/LATEST/search-index) and [SEC Form 13F](https://www.sec.gov/data-research/sec-markets-data/form-13f-data-sets) / [fails-to-deliver](https://www.sec.gov/data-research/sec-markets-data/fails-deliver-data) data sets | Extra sources: history and live | Public data, same fair access policy and rate limiter. |
+| [FINRA Query API](https://developer.finra.org) (consolidated short interest) and [daily short volume files](https://www.finra.org/finra-data/browse-catalog/short-sale-volume-data) | Short-data source | Public datasets, no credentials; a few requests per day, cached. |
 | [Yahoo Finance](https://finance.yahoo.com) via [yfinance](https://github.com/ranaroussi/yfinance) | Backtest prices, delayed dashboard quotes and charts | Unofficial API, not affiliated with Yahoo; data is for personal use under Yahoo's terms and comes with no guarantee. Quotes are delayed about 15 minutes. |
 | [Financial Modeling Prep](https://financialmodelingprep.com) public image endpoint, with [nvstly/icons](https://github.com/nvstly/icons) as fallback | Company logos on the dashboard | Logos are trademarks of their owners, fetched on demand and cached locally (`data/cache/logos/`), never committed. Only the ticker is sent. |
 | [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/python) | Optional AI summaries | Runs on your own Claude Code login/subscription and its terms. |

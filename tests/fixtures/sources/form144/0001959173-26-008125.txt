@@ -1,0 +1,156 @@
+<SEC-DOCUMENT>0001959173-26-008125.txt : 20261118
+<SEC-HEADER>0001959173-26-008125.hdr.sgml : 20261118
+<ACCEPTANCE-DATETIME>20261118103402
+ACCESSION NUMBER:		0001959173-26-008125
+CONFORMED SUBMISSION TYPE:	144
+PUBLIC DOCUMENT COUNT:		1
+FILED AS OF DATE:		20261118
+DATE AS OF CHANGE:		20261118
+
+SUBJECT COMPANY:	
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Matson, Inc.
+		CENTRAL INDEX KEY:			0000003453
+		STANDARD INDUSTRIAL CLASSIFICATION:	WATER TRANSPORTATION [4400]
+		ORGANIZATION NAME:           	01 Energy & Transportation
+		EIN:				990032630
+		STATE OF INCORPORATION:			HI
+		FISCAL YEAR END:			1231
+
+	FILING VALUES:
+		FORM TYPE:		144
+		SEC ACT:		1933 Act
+		SEC FILE NUMBER:	001-34187
+		FILM NUMBER:		261568512
+
+	BUSINESS ADDRESS:	
+		STREET 1:		1411 SAND ISLAND PARKWAY
+		CITY:			HONOLULU
+		STATE:			HI
+		ZIP:			96819
+		BUSINESS PHONE:		808-848-1211
+
+	MAIL ADDRESS:	
+		STREET 1:		1411 SAND ISLAND PARKWAY
+		CITY:			HONOLULU
+		STATE:			HI
+		ZIP:			96819
+
+	FORMER COMPANY:	
+		FORMER CONFORMED NAME:	ALEXANDER & BALDWIN INC
+		DATE OF NAME CHANGE:	19920703
+
+REPORTING-OWNER:	
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Park Kuuhaku T
+		CENTRAL INDEX KEY:			0001910186
+		ORGANIZATION NAME:           	
+
+	FILING VALUES:
+		FORM TYPE:		144
+
+	MAIL ADDRESS:	
+		STREET 1:		1411 SAND ISLAND PARKWAY
+		CITY:			HONOLULU
+		STATE:			HI
+		ZIP:			96819
+</SEC-HEADER>
+<DOCUMENT>
+<TYPE>144
+<SEQUENCE>1
+<FILENAME>primary_doc.xml
+<TEXT>
+<XML>
+<?xml version="1.0" encoding="UTF-8"?><edgarSubmission xmlns="http://www.sec.gov/edgar/ownership" xmlns:com="http://www.sec.gov/edgar/common">
+  <headerData>
+    <submissionType>144</submissionType>
+    <filerInfo>
+      <filer>
+        <filerCredentials>
+          <cik>0001910186</cik>
+          <ccc>XXXXXXXX</ccc>
+        </filerCredentials>
+      </filer>
+      <liveTestFlag>LIVE</liveTestFlag>
+
+
+
+    </filerInfo>
+  </headerData>
+  <formData>
+    <issuerInfo>
+      <issuerCik>0000003453</issuerCik>
+      <issuerName>Matson, Inc.</issuerName>
+      <secFileNumber>001-34187</secFileNumber>
+      <issuerAddress>
+        <com:street1>1411 SAND ISLAND PARKWAY</com:street1>
+        <com:city>HONOLULU</com:city>
+        <com:stateOrCountry>HI</com:stateOrCountry>
+        <com:zipCode>96819</com:zipCode>
+      </issuerAddress>
+      <issuerContactPhone>808-848-1211</issuerContactPhone>
+      <nameOfPersonForWhoseAccountTheSecuritiesAreToBeSold>Park Kuuhaku T</nameOfPersonForWhoseAccountTheSecuritiesAreToBeSold>
+      <relationshipsToIssuer>
+        <relationshipToIssuer>Officer</relationshipToIssuer>
+      </relationshipsToIssuer>
+    </issuerInfo>
+    <securitiesInformation>
+      <securitiesClassTitle>Common</securitiesClassTitle>
+      <brokerOrMarketmakerDetails>
+        <name>Fidelity Brokerage Services LLC</name>
+        <address>
+          <com:street1>900 Salem Street</com:street1>
+          <com:city>Smithfield</com:city>
+          <com:stateOrCountry>RI</com:stateOrCountry>
+          <com:zipCode>02917</com:zipCode>
+        </address>
+      </brokerOrMarketmakerDetails>
+      <noOfUnitsSold>1500</noOfUnitsSold>
+      <aggregateMarketValue>320835.00</aggregateMarketValue>
+      <noOfUnitsOutstanding>29636274</noOfUnitsOutstanding>
+      <approxSaleDate>11/18/2026</approxSaleDate>
+      <securitiesExchangeName>NYSE</securitiesExchangeName>
+    </securitiesInformation>
+    <securitiesToBeSold>
+      <securitiesClassTitle>Common</securitiesClassTitle>
+      <acquiredDate>01/22/2026</acquiredDate>
+      <natureOfAcquisitionTransaction>Restricted Stock Vesting</natureOfAcquisitionTransaction>
+      <nameOfPersonfromWhomAcquired>Issuer</nameOfPersonfromWhomAcquired>
+      <isGiftTransaction>N</isGiftTransaction>
+      <amountOfSecuritiesAcquired>196</amountOfSecuritiesAcquired>
+      <paymentDate>01/22/2026</paymentDate>
+      <natureOfPayment>Compensation</natureOfPayment>
+    </securitiesToBeSold>
+    <securitiesToBeSold>
+      <securitiesClassTitle>Common</securitiesClassTitle>
+      <acquiredDate>01/24/2026</acquiredDate>
+      <natureOfAcquisitionTransaction>Restricted Stock Vesting</natureOfAcquisitionTransaction>
+      <nameOfPersonfromWhomAcquired>Issuer</nameOfPersonfromWhomAcquired>
+      <isGiftTransaction>N</isGiftTransaction>
+      <amountOfSecuritiesAcquired>265</amountOfSecuritiesAcquired>
+      <paymentDate>01/24/2026</paymentDate>
+      <natureOfPayment>Compensation</natureOfPayment>
+    </securitiesToBeSold>
+    <securitiesToBeSold>
+      <securitiesClassTitle>Common</securitiesClassTitle>
+      <acquiredDate>01/25/2026</acquiredDate>
+      <natureOfAcquisitionTransaction>Restricted Stock Vesting</natureOfAcquisitionTransaction>
+      <nameOfPersonfromWhomAcquired>Issuer</nameOfPersonfromWhomAcquired>
+      <isGiftTransaction>N</isGiftTransaction>
+      <amountOfSecuritiesAcquired>1039</amountOfSecuritiesAcquired>
+      <paymentDate>01/25/2026</paymentDate>
+      <natureOfPayment>Compensation</natureOfPayment>
+    </securitiesToBeSold>
+    <nothingToReportFlagOnSecuritiesSoldInPast3Months>Y</nothingToReportFlagOnSecuritiesSoldInPast3Months>
+    <noticeSignature>
+      <noticeDate>11/18/2026</noticeDate>
+      <signature>/s/ Emily Navaro, as a duly authorized representative of Fidelity Brokerage Services LLC, as attorney-in-fact for  Ku'uhaku Park.</signature>
+    </noticeSignature>
+  </formData>
+</edgarSubmission>
+</XML>
+</TEXT>
+</DOCUMENT>
+</SEC-DOCUMENT>

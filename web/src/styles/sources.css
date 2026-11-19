@@ -1,0 +1,286 @@
+/* Extra signal sources (Form 144, 13F, 8-K, short data). Each source has an accent,
+   but every badge also carries an icon and a word: color is never the only cue. */
+:root {
+  --src-form144: #ff8a5c;
+  --src-thirteenf: var(--up);
+  --src-eightk: #d9c27a;
+  --src-short: var(--down);
+}
+
+.card--src-form144,
+.detail--form144_cluster,
+.detail--form144_large {
+  --accent: var(--src-form144);
+}
+
+.card--src-thirteenf,
+.detail--fund_consensus_13f,
+.detail--notable_fund_new_13f {
+  --accent: var(--src-thirteenf);
+}
+
+.card--src-eightk,
+.detail--buyback_8k,
+.detail--ceo_cfo_exit_8k,
+.detail--bankruptcy_8k,
+.detail--auditor_change_8k,
+.detail--late_filing_nt {
+  --accent: var(--src-eightk);
+}
+
+.card--src-short,
+.detail--short_crowded,
+.detail--squeeze_setup,
+.detail--ftd_persistent {
+  --accent: var(--src-short);
+}
+
+/* Source chips of the feed: icon + name. */
+.chip svg {
+  margin-right: 0.3125rem;
+  vertical-align: -0.125em;
+  font-size: 0.8125rem;
+}
+
+.chip--form144 svg {
+  color: var(--src-form144);
+}
+
+.chip--thirteenf svg {
+  color: var(--src-thirteenf);
+}
+
+.chip--eightk svg {
+  color: var(--src-eightk);
+}
+
+.chip--short svg {
+  color: var(--src-short);
+}
+
+.chip[aria-pressed='true'] svg {
+  color: inherit;
+}
+
+.tag svg {
+  margin-right: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.tag--source {
+  color: var(--tx-2);
+  border-color: color-mix(in srgb, var(--accent, var(--tx-3)) 55%, transparent);
+}
+
+.tag--source svg {
+  color: var(--accent, var(--tx-2));
+}
+
+.tag--avoid {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 55%, transparent);
+  font-weight: 600;
+}
+
+.tag--avoid::before {
+  content: '▼';
+  margin-right: 0.25rem;
+  font-size: 0.5rem;
+}
+
+.tag--long {
+  color: var(--up);
+  border-color: color-mix(in srgb, var(--up) 55%, transparent);
+  font-weight: 600;
+}
+
+.tag--long::before {
+  content: '▲';
+  margin-right: 0.25rem;
+  font-size: 0.5rem;
+}
+
+.tag--untested {
+  border-style: dashed;
+  border-color: var(--tx-3);
+  color: var(--tx-3);
+}
+
+/* Tape: events of the extra sources. */
+.tape__form {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tape__form svg {
+  font-size: 0.75rem;
+}
+
+.tape__form--form144 {
+  color: var(--src-form144);
+  border-color: color-mix(in srgb, var(--src-form144) 45%, transparent);
+}
+
+.tape__form--thirteenf {
+  color: var(--src-thirteenf);
+  border-color: color-mix(in srgb, var(--src-thirteenf) 45%, transparent);
+}
+
+.tape__form--eightk {
+  color: var(--src-eightk);
+  border-color: color-mix(in srgb, var(--src-eightk) 45%, transparent);
+}
+
+.tape__form--short {
+  color: var(--src-short);
+  border-color: color-mix(in srgb, var(--src-short) 45%, transparent);
+}
+
+.tape__event {
+  max-width: 34rem;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--tx-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Detail: excerpt of the filing that fired the rule. */
+.excerpt {
+  margin: 0;
+  padding: 0.375rem 0.625rem;
+  border-left: 2px solid var(--accent, var(--line-2));
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--tx-2);
+}
+
+/* Detail: the company across every source. */
+.ctx {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--line);
+  overflow: visible;
+}
+
+.ctx__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.ctx__section {
+  min-width: 0;
+}
+
+.ctx__title {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0 0 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx-3);
+}
+
+.ctx__section--form144 .ctx__title svg {
+  color: var(--src-form144);
+}
+
+.ctx__section--thirteenf .ctx__title svg {
+  color: var(--src-thirteenf);
+}
+
+.ctx__section--eightk .ctx__title svg {
+  color: var(--src-eightk);
+}
+
+.ctx__section--short .ctx__title svg {
+  color: var(--src-short);
+}
+
+.ctx__list {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ctx__row {
+  display: grid;
+  grid-template-columns: 5.75rem minmax(0, 1fr);
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+.ctx__date {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--tx-3);
+}
+
+.ctx__text {
+  overflow: hidden;
+  color: var(--tx-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.ctx__text:hover {
+  color: var(--tx-1);
+  text-decoration: underline;
+}
+
+.ctx__text b {
+  color: var(--tx-1);
+  font-weight: 600;
+}
+
+.ctx__sub {
+  margin-left: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--tx-3);
+}
+
+.ctx__none {
+  margin: 0;
+  font-size: 0.6875rem;
+  color: var(--tx-3);
+}
+
+.ctx__facts {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.ctx__facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx-3);
+}
+
+.ctx__facts dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx-1);
+}
+
+/* Second chip row of the feed: signal types of the selected source. */
+.filters--types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0;
+  padding: 0.375rem 0.75rem 0;
+}

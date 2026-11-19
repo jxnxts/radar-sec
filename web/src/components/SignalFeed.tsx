@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useI18n } from '../i18n'
 import { useNow } from '../lib/hooks'
-import { isFresh, usePanel } from '../store'
-import type { SignalType } from '../types'
+import { isFresh, usePanel, visibleSignals } from '../store'
+import { SOURCES, TYPES_BY_SOURCE, type Source } from '../types'
+import { SourceGlyph } from './glyphs'
 import { Panel } from './Panel'
 import { SignalCard } from './SignalCard'
 
-const FILTERS: Array<SignalType | 'all'> = ['all', 'cluster_buy', 'big_officer_buy', 'activist_13d']
+const FILTERS: Array<Source | 'all'> = ['all', ...SOURCES]
 
 export function SignalFeed() {
   const { t } = useI18n()
@@ -16,6 +17,8 @@ export function SignalFeed() {
   const selectedId = usePanel((s) => s.selectedId)
   const pinnedUntil = usePanel((s) => s.pinnedUntil)
   const filter = usePanel((s) => s.filter)
+  const source = usePanel((s) => s.source)
+  const setSource = usePanel((s) => s.setSource)
   const mode = usePanel((s) => s.mode)
   const select = usePanel((s) => s.select)
   const follow = usePanel((s) => s.follow)
@@ -24,8 +27,8 @@ export function SignalFeed() {
   const list = useRef<HTMLOListElement>(null)
 
   const visible = useMemo(
-    () => (filter === 'all' ? signals : signals.filter((s) => s.type === filter)),
-    [signals, filter],
+    () => visibleSignals({ signals, filter, source }),
+    [signals, filter, source],
   )
   const newest = signals[0]
   const newestFresh = newest ? isFresh(arrivals, newest.id, now) : false
@@ -46,21 +49,35 @@ export function SignalFeed() {
       labelledBy="feed-title"
       className={`feed${newestFresh ? ' feed--alert' : ''}`}
       aside={
-        <div className="filters" role="group" aria-label={t.feed.filterGroup}>
+        <div className="filters" role="group" aria-label={t.sources.group}>
           {FILTERS.map((id) => (
             <button
               key={id}
               type="button"
-              className="chip"
-              aria-pressed={filter === id}
-              onClick={() => setFilter(id)}
+              className={`chip chip--${id}`}
+              aria-pressed={source === id}
+              title={id === 'all' ? undefined : t.sources.title[id]}
+              onClick={() => {
+                setSource(id)
+                setFilter('all')
+              }}
             >
-              {id === 'all' ? t.feed.all : t.signalType.tiny[id]}
+              {id === 'all' ? null : <SourceGlyph source={id} />}
+              {id === 'all' ? t.sources.all : t.sources.name[id]}
             </button>
           ))}
         </div>
       }
     >
+      {source !== 'all' ? (
+        <div className="filters filters--types" role="group" aria-label={t.feed.filterGroup}>
+          {(['all', ...TYPES_BY_SOURCE[source]] as const).map((id) => (
+            <button key={id} type="button" className="chip" aria-pressed={filter === id} onClick={() => setFilter(id)}>
+              {id === 'all' ? t.feed.all : t.signalType.tiny[id]}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div className="feed__status">
         <span>
           {t.feed.count(visible.length)}
@@ -85,7 +102,7 @@ export function SignalFeed() {
       {visible.length === 0 ? (
         <div className="empty">
           <p className="empty__title">{t.feed.emptyTitle}</p>
-          <p>{filter === 'all' ? t.feed.emptyAll : t.feed.emptyFiltered}</p>
+          <p>{filter === 'all' && source === 'all' ? t.feed.emptyAll : t.feed.emptyFiltered}</p>
         </div>
       ) : (
         <ol className="feed__list" ref={list}>

@@ -1,8 +1,10 @@
 import { labelOf, localized, roleLabel, useI18n } from '../i18n'
 import { personName } from '../lib/format'
 import { usePriceHistory, useSignalDetail } from '../lib/hooks'
-import { usePanel } from '../store'
+import { cardFacts, factLabel, formatFact } from '../lib/facts'
+import { sourceOf, usePanel } from '../store'
 import type { Outcome, Purchase, Quote, Signal } from '../types'
+import { CompanyContext } from './CompanyContext'
 import { Delta } from './Delta'
 import { ExternalIcon, SignalGlyph } from './glyphs'
 import { Logo } from './Logo'
@@ -57,9 +59,34 @@ function OutcomeTable({ outcome }: { outcome: Outcome }) {
   )
 }
 
+function headlineFact(signal: Signal) {
+  return cardFacts(signal.facts)[0]
+}
+
+/** KPIs of a signal of the extra sources, straight from its facts. */
+function SourceKpis({ signal, quote }: { signal: Signal; quote: Quote | undefined }) {
+  const { t, f } = useI18n()
+  const facts = (signal.facts ?? []).filter((fact) => fact.kind !== 'quote')
+  return (
+    <dl className="kpis">
+      {facts.map((fact) => (
+        <Kpi key={fact.key} label={factLabel(t, fact)} wide={fact.kind === 'items'}>
+          {formatFact(t, f, fact)}
+        </Kpi>
+      ))}
+      {quote ? (
+        <Kpi label={t.detail.kpi.quoteDelayed}>
+          {f.price(quote.price)} <Delta value={quote.change_pct} digits={2} />
+        </Kpi>
+      ) : null}
+    </dl>
+  )
+}
+
 function Kpis({ signal, quote }: { signal: Signal; quote: Quote | undefined }) {
   const { t, f } = useI18n()
   const k = t.detail.kpi
+  if (sourceOf(signal) !== 'insiders') return <SourceKpis signal={signal} quote={quote} />
   if (signal.type === 'activist_13d') {
     return (
       <dl className="kpis">
@@ -167,6 +194,7 @@ export function SignalDetail() {
     .split('\n')
     .filter((line) => line.trim())
   const byAi = localized(signal.summary_source, lang) === 'ai'
+  const excerpt = signal.facts?.find((fact) => fact.kind === 'quote')
 
   return (
     <Panel
@@ -245,6 +273,7 @@ export function SignalDetail() {
               <>
                 <h4 className="block__title">{t.detail.rule}</h4>
                 <p className="rule">{localized(signal.explanation, lang)}</p>
+                {excerpt ? <blockquote className="excerpt">{formatFact(t, f, excerpt)}</blockquote> : null}
               </>
             )}
           </section>
@@ -266,7 +295,15 @@ export function SignalDetail() {
                       <SignalGlyph type={item.type} />
                       <span>{f.dateShort(item.date, true)}</span>
                       <span>{t.signalType.short[item.type]}</span>
-                      <span className="num">{item.type === 'activist_13d' ? f.points(item.percent) : f.usd(item.value)}</span>
+                      <span className="num">
+                        {sourceOf(item) !== 'insiders'
+                          ? headlineFact(item)
+                            ? formatFact(t, f, headlineFact(item)!)
+                            : ''
+                          : item.type === 'activist_13d'
+                            ? f.points(item.percent)
+                            : f.usd(item.value)}
+                      </span>
                       {item.outcome ? <OutcomeBadge outcome={item.outcome} /> : null}
                     </li>
                   ))}
@@ -275,6 +312,8 @@ export function SignalDetail() {
             ) : null}
           </section>
         </div>
+
+        <CompanyContext signal={signal} />
       </div>
     </Panel>
   )

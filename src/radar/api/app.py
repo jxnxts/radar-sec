@@ -25,7 +25,10 @@ from radar.api.hub import Hub
 from radar.api.logos import LogoService
 from radar.api.prices import PriceService
 from radar.api.ranking import WINDOWS
-from radar.signals import SIGNAL_TYPES
+from radar.signals import SIGNAL_TYPES as INSIDER_TYPES
+from radar.sources.specs import SPECS as SOURCE_SPECS
+
+SIGNAL_TYPES = (*INSIDER_TYPES, *SOURCE_SPECS)
 
 log = logging.getLogger(__name__)
 
@@ -160,6 +163,24 @@ def create_app(
         if found is None:
             raise HTTPException(404, "company without recorded signals or buys")
         return found
+
+    @app.get("/api/events")
+    def market_events(
+        limit: int = Query(60, ge=1, le=300), source: str | None = None
+    ) -> list[dict[str, Any]]:
+        """Events of the extra sources (Form 144, 8-K, 13F, short data); none in REPLAY."""
+        list_events = getattr(engine, "list_events", None)
+        return list_events(limit=limit, source=source) if list_events else []
+
+    @app.get("/api/company/{cik}/context")
+    def company_context(cik: str) -> dict[str, Any]:
+        """Insiders, 13F, 8-K, Form 144 and short data of one company, in one payload."""
+        if not cik.isdigit():
+            raise HTTPException(422, "invalid CIK")
+        context = getattr(engine, "company_context", None)
+        if context is None:
+            raise HTTPException(404, "context is only available live")
+        return context(cik.lstrip("0"))
 
     @app.get("/api/ranking")
     def ranking(days: int = Query(7)) -> dict[str, Any]:

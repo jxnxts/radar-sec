@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getJSON } from './api'
-import type { PriceHistory, SignalDetail } from '../types'
+import type { CompanyContext, PriceHistory, SignalDetail } from '../types'
 
 /** Clock that re-renders the component every `interval` ms. */
 export function useNow(interval = 1000): number {
@@ -47,6 +47,16 @@ export function useFetch<T>(path: string | null): Loadable<T> {
 
 export function useSignalDetail(id: string | null): Loadable<SignalDetail> {
   return useFetch<SignalDetail>(id ? `/api/signals/${encodeURIComponent(id)}` : null)
+}
+
+/**
+ * Everything the radar knows about a company across sources (live only). `version`
+ * changes when new events of that company arrive, which refetches the context.
+ */
+export function useCompanyContext(cik: string | null, version = 0): Loadable<CompanyContext> {
+  return useFetch<CompanyContext>(
+    cik ? `/api/company/${encodeURIComponent(cik)}/context${version ? `?v=${version}` : ''}` : null,
+  )
 }
 
 export function usePriceHistory(

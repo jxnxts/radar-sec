@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useI18n } from '../i18n'
+import { localized, useI18n } from '../i18n'
 import { clockOf, personName, type Format } from '../lib/format'
 import { usePrefersReducedMotion } from '../lib/hooks'
 import { usePanel } from '../store'
-import type { Filing } from '../types'
-import { KindGlyph } from './glyphs'
+import type { Filing, MarketEvent } from '../types'
+import { KindGlyph, SourceGlyph } from './glyphs'
 
 function formBadge(form: string): string {
   if (form.includes('13D')) return form.endsWith('/A') ? '13D/A' : '13D'
@@ -46,6 +46,53 @@ function TapeItem({ filing }: { filing: Filing }) {
   )
 }
 
+function EventTapeItem({ event }: { event: MarketEvent }) {
+  const { t, f, lang } = useI18n()
+  const content = (
+    <>
+      <span className={`tape__form tape__form--${event.source}`}>
+        <SourceGlyph source={event.source} />
+        {t.sources.eventKinds[event.kind] ?? t.sources.name[event.source] ?? event.source}
+      </span>
+      {event.ticker || event.company ? (
+        <span className="tape__ticker">{event.ticker || event.company}</span>
+      ) : null}
+      <span className="tape__event">{localized(event.title, lang)}</span>
+      <span className="tape__when">
+        {f.dateShort(event.date)}
+        {event.seen_at ? ` ${clockOf(event.seen_at)}` : ''}
+      </span>
+    </>
+  )
+  return event.url ? (
+    <a className="tape__item" href={event.url} target="_blank" rel="noreferrer noopener" tabIndex={-1}>
+      {content}
+    </a>
+  ) : (
+    <span className="tape__item">{content}</span>
+  )
+}
+
+type TapeEntry = { key: string; at: string; filing?: Filing; event?: MarketEvent }
+
+/** Filings and extra-source events on one tape, newest first. */
+export function tapeEntries(filings: Filing[], events: MarketEvent[]): TapeEntry[] {
+  const entries: TapeEntry[] = [
+    ...filings.map((filing) => ({
+      key: `f-${filing.accession}`,
+      at: filing.accepted_at ?? filing.filed_date ?? '',
+      filing,
+    })),
+    ...events.map((event) => ({ key: `e-${event.id}`, at: event.seen_at ?? event.date, event })),
+  ]
+  // Stable sort: equal times keep the server order (newest first within each list).
+  return entries.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0))
+}
+
+function Entry({ entry }: { entry: TapeEntry }) {
+  return entry.filing ? <TapeItem filing={entry.filing} /> : entry.event ? <EventTapeItem event={entry.event} /> : null
+}
+
 /**
  * Filing tape. The newest one stays still on the left (and flashes on arrival); the rest
  * scroll by on the tape, which only swaps its content at the end of each loop to avoid jumps.
@@ -53,13 +100,15 @@ function TapeItem({ filing }: { filing: Filing }) {
 export function FilingTape() {
   const { t } = useI18n()
   const filings = usePanel((s) => s.filings)
+  const events = usePanel((s) => s.events)
+  const entries = useMemo(() => tapeEntries(filings, events), [filings, events])
   const reduced = usePrefersReducedMotion()
-  const [shown, setShown] = useState<Filing[]>(filings)
-  const latest = filings[0]
+  const [shown, setShown] = useState<TapeEntry[]>(entries)
+  const latest = entries[0]
 
   useEffect(() => {
-    if (shown.length === 0 || reduced) setShown(filings)
-  }, [filings, shown.length, reduced])
+    if (shown.length === 0 || reduced) setShown(entries)
+  }, [entries, shown.length, reduced])
 
   const duration = useMemo(() => Math.max(40, shown.length * 5), [shown.length])
 
@@ -68,8 +117,8 @@ export function FilingTape() {
       <div className="tape__latest">
         <span className="tape__label">{t.tape.latest}</span>
         {latest ? (
-          <span className="tape__flash" key={latest.accession}>
-            <TapeItem filing={latest} />
+          <span className="tape__flash" key={latest.key}>
+            <Entry entry={latest} />
           </span>
         ) : (
           <span className="tape__idle">{t.tape.waiting}</span>
@@ -82,12 +131,15 @@ export function FilingTape() {
           <div
             className="tape__track"
             style={{ animationDuration: `${duration}s` }}
-            onAnimationIteration={() => setShown(usePanel.getState().filings)}
+            onAnimationIteration={() => {
+              const state = usePanel.getState()
+              setShown(tapeEntries(state.filings, state.events))
+            }}
           >
             {[0, 1].map((copy) => (
               <div className="tape__run" key={copy} aria-hidden={copy === 1}>
-                {shown.map((filing) => (
-                  <TapeItem key={`${copy}-${filing.accession}`} filing={filing} />
+                {shown.map((entry) => (
+                  <Entry key={`${copy}-${entry.key}`} entry={entry} />
                 ))}
               </div>
             ))}

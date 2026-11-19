@@ -5,6 +5,7 @@ import { create } from 'zustand'
 import type { ConnectionInfo } from './lib/socket'
 import type {
   Filing,
+  MarketEvent,
   Mode,
   PricesStatus,
   Quote,
@@ -12,11 +13,13 @@ import type {
   ServerMessage,
   Signal,
   SignalType,
+  Source,
   Status,
 } from './types'
 
 export const MAX_SIGNALS = 80
 export const MAX_FILINGS = 80
+export const MAX_EVENTS = 80
 /** How long a newly arrived signal stays highlighted. */
 export const FRESH_MS = 45_000
 /** After an operator click, the panel waits this long before following new signals again. */
@@ -33,12 +36,16 @@ export interface PanelState {
   quotes: Record<string, Quote>
   signals: Signal[]
   filings: Filing[]
+  /** Events of the extra sources (Form 144, 8-K, 13F, short data), newest first. */
+  events: MarketEvent[]
   ranking: Rankings
   /** When each signal arrived in this session (ms), for the "new" highlight. */
   arrivals: Record<string, number>
   selectedId: string | null
   pinnedUntil: number
   filter: SignalType | 'all'
+  /** Source chips of the signal feed. */
+  source: Source | 'all'
   window: '7' | '30'
 }
 
@@ -53,12 +60,37 @@ export const initialState: PanelState = {
   quotes: {},
   signals: [],
   filings: [],
+  events: [],
   ranking: {},
   arrivals: {},
   selectedId: null,
   pinnedUntil: 0,
   filter: 'all',
+  source: 'all',
   window: '7',
+}
+
+/** Source of a signal; older servers send none, and those are all insider signals. */
+export function sourceOf(signal: Signal): Source {
+  return signal.source ?? 'insiders'
+}
+
+/** Signals that pass the feed filters (source chips and signal type). */
+export function visibleSignals(state: Pick<PanelState, 'signals' | 'filter' | 'source'>): Signal[] {
+  return state.signals.filter(
+    (s) => (state.source === 'all' || sourceOf(s) === state.source) && (state.filter === 'all' || s.type === state.filter),
+  )
+}
+
+function mergeEvents(current: MarketEvent[], incoming: MarketEvent[]): MarketEvent[] {
+  const seen = new Set<string>()
+  const merged: MarketEvent[] = []
+  for (const event of [...incoming, ...current]) {
+    if (seen.has(event.id)) continue
+    seen.add(event.id)
+    merged.push(event)
+  }
+  return merged.slice(0, MAX_EVENTS)
 }
 
 function mergeFilings(current: Filing[], incoming: Filing[]): Filing[] {
@@ -105,6 +137,7 @@ export function applySnapshot(
     quotes: data.quotes,
     signals,
     filings: mergeFilings([], data.filings),
+    events: mergeEvents([], data.market_events ?? []),
     ranking: data.ranking,
     arrivals,
     selectedId: keepSelection(state, signals),
@@ -135,6 +168,8 @@ export function applyEvent(
     }
     case 'filing.new':
       return { seq, filings: mergeFilings(state.filings, [message.data]) }
+    case 'market_event.new':
+      return { seq, events: mergeEvents(state.events, [message.data]) }
     case 'price.tick': {
       const { quotes, ...prices } = message.data
       return { seq, quotes, prices }
@@ -168,6 +203,7 @@ interface Actions {
   select: (id: string) => void
   follow: () => void
   setFilter: (filter: SignalType | 'all') => void
+  setSource: (source: Source | 'all') => void
   setWindow: (window: '7' | '30') => void
 }
 
@@ -183,6 +219,7 @@ export const usePanel = create<PanelState & Actions>((set) => ({
   select: (id) => set({ selectedId: id, pinnedUntil: Date.now() + PIN_MS }),
   follow: () => set((state) => ({ pinnedUntil: 0, selectedId: state.signals[0]?.id ?? null })),
   setFilter: (filter) => set({ filter }),
+  setSource: (source) => set({ source }),
   setWindow: (window) => set({ window }),
 }))
 

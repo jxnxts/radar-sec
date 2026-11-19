@@ -361,6 +361,7 @@ class ReplayEngine:
             "signals": self.list_signals(),
             "filings": self.list_filings(),
             "ranking": self.rankings(),
+            "market_events": [],  # the extra sources have no replay
         }
 
     def status(self) -> dict[str, Any]:

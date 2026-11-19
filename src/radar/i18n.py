@@ -10,14 +10,18 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from radar.locales import en, pt_br
+from radar.locales import en, pt_br, sources_en, sources_pt_br
 
 EN = "en"
 PT_BR = "pt-BR"
 LANGS: tuple[str, ...] = (EN, PT_BR)
 DEFAULT_LANG = EN
 
-CATALOGS: dict[str, dict[str, str]] = {EN: en.MESSAGES, PT_BR: pt_br.MESSAGES}
+# The extra signal sources keep their messages in their own files (same keys space).
+CATALOGS: dict[str, dict[str, str]] = {
+    EN: {**en.MESSAGES, **sources_en.MESSAGES},
+    PT_BR: {**pt_br.MESSAGES, **sources_pt_br.MESSAGES},
+}
 
 _ALIASES = {
     "en": EN,

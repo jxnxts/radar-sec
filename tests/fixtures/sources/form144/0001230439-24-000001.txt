@@ -1,0 +1,137 @@
+<SEC-DOCUMENT>0001230439-24-000001.txt : 20240222
+<SEC-HEADER>0001230439-24-000001.hdr.sgml : 20240222
+<ACCEPTANCE-DATETIME>20240222185916
+ACCESSION NUMBER:		0001230439-24-000001
+CONFORMED SUBMISSION TYPE:	144
+PUBLIC DOCUMENT COUNT:		1
+FILED AS OF DATE:		20240222
+DATE AS OF CHANGE:		20240222
+
+SUBJECT COMPANY:	
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			10x Genomics, Inc.
+		CENTRAL INDEX KEY:			0001770787
+		STANDARD INDUSTRIAL CLASSIFICATION:	LABORATORY ANALYTICAL INSTRUMENTS [3826]
+		ORGANIZATION NAME:           	08 Industrial Applications and Services
+		IRS NUMBER:				455614458
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			1231
+
+	FILING VALUES:
+		FORM TYPE:		144
+		SEC ACT:		1933 Act
+		SEC FILE NUMBER:	001-39035
+		FILM NUMBER:		24666726
+
+	BUSINESS ADDRESS:	
+		STREET 1:		6230 STONERIDGE MALL ROAD
+		CITY:			PLEASANTON
+		STATE:			CA
+		ZIP:			94588
+		BUSINESS PHONE:		(925) 401-7300
+
+	MAIL ADDRESS:	
+		STREET 1:		6230 STONERIDGE MALL ROAD
+		CITY:			PLEASANTON
+		STATE:			CA
+		ZIP:			94588
+
+	FORMER COMPANY:	
+		FORMER CONFORMED NAME:	10X Genomics, Inc.
+		DATE OF NAME CHANGE:	20190315
+
+REPORTING-OWNER:	
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Hindson Benjamin J.
+		CENTRAL INDEX KEY:			0001786391
+		ORGANIZATION NAME:           	
+
+	FILING VALUES:
+		FORM TYPE:		144
+
+	MAIL ADDRESS:	
+		STREET 1:		10X GENOMICS, INC.
+		STREET 2:		6230 STONERIDGE MALL ROAD
+		CITY:			PLEASANTON
+		STATE:			CA
+		ZIP:			94588
+</SEC-HEADER>
+<DOCUMENT>
+<TYPE>144
+<SEQUENCE>1
+<FILENAME>primary_doc.xml
+<TEXT>
+<XML>
+<?xml version="1.0" encoding="UTF-8"?><edgarSubmission xmlns="http://www.sec.gov/edgar/ownership" xmlns:com="http://www.sec.gov/edgar/common">
+  <headerData>
+    <submissionType>144</submissionType>
+    <filerInfo>
+      <filer>
+        <filerCredentials>
+          <cik>0001786391</cik>
+          <ccc>XXXXXXXX</ccc>
+        </filerCredentials>
+      </filer>
+      <liveTestFlag>LIVE</liveTestFlag>
+
+
+    </filerInfo>
+  </headerData>
+  <formData>
+    <issuerInfo>
+      <issuerCik>0001770787</issuerCik>
+      <issuerName>10x Genomics, Inc.</issuerName>
+      <secFileNumber>001-39035</secFileNumber>
+      <issuerAddress>
+        <com:street1>6230 STONERIDGE MALL ROAD</com:street1>
+        <com:city>PLEASANTON</com:city>
+        <com:stateOrCountry>CA</com:stateOrCountry>
+        <com:zipCode>94588</com:zipCode>
+      </issuerAddress>
+      <issuerContactPhone>(925) 401-7300</issuerContactPhone>
+      <nameOfPersonForWhoseAccountTheSecuritiesAreToBeSold>Hindson Benjamin J.</nameOfPersonForWhoseAccountTheSecuritiesAreToBeSold>
+      <relationshipsToIssuer>
+        <relationshipToIssuer>Officer</relationshipToIssuer>
+        <relationshipToIssuer>Director</relationshipToIssuer>
+      </relationshipsToIssuer>
+    </issuerInfo>
+    <securitiesInformation>
+      <securitiesClassTitle>Common Stock</securitiesClassTitle>
+      <brokerOrMarketmakerDetails>
+        <name>Morgan Stanley Smith Barney LLC</name>
+        <address>
+          <com:street1>200 W. Civic Center Drive, 4th Floor</com:street1>
+          <com:city>Sandy</com:city>
+          <com:stateOrCountry>UT</com:stateOrCountry>
+          <com:zipCode>84070</com:zipCode>
+        </address>
+      </brokerOrMarketmakerDetails>
+      <noOfUnitsSold>2581</noOfUnitsSold>
+      <aggregateMarketValue>122494.26</aggregateMarketValue>
+      <noOfUnitsOutstanding>105109711</noOfUnitsOutstanding>
+      <approxSaleDate>02/22/2024</approxSaleDate>
+      <securitiesExchangeName>NASDAQ</securitiesExchangeName>
+    </securitiesInformation>
+    <securitiesToBeSold>
+      <securitiesClassTitle>Common Stock</securitiesClassTitle>
+      <acquiredDate>02/21/2024</acquiredDate>
+      <natureOfAcquisitionTransaction>Restricted Stock Unit Grant</natureOfAcquisitionTransaction>
+      <nameOfPersonfromWhomAcquired>Issuer</nameOfPersonfromWhomAcquired>
+      <isGiftTransaction>N</isGiftTransaction>
+      <amountOfSecuritiesAcquired>6866</amountOfSecuritiesAcquired>
+      <paymentDate>02/21/2024</paymentDate>
+      <natureOfPayment>Services Rendered</natureOfPayment>
+    </securitiesToBeSold>
+    <nothingToReportFlagOnSecuritiesSoldInPast3Months>Y</nothingToReportFlagOnSecuritiesSoldInPast3Months>
+    <noticeSignature>
+      <noticeDate>02/22/2024</noticeDate>
+      <signature>Benjamin J. Hindson</signature>
+    </noticeSignature>
+  </formData>
+</edgarSubmission>
+</XML>
+</TEXT>
+</DOCUMENT>
+</SEC-DOCUMENT>

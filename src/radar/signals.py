@@ -466,7 +466,10 @@ def explain(signal: Signal, lang: str = DEFAULT_LANG) -> str:
         if d.get("source_format") == "legacy":
             text += t("explain.activist.legacy", lang)
         return text
-    return signal.explanation
+    # Signal types of the extra sources (Form 144, 13F, 8-K, short data).
+    from radar.sources.explain import explain as explain_source
+
+    return explain_source(signal, lang) or signal.explanation
 
 
 def explanations(signal: Signal) -> dict[str, str]:

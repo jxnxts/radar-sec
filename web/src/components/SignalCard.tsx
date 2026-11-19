@@ -1,8 +1,10 @@
 import { labelOf, localized, roleLabel, useI18n } from '../i18n'
+import { cardFacts, factLabel, formatFact } from '../lib/facts'
 import { ARROWS, direction, personName } from '../lib/format'
+import { sourceOf } from '../store'
 import type { Outcome, Quote, Signal } from '../types'
 import { Delta } from './Delta'
-import { SignalGlyph } from './glyphs'
+import { SignalGlyph, SourceGlyph } from './glyphs'
 import { Logo } from './Logo'
 import { ScoreRing } from './ScoreRing'
 
@@ -49,14 +51,38 @@ export function SignalCard({ signal, quote, selected, fresh, now, onSelect }: Si
   const more = signal.insiders.length - people.length
   const when =
     signal.mode === 'live' && fresh ? f.ago(signal.published_at, now) : f.dateShort(signal.date)
+  const source = sourceOf(signal)
+  const facts = cardFacts(signal.facts)
   const headline =
-    signal.type === 'activist_13d' ? t.card.stakeOfCompany(f.points(signal.percent)) : f.usd(signal.value)
+    source !== 'insiders'
+      ? facts[0]
+        ? formatFact(t, f, facts[0])
+        : '—'
+      : signal.type === 'activist_13d'
+        ? t.card.stakeOfCompany(f.points(signal.percent))
+        : f.usd(signal.value)
+  const countLine =
+    source !== 'insiders'
+      ? facts[1]
+        ? `${factLabel(t, facts[1])}: ${formatFact(t, f, facts[1])}`
+        : facts[0]
+          ? factLabel(t, facts[0])
+          : ''
+      : signal.type === 'cluster_buy'
+        ? t.card.insiders(signal.n_insiders)
+        : signal.type === 'big_officer_buy'
+          ? signal.stake_increase != null
+            ? t.card.stake(f.pct(signal.stake_increase))
+            : t.card.openMarket
+          : signal.activist_tone
+            ? t.card.activistTone
+            : t.card.declaredStake
 
   return (
     <li className="card-slot">
       <button
         type="button"
-        className={`card card--${signal.type}${selected ? ' is-selected' : ''}${fresh ? ' is-fresh' : ''}`}
+        className={`card card--${signal.type} card--src-${source}${selected ? ' is-selected' : ''}${fresh ? ' is-fresh' : ''}`}
         aria-pressed={selected}
         onClick={() => onSelect(signal.id)}
         data-signal-id={signal.id}
@@ -82,17 +108,7 @@ export function SignalCard({ signal, quote, selected, fresh, now, onSelect }: Si
 
         <span className="card__figure">
           <span className="card__value">{headline}</span>
-          <span className="card__count">
-            {signal.type === 'cluster_buy'
-              ? t.card.insiders(signal.n_insiders)
-              : signal.type === 'big_officer_buy'
-                ? signal.stake_increase != null
-                  ? t.card.stake(f.pct(signal.stake_increase))
-                  : t.card.openMarket
-                : signal.activist_tone
-                  ? t.card.activistTone
-                  : t.card.declaredStake}
-          </span>
+          <span className="card__count">{countLine}</span>
         </span>
 
         <span className="card__people">
@@ -108,6 +124,22 @@ export function SignalCard({ signal, quote, selected, fresh, now, onSelect }: Si
 
         <span className="card__foot">
           <span className="card__tags">
+            {source !== 'insiders' ? (
+              <span className="tag tag--source" title={t.sources.title[source]}>
+                <SourceGlyph source={source} />
+                {t.sources.name[source]}
+              </span>
+            ) : null}
+            {signal.direction === 'avoid' || signal.direction === 'long' ? (
+              <span className={`tag tag--${signal.direction}`} title={t.sources.directionTitle[signal.direction]}>
+                {t.sources.direction[signal.direction]}
+              </span>
+            ) : null}
+            {signal.tested === false ? (
+              <span className="tag tag--untested" title={t.sources.untestedTitle}>
+                {t.sources.untested}
+              </span>
+            ) : null}
             {signal.sector && signal.sector !== UNCLASSIFIED ? (
               <span className="tag">{labelOf(t.sectors, signal.sector)}</span>
             ) : null}

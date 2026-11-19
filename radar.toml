@@ -43,3 +43,8 @@ price_jump_ratio = 5.0          # daily jump that signals a reverse split Yahoo 
 price_jump_below = 1.0          # ...when it starts from a price below this value (US$)
 price_batch_size = 20           # tickers per Yahoo query
 price_requests_per_second = 2.0 # average pace; bigger bursts get blocked by Yahoo
+
+[sources]
+# Extra sources polled by `radar watch` and `radar serve`, each at its own pace:
+# form144 and eightk every cycle, thirteenf every 15 min, short (FINRA/SEC files) hourly.
+enabled = ["form144", "eightk", "thirteenf", "short"]

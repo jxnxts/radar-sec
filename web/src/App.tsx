@@ -8,7 +8,7 @@ import { TopBar } from './components/TopBar'
 import { applyDocumentLang, useI18n } from './i18n'
 import { useNow } from './lib/hooks'
 import { RadarSocket, socketUrl } from './lib/socket'
-import { usePanel } from './store'
+import { usePanel, visibleSignals } from './store'
 
 function ConnectionBanner() {
   const connection = usePanel((s) => s.connection)
@@ -51,8 +51,9 @@ export function App() {
       if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
       const target = event.target as HTMLElement | null
       if (target?.closest('input, select, textarea, .tablewrap')) return
-      const { signals, selectedId, select, filter } = usePanel.getState()
-      const list = filter === 'all' ? signals : signals.filter((s) => s.type === filter)
+      const state = usePanel.getState()
+      const { selectedId, select } = state
+      const list = visibleSignals(state)
       const index = list.findIndex((s) => s.id === selectedId)
       const next = list[index + (event.key === 'ArrowDown' ? 1 : -1)]
       if (!next) return

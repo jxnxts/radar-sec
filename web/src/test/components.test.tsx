@@ -143,6 +143,7 @@ describe('SignalFeed', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(2)
     expect(screen.getByText(/2 signals/)).toBeTruthy()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Insiders' }))
     fireEvent.click(screen.getByRole('button', { name: 'CEO/CFO' }))
     expect(screen.getAllByRole('listitem')).toHaveLength(1)
     expect(screen.getByText('BETA')).toBeTruthy()
@@ -168,6 +169,7 @@ describe('SignalFeed', () => {
     act(() => useLang.getState().setLang('pt-BR'))
     expect(screen.getByRole('heading', { name: /Sinais/ })).toBeTruthy()
     expect(screen.getByText(/1 sinal/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Insiders' }))
     expect(screen.getByRole('button', { name: 'Grupo' })).toBeTruthy()
   })
 })

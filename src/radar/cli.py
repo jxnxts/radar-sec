@@ -14,7 +14,12 @@ from rich.console import Console
 
 from radar.config import ConfigError, Settings, load_settings
 from radar.i18n import LANGS, normalize_lang, signal_label, t
-from radar.signals import SIGNAL_TYPES
+from radar.signals import SIGNAL_TYPES as INSIDER_TYPES
+from radar.sources.runner import build_runner
+from radar.sources.specs import SPECS as SOURCE_SPECS
+
+# Every type the radar stores: the insider rules plus the extra sources.
+SIGNAL_TYPES = (*INSIDER_TYPES, *SOURCE_SPECS)
 
 app = typer.Typer(
     help="radar-sec: monitors EDGAR filings, detects insider buying signals and measures them.",
@@ -120,6 +125,7 @@ def watch(
             client,
             build_alerters(alert, lang=settings.lang),
             Summarizer(db, settings.ai, lang=settings.lang),
+            sources=build_runner(settings, db, client),
         )
         if once or interval is None:
             _cycle(watcher, settings)
@@ -148,6 +154,8 @@ def _cycle(watcher, settings: Settings) -> None:
         extras.append(t("cli.cycle.errors", lang, n=result.errors))
     if result.stored_only:
         extras.append(t("cli.cycle.stored_only", lang, n=result.stored_only))
+    if result.source_events:
+        extras.append(t("cli.cycle.source_events", lang, n=result.source_events))
     suffix = f" ({'; '.join(extras)})" if extras else ""
     line = t(
         "cli.cycle",
@@ -279,6 +287,43 @@ def backtest(
     _say(settings, "csv_path", path=outcome.csv_path)
     _say(settings, "replay_path", path=outcome.replay_path)
     console.print(f"\n{outcome.verdict}", highlight=False)
+
+
+@app.command("backtest-sources")
+def backtest_sources(
+    start: Annotated[str, typer.Option("--start", help="Start (YYYY-MM-DD).")] = "2020-01-01",
+    end: Annotated[str, typer.Option("--end", help="End (YYYY-MM-DD).")] = "2025-12-31",
+    output: Annotated[
+        Path | None, typer.Option("--output", help="Reports folder (default: reports/).")
+    ] = None,
+    lang: LangOption = None,
+    config: ConfigOption = None,
+    verbose: VerboseOption = False,
+) -> None:
+    """Backtests the extra sources (Form 144, 13F, 8-K, short data) with the pre-registered
+    rules of research/new-signals-plan.md; writes reports/new-signals-<date>.md (+ .pt-BR.md)."""
+    from radar.http import SecClient
+    from radar.sources.backtest import run as run_sources
+
+    settings = _setup(verbose, config, lang)
+    start_date, end_date = _dates(start, end)
+    if output is not None:
+        settings = replace(settings, reports_dir=output)
+    try:
+        client = SecClient(settings.cache_dir, config=settings.sec)
+    except ConfigError as exc:
+        _fail(str(exc))
+    with client:
+        paths = run_sources(
+            settings,
+            client,
+            start_date,
+            end_date,
+            lang=settings.lang,
+            say=lambda message: console.print(message, highlight=False),
+        )
+    for report_lang, path in paths.items():
+        _say(settings, "report_path", lang=report_lang, path=path)
 
 
 @app.command()

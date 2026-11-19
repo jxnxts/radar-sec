@@ -1,0 +1,367 @@
+{
+ "took": 303,
+ "timed_out": false,
+ "_shards": {
+  "total": 50,
+  "successful": 50,
+  "skipped": 0,
+  "failed": 0
+ },
+ "hits": {
+  "total": {
+   "value": 38,
+   "relation": "eq"
+  },
+  "max_score": 10.505377,
+  "hits": [
+   {
+    "_index": "edgar_file",
+    "_id": "0001493152-24-000337:form8-k.htm",
+    "_score": 10.505377,
+    "_source": {
+     "ciks": [
+      "0001855631"
+     ],
+     "period_ending": "2023-12-27",
+     "file_num": [
+      "001-40734"
+     ],
+     "display_names": [
+      "AERWINS Technologies Inc.  (AWIN, AWINW)  (CIK 0001855631)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-01-03",
+     "biz_states": [
+      "M0"
+     ],
+     "sics": [
+      "3721"
+     ],
+     "form": "8-K",
+     "adsh": "0001493152-24-000337",
+     "film_num": [
+      "24508305"
+     ],
+     "biz_locations": [
+      "Minato-ku, Tokyo, M0"
+     ],
+     "file_type": "8-K",
+     "file_description": null,
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "1.03",
+      "2.04",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001467154-24-000004:NOVN01262024_8K_PlanConfirm.txt",
+    "_score": 10.465953,
+    "_source": {
+     "ciks": [
+      "0001467154"
+     ],
+     "period_ending": "2024-01-26",
+     "file_num": [
+      "001-37880"
+     ],
+     "display_names": [
+      "NVN Liquidation, Inc.  (CIK 0001467154)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-01-30",
+     "biz_states": [
+      "NC"
+     ],
+     "sics": [
+      "2834"
+     ],
+     "form": "8-K",
+     "adsh": "0001467154-24-000004",
+     "film_num": [
+      "24578847"
+     ],
+     "biz_locations": [
+      "Pittsboro, NC"
+     ],
+     "file_type": "8-K",
+     "file_description": null,
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "1.03",
+      "3.03"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001493152-24-003336:form8-k.htm",
+    "_score": 9.856403,
+    "_source": {
+     "ciks": [
+      "0001504167"
+     ],
+     "period_ending": "2024-01-22",
+     "file_num": [
+      "001-37411"
+     ],
+     "display_names": [
+      "Timber Pharmaceuticals, Inc.  (CIK 0001504167)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-01-23",
+     "biz_states": [
+      "NJ"
+     ],
+     "sics": [
+      "2834"
+     ],
+     "form": "8-K",
+     "adsh": "0001493152-24-003336",
+     "film_num": [
+      "24550191"
+     ],
+     "biz_locations": [
+      "Warren, NJ"
+     ],
+     "file_type": "8-K",
+     "file_description": null,
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "1.01",
+      "1.03",
+      "2.01",
+      "5.02"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001794905-24-000006:cyxt-20240112.htm",
+    "_score": 9.590983,
+    "_source": {
+     "ciks": [
+      "0001794905"
+     ],
+     "period_ending": "2024-01-12",
+     "file_num": [
+      "001-39496"
+     ],
+     "display_names": [
+      "Cyxtera Technologies, Inc.  (CIK 0001794905)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-01-19",
+     "biz_states": [
+      "FL"
+     ],
+     "sics": [
+      "7370"
+     ],
+     "form": "8-K",
+     "adsh": "0001794905-24-000006",
+     "film_num": [
+      "24545104"
+     ],
+     "biz_locations": [
+      "Coral Gables, FL"
+     ],
+     "file_type": "8-K",
+     "file_description": "8-K",
+     "inc_states": [],
+     "items": [
+      "1.03",
+      "3.03",
+      "5.02",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001493152-24-002344:form8-k.htm",
+    "_score": 9.566232,
+    "_source": {
+     "ciks": [
+      "0001855631"
+     ],
+     "period_ending": "2024-01-10",
+     "file_num": [
+      "001-40734"
+     ],
+     "display_names": [
+      "AERWINS Technologies Inc.  (AWIN, AWINW)  (CIK 0001855631)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-01-16",
+     "biz_states": [
+      "M0"
+     ],
+     "sics": [
+      "3721"
+     ],
+     "form": "8-K",
+     "adsh": "0001493152-24-002344",
+     "film_num": [
+      "24533692"
+     ],
+     "biz_locations": [
+      "Minato-ku, Tokyo, M0"
+     ],
+     "file_type": "8-K",
+     "file_description": null,
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "1.03",
+      "8.01",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001214659-24-000421:o152468k.htm",
+    "_score": 9.062736,
+    "_source": {
+     "ciks": [
+      "0001293310"
+     ],
+     "period_ending": "2024-01-03",
+     "file_num": [
+      "001-35798"
+     ],
+     "display_names": [
+      "HUMANIGEN, INC  (CIK 0001293310)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-01-08",
+     "biz_states": [
+      "NJ"
+     ],
+     "sics": [
+      "2834"
+     ],
+     "form": "8-K",
+     "adsh": "0001214659-24-000421",
+     "film_num": [
+      "24520923"
+     ],
+     "biz_locations": [
+      "Short Hills, NJ"
+     ],
+     "file_type": "8-K",
+     "file_description": null,
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "1.01",
+      "1.03",
+      "2.03",
+      "7.01",
+      "9.01"
+     ]
+    }
+   }
+  ]
+ },
+ "query": {
+  "_source": {
+   "exclude": [
+    "doc_text"
+   ]
+  },
+  "query": {
+   "bool": {
+    "must": [
+     {
+      "match_phrase": {
+       "doc_text": "Item 1.03"
+      }
+     }
+    ],
+    "must_not": [],
+    "should": [],
+    "filter": [
+     {
+      "terms": {
+       "root_forms": [
+        "8-K"
+       ]
+      }
+     },
+     {
+      "range": {
+       "file_date": {
+        "gte": "2024-01-01",
+        "lte": "2024-01-31"
+       }
+      }
+     }
+    ]
+   }
+  },
+  "from": 0,
+  "size": 100,
+  "aggregations": {
+   "form_filter": {
+    "terms": {
+     "field": "root_forms",
+     "size": 30
+    }
+   },
+   "entity_filter": {
+    "terms": {
+     "field": "display_names.raw",
+     "size": 30
+    }
+   },
+   "sic_filter": {
+    "terms": {
+     "field": "sics",
+     "size": 30
+    }
+   },
+   "biz_states_filter": {
+    "terms": {
+     "field": "biz_states",
+     "size": 30
+    }
+   }
+  }
+ }
+}

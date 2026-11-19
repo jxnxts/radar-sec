@@ -1,0 +1,454 @@
+{
+ "took": 754,
+ "timed_out": false,
+ "_shards": {
+  "total": 50,
+  "successful": 50,
+  "skipped": 0,
+  "failed": 0
+ },
+ "hits": {
+  "total": {
+   "value": 20,
+   "relation": "eq"
+  },
+  "max_score": 11.050594,
+  "hits": [
+   {
+    "_index": "edgar_file",
+    "_id": "0001558370-24-001513:vwfb-20240220x8k.htm",
+    "_score": 11.050594,
+    "_source": {
+     "ciks": [
+      "0001913838"
+     ],
+     "period_ending": "2024-02-20",
+     "file_num": [
+      "000-56459"
+     ],
+     "display_names": [
+      "VWF Bancorp, Inc.  (VWFB)  (CIK 0001913838)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-02-22",
+     "biz_states": [
+      "OH"
+     ],
+     "sics": [
+      "6036"
+     ],
+     "form": "8-K",
+     "adsh": "0001558370-24-001513",
+     "film_num": [
+      "24664174"
+     ],
+     "biz_locations": [
+      "Van Wert, OH"
+     ],
+     "file_type": "8-K",
+     "file_description": "8-K",
+     "inc_states": [],
+     "items": [
+      "8.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001437749-24-003047:hpe20240202_8k.htm",
+    "_score": 11.000399,
+    "_source": {
+     "ciks": [
+      "0001792849"
+     ],
+     "period_ending": "2024-02-05",
+     "file_num": [
+      "001-39464"
+     ],
+     "display_names": [
+      "HighPeak Energy, Inc.  (HPK, HPKEW)  (CIK 0001792849)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-02-05",
+     "biz_states": [
+      "TX"
+     ],
+     "sics": [
+      "1381"
+     ],
+     "form": "8-K",
+     "adsh": "0001437749-24-003047",
+     "film_num": [
+      "24593886"
+     ],
+     "biz_locations": [
+      "Fort Worth, TX"
+     ],
+     "file_type": "8-K",
+     "file_description": "FORM 8-K",
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "8.01",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001193125-24-056846:d797120dex992.htm",
+    "_score": 10.873835,
+    "_source": {
+     "ciks": [
+      "0001801368"
+     ],
+     "period_ending": "2024-03-04",
+     "file_num": [
+      "001-39277"
+     ],
+     "display_names": [
+      "MP Materials Corp. / DE  (MP)  (CIK 0001801368)"
+     ],
+     "xsl": null,
+     "sequence": 3,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-03-04",
+     "biz_states": [
+      "NV"
+     ],
+     "sics": [
+      "1000"
+     ],
+     "form": "8-K",
+     "adsh": "0001193125-24-056846",
+     "film_num": [
+      "24712835"
+     ],
+     "biz_locations": [
+      "Las Vegas, NV"
+     ],
+     "file_type": "EX-99.2",
+     "file_description": "EX-99.2",
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "8.01",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001039684-24-000004:oke-20240117.htm",
+    "_score": 10.814457,
+    "_source": {
+     "ciks": [
+      "0001039684"
+     ],
+     "period_ending": "2024-01-17",
+     "file_num": [
+      "001-13643"
+     ],
+     "display_names": [
+      "ONEOK INC /NEW/  (OKE)  (CIK 0001039684)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-01-18",
+     "biz_states": [
+      "OK"
+     ],
+     "sics": [
+      "4923"
+     ],
+     "form": "8-K",
+     "adsh": "0001039684-24-000004",
+     "film_num": [
+      "24542655"
+     ],
+     "biz_locations": [
+      "Tulsa, OK"
+     ],
+     "file_type": "8-K",
+     "file_description": "8-K",
+     "inc_states": [
+      "OK"
+     ],
+     "items": [
+      "7.01",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0000950170-24-025361:seat-20240229.htm",
+    "_score": 10.791353,
+    "_source": {
+     "ciks": [
+      "0001856031"
+     ],
+     "period_ending": "2024-02-29",
+     "file_num": [
+      "001-40926"
+     ],
+     "display_names": [
+      "Vivid Seats Inc.  (SEAT, SEATW)  (CIK 0001856031)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-03-05",
+     "biz_states": [
+      "IL"
+     ],
+     "sics": [
+      "7990"
+     ],
+     "form": "8-K",
+     "adsh": "0000950170-24-025361",
+     "film_num": [
+      "24718211"
+     ],
+     "biz_locations": [
+      "Chicago, IL"
+     ],
+     "file_type": "8-K",
+     "file_description": "8-K",
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "2.02",
+      "5.02",
+      "8.01",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001326801-24-000010:meta-20240201.htm",
+    "_score": 10.729218,
+    "_source": {
+     "ciks": [
+      "0001326801"
+     ],
+     "period_ending": "2024-02-01",
+     "file_num": [
+      "001-35551"
+     ],
+     "display_names": [
+      "Meta Platforms, Inc.  (META)  (CIK 0001326801)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-02-01",
+     "biz_states": [
+      "CA"
+     ],
+     "sics": [
+      "7370"
+     ],
+     "form": "8-K",
+     "adsh": "0001326801-24-000010",
+     "film_num": [
+      "24587025"
+     ],
+     "biz_locations": [
+      "Menlo Park, CA"
+     ],
+     "file_type": "8-K",
+     "file_description": "8-K",
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "2.02",
+      "8.01",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001650164-24-000069:tost-20231231xexhibit991.htm",
+    "_score": 10.092489,
+    "_source": {
+     "ciks": [
+      "0001650164"
+     ],
+     "period_ending": "2024-02-15",
+     "file_num": [
+      "001-40819"
+     ],
+     "display_names": [
+      "Toast, Inc.  (TOST)  (CIK 0001650164)"
+     ],
+     "xsl": null,
+     "sequence": 2,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-02-15",
+     "biz_states": [
+      "MA"
+     ],
+     "sics": [
+      "7374"
+     ],
+     "form": "8-K",
+     "adsh": "0001650164-24-000069",
+     "film_num": [
+      "24643815"
+     ],
+     "biz_locations": [
+      "Boston, MA"
+     ],
+     "file_type": "EX-99.1",
+     "file_description": "EX-99.1",
+     "inc_states": [],
+     "items": [
+      "2.02",
+      "2.05",
+      "8.01",
+      "9.01"
+     ]
+    }
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001753926-24-000400:g084080_ex99-1.htm",
+    "_score": 9.582747,
+    "_source": {
+     "ciks": [
+      "0000822663"
+     ],
+     "period_ending": "2024-02-27",
+     "file_num": [
+      "000-16469"
+     ],
+     "display_names": [
+      "INTER PARFUMS INC  (IPAR)  (CIK 0000822663)"
+     ],
+     "xsl": null,
+     "sequence": 2,
+     "root_forms": [
+      "8-K"
+     ],
+     "file_date": "2024-02-27",
+     "biz_states": [
+      "NY"
+     ],
+     "sics": [
+      "2844"
+     ],
+     "form": "8-K",
+     "adsh": "0001753926-24-000400",
+     "film_num": [
+      "24687418"
+     ],
+     "biz_locations": [
+      "New York, NY"
+     ],
+     "file_type": "EX-99.1",
+     "file_description": "EXHIBIT 99.1",
+     "inc_states": [
+      "DE"
+     ],
+     "items": [
+      "2.02",
+      "7.01",
+      "8.01",
+      "9.01"
+     ]
+    }
+   }
+  ]
+ },
+ "query": {
+  "_source": {
+   "exclude": [
+    "doc_text"
+   ]
+  },
+  "query": {
+   "bool": {
+    "must": [
+     {
+      "match_phrase": {
+       "doc_text": "authorized a share repurchase program"
+      }
+     }
+    ],
+    "must_not": [],
+    "should": [],
+    "filter": [
+     {
+      "terms": {
+       "root_forms": [
+        "8-K"
+       ]
+      }
+     },
+     {
+      "range": {
+       "file_date": {
+        "gte": "2024-01-01",
+        "lte": "2024-03-31"
+       }
+      }
+     }
+    ]
+   }
+  },
+  "from": 0,
+  "size": 100,
+  "aggregations": {
+   "form_filter": {
+    "terms": {
+     "field": "root_forms",
+     "size": 30
+    }
+   },
+   "entity_filter": {
+    "terms": {
+     "field": "display_names.raw",
+     "size": 30
+    }
+   },
+   "sic_filter": {
+    "terms": {
+     "field": "sics",
+     "size": 30
+    }
+   },
+   "biz_states_filter": {
+    "terms": {
+     "field": "biz_states",
+     "size": 30
+    }
+   }
+  }
+ }
+}

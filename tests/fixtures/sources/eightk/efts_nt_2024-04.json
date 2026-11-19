@@ -1,0 +1,380 @@
+{
+ "took": 346,
+ "timed_out": false,
+ "_shards": {
+  "total": 50,
+  "successful": 50,
+  "skipped": 0,
+  "failed": 0
+ },
+ "hits": {
+  "total": {
+   "value": 544,
+   "relation": "eq"
+  },
+  "max_score": null,
+  "hits": [
+   {
+    "_index": "edgar_file",
+    "_id": "0001973047-24-000008:form12b_25marky.htm",
+    "_score": null,
+    "_source": {
+     "ciks": [
+      "0001973047"
+     ],
+     "period_ending": "2024-01-31",
+     "file_num": [
+      "333-271350"
+     ],
+     "display_names": [
+      "MARKY CORP.  (CIK 0001973047)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "NT 10-K"
+     ],
+     "file_date": "2024-04-30",
+     "biz_states": [
+      "WY"
+     ],
+     "sics": [
+      "7370"
+     ],
+     "form": "NT 10-K",
+     "adsh": "0001973047-24-000008",
+     "film_num": [
+      "24896802"
+     ],
+     "biz_locations": [
+      "Sheridan, WY"
+     ],
+     "file_type": "NT 10-K",
+     "file_description": null,
+     "inc_states": [
+      "WY"
+     ],
+     "items": []
+    },
+    "sort": [
+     1714435200000,
+     "0001973047-24-000008:form12b_25marky.htm"
+    ]
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001493152-24-017271:formnt10-k.htm",
+    "_score": null,
+    "_source": {
+     "ciks": [
+      "0001263364"
+     ],
+     "period_ending": "2024-01-31",
+     "file_num": [
+      "333-108715"
+     ],
+     "display_names": [
+      "Idaho Copper Corp  (COPR)  (CIK 0001263364)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "NT 10-K"
+     ],
+     "file_date": "2024-04-30",
+     "biz_states": [
+      "ID"
+     ],
+     "sics": [
+      "1000"
+     ],
+     "form": "NT 10-K",
+     "adsh": "0001493152-24-017271",
+     "film_num": [
+      "24898319"
+     ],
+     "biz_locations": [
+      "Boise, ID"
+     ],
+     "file_type": "NT 10-K",
+     "file_description": null,
+     "inc_states": [
+      "NV"
+     ],
+     "items": []
+    },
+    "sort": [
+     1714435200000,
+     "0001493152-24-017271:formnt10-k.htm"
+    ]
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001493152-24-017241:formnt10-k.htm",
+    "_score": null,
+    "_source": {
+     "ciks": [
+      "0001710495"
+     ],
+     "period_ending": "2024-01-31",
+     "file_num": [
+      "001-41762"
+     ],
+     "display_names": [
+      "PINEAPPLE EXPRESS CANNABIS Co  (PNXP)  (CIK 0001710495)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "NT 10-K"
+     ],
+     "file_date": "2024-04-30",
+     "biz_states": [
+      "UT"
+     ],
+     "sics": [
+      "7372"
+     ],
+     "form": "NT 10-K",
+     "adsh": "0001493152-24-017241",
+     "film_num": [
+      "24897722"
+     ],
+     "biz_locations": [
+      "Draper, UT"
+     ],
+     "file_type": "NT 10-K",
+     "file_description": null,
+     "inc_states": [
+      "NV"
+     ],
+     "items": []
+    },
+    "sort": [
+     1714435200000,
+     "0001493152-24-017241:formnt10-k.htm"
+    ]
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001493152-24-017237:formnt10k.htm",
+    "_score": null,
+    "_source": {
+     "ciks": [
+      "0001721741"
+     ],
+     "period_ending": "2023-12-31",
+     "file_num": [
+      "001-38424"
+     ],
+     "display_names": [
+      "Lazydays Holdings, Inc.  (GORV)  (CIK 0001721741)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "NT 10-K"
+     ],
+     "file_date": "2024-04-30",
+     "biz_states": [
+      "FL"
+     ],
+     "sics": [
+      "5500"
+     ],
+     "form": "NT 10-K",
+     "adsh": "0001493152-24-017237",
+     "film_num": [
+      "24897647"
+     ],
+     "biz_locations": [
+      "Tampa, FL"
+     ],
+     "file_type": "NT 10-K",
+     "file_description": null,
+     "inc_states": [
+      "DE"
+     ],
+     "items": []
+    },
+    "sort": [
+     1714435200000,
+     "0001493152-24-017237:formnt10k.htm"
+    ]
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001493152-24-017200:formnt10-k.htm",
+    "_score": null,
+    "_source": {
+     "ciks": [
+      "0001172178"
+     ],
+     "period_ending": "2024-01-31",
+     "file_num": [
+      "000-50071"
+     ],
+     "display_names": [
+      "LIBERTY STAR URANIUM & METALS CORP.  (LBSR)  (CIK 0001172178)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "NT 10-K"
+     ],
+     "file_date": "2024-04-30",
+     "biz_states": [
+      "AZ"
+     ],
+     "sics": [
+      "1000"
+     ],
+     "form": "NT 10-K",
+     "adsh": "0001493152-24-017200",
+     "film_num": [
+      "24896223"
+     ],
+     "biz_locations": [
+      "Tucson, AZ"
+     ],
+     "file_type": "NT 10-K",
+     "file_description": null,
+     "inc_states": [
+      "NV"
+     ],
+     "items": []
+    },
+    "sort": [
+     1714435200000,
+     "0001493152-24-017200:formnt10-k.htm"
+    ]
+   },
+   {
+    "_index": "edgar_file",
+    "_id": "0001477932-24-002438:kcrd_nt10k.htm",
+    "_score": null,
+    "_source": {
+     "ciks": [
+      "0001696025"
+     ],
+     "period_ending": "2024-01-31",
+     "file_num": [
+      "000-56003"
+     ],
+     "display_names": [
+      "Kindcard, Inc.  (KCRD)  (CIK 0001696025)"
+     ],
+     "xsl": null,
+     "sequence": 1,
+     "root_forms": [
+      "NT 10-K"
+     ],
+     "file_date": "2024-04-30",
+     "biz_states": [
+      "FL"
+     ],
+     "sics": [
+      "5940"
+     ],
+     "form": "NT 10-K",
+     "adsh": "0001477932-24-002438",
+     "film_num": [
+      "24898687"
+     ],
+     "biz_locations": [
+      "Boca Raton, FL"
+     ],
+     "file_type": "NT 10-K",
+     "file_description": "NT 10-K",
+     "inc_states": [
+      "NV"
+     ],
+     "items": []
+    },
+    "sort": [
+     1714435200000,
+     "0001477932-24-002438:kcrd_nt10k.htm"
+    ]
+   }
+  ]
+ },
+ "query": {
+  "_source": {
+   "exclude": [
+    "doc_text"
+   ]
+  },
+  "query": {
+   "bool": {
+    "must": [],
+    "must_not": [],
+    "should": [],
+    "filter": [
+     {
+      "terms": {
+       "root_forms": [
+        "NT 10-K",
+        "NT 10-Q"
+       ]
+      }
+     },
+     {
+      "term": {
+       "sequence": {
+        "value": 1
+       }
+      }
+     },
+     {
+      "range": {
+       "file_date": {
+        "gte": "2024-04-01",
+        "lte": "2024-04-30"
+       }
+      }
+     }
+    ]
+   }
+  },
+  "from": 0,
+  "size": 100,
+  "aggregations": {
+   "form_filter": {
+    "terms": {
+     "field": "root_forms",
+     "size": 30
+    }
+   },
+   "entity_filter": {
+    "terms": {
+     "field": "display_names.raw",
+     "size": 30
+    }
+   },
+   "sic_filter": {
+    "terms": {
+     "field": "sics",
+     "size": 30
+    }
+   },
+   "biz_states_filter": {
+    "terms": {
+     "field": "biz_states",
+     "size": 30
+    }
+   }
+  },
+  "sort": [
+   {
+    "file_date": {
+     "order": "desc"
+    }
+   },
+   {
+    "_id": {
+     "order": "desc"
+    }
+   }
+  ]
+ }
+}

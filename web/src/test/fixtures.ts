@@ -1,4 +1,4 @@
-import type { Filing, Signal, Snapshot } from '../types'
+import type { Filing, MarketEvent, Signal, Snapshot } from '../types'
 
 export function signal(id: string, patch: Partial<Signal> = {}): Signal {
   return {
@@ -71,4 +71,43 @@ export function snapshot(patch: Partial<Snapshot> = {}): Snapshot {
     ranking: {},
     ...patch,
   }
+}
+
+export function marketEvent(id: string, patch: Partial<MarketEvent> = {}): MarketEvent {
+  return {
+    id,
+    source: 'eightk',
+    kind: '8k',
+    date: '2026-11-18',
+    cik: '100',
+    company: 'Acme Corp',
+    ticker: 'ACME',
+    symbol: 'ACME',
+    title: { en: '8-K · Earnings release', 'pt-BR': '8-K · Resultado divulgado' },
+    data: { items: ['2.02', '9.01'] },
+    url: 'https://www.sec.gov/x-index.htm',
+    seen_at: '2026-11-18T15:00:00+00:00',
+    ...patch,
+  }
+}
+
+/** A signal of an extra source, as the server sends it. */
+export function sourceSignal(id: string, patch: Partial<Signal> = {}): Signal {
+  return signal(id, {
+    mode: 'live',
+    type: 'short_crowded',
+    label: 'Crowded short',
+    source: 'short',
+    direction: 'avoid',
+    tested: true,
+    value: null,
+    insiders: [],
+    n_insiders: 0,
+    facts: [
+      { key: 'days_to_cover', value: 9.24, kind: 'decimal' },
+      { key: 'short_change', value: 0.4, kind: 'pct' },
+      { key: 'short_shares', value: 5_200_000, kind: 'shares' },
+    ],
+    ...patch,
+  })
 }

@@ -6,7 +6,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from radar.alerts import Alerter, dispatch
 from radar.config import Settings
@@ -27,6 +27,9 @@ from radar.signals import (
 from radar.summary import Summarizer
 from radar.tickers import TickerMap
 
+if TYPE_CHECKING:
+    from radar.sources.runner import SourceRunner
+
 log = logging.getLogger(__name__)
 
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
@@ -45,6 +48,9 @@ class WatchListener(Protocol):
     def signal(self, signal: Signal) -> None:
         """A new signal was stored, summarized and alerted."""
 
+    def market_event(self, event_id: int, event: object) -> None:
+        """A new event of an extra source (Form 144, 8-K, 13F, short data) was stored."""
+
 
 @dataclass
 class WatchResult:
@@ -55,6 +61,7 @@ class WatchResult:
     errors: int = 0
     signals: list[Signal] = field(default_factory=list)
     stored_only: int = 0  # old signals stored without alerting
+    source_events: int = 0  # new events of the extra sources (radar.sources)
 
 
 class Watcher:
@@ -68,8 +75,10 @@ class Watcher:
         *,
         today: date | None = None,
         listener: WatchListener | None = None,
+        sources: SourceRunner | None = None,
     ):
         self.listener = listener
+        self.sources = sources
         self.settings = settings
         self.db = db
         self.client = client
@@ -107,6 +116,14 @@ class Watcher:
             if self.settings.sec.backfill_issuer:
                 self._backfill_issuer(issuer, result)
             candidates += self._form4_signals(issuer)
+
+        if self.sources is not None:
+            self._notify("stage", "sources", 0)
+            tick = self.sources.tick(
+                on_event=lambda event_id, event: self._notify("market_event", event_id, event)
+            )
+            result.source_events += len(tick.events)
+            candidates += tick.signals
 
         self._publish(candidates, result)
         return result
