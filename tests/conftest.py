@@ -52,6 +52,7 @@ def isolated_environment(monkeypatch: pytest.MonkeyPatch):
         "RADAR_DATA_DIR",
         "RADAR_CONFIG",
         "RADAR_LANG",
+        "TIINGO_API_KEY",
     ):
         monkeypatch.delenv(name, raising=False)
 

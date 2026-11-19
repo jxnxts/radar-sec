@@ -20,6 +20,8 @@ def test_shipped_config_file_matches_the_defaults():
     assert loaded.sec == defaults.sec
     assert loaded.ai == defaults.ai
     assert loaded.backtest == defaults.backtest
+    assert loaded.sources == defaults.sources
+    assert loaded.news == defaults.news
     assert loaded.lang == defaults.lang == "en"
 
 
@@ -96,7 +98,15 @@ def workdir(monkeypatch, tmp_path):
 def test_help_lists_the_commands():
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    for command in ("watch", "signals", "backtest", "report", "serve", "replay-build"):
+    for command in (
+        "watch",
+        "signals",
+        "backtest",
+        "report",
+        "serve",
+        "replay-build",
+        "news",
+    ):
         assert command in result.output
 
 

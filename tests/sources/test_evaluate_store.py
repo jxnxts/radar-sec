@@ -122,7 +122,7 @@ def test_cooldown_filter_and_display_names():
 def test_store_migrations_and_events():
     conn = sqlite3.connect(":memory:")
     store = SourceStore(conn)
-    assert migrate(conn) == 1  # idempotent
+    assert migrate(conn) == 2  # idempotent
     event = MarketEvent(
         source="eightk",
         kind="8k",

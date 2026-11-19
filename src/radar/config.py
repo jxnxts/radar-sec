@@ -69,8 +69,37 @@ class AIConfig:
 class SourcesConfig:
     """Extra signal sources polled by `radar watch` and `radar serve` (see radar.sources)."""
 
-    # Any of "form144", "eightk", "thirteenf", "short"; an empty list turns them all off.
-    enabled: tuple[str, ...] = ("form144", "eightk", "thirteenf", "short")
+    # Any of "form144", "eightk", "thirteenf", "short", "news"; an empty list turns them
+    # all off.
+    enabled: tuple[str, ...] = ("form144", "eightk", "thirteenf", "short", "news")
+
+
+@dataclass(frozen=True)
+class NewsConfig:
+    """The news source (radar.sources.news): free wires and GDELT, Tiingo with a key."""
+
+    # Seconds between polls of the press-release wires.
+    interval_seconds: float = 300.0
+    # Wire feeds to read (see radar.sources.news.feeds.WIRES). "businesswire" and
+    # "globenewswire" exist but are off: Business Wire's robots.txt disallows its RSS for
+    # generic agents and GlobeNewswire answers 403 to automated clients (2026-11-19).
+    wires: tuple[str, ...] = ("prnewswire",)
+    # GDELT DOC 2.0: broader news coverage, polled less often (it allows 1 request / 5 s).
+    # Off by default: on 2026-11-19 it answered 429 to every request from the test
+    # machine, even minutes apart. Turn it on where it answers; it backs off on 429.
+    gdelt: bool = False
+    gdelt_interval_seconds: float = 900.0
+    gdelt_query: str = "(NYSE OR NASDAQ) sourcelang:english"
+    gdelt_max_records: int = 250
+    # Tiingo News runs only when TIINGO_API_KEY is set (paid; off otherwise).
+    tiingo_interval_seconds: float = 900.0
+    # Politeness: minimum seconds between two requests to the same host, and the
+    # User-Agent sent to the news hosts (not the SEC one).
+    min_host_interval_seconds: float = 5.0
+    user_agent: str = "radar-sec/0.1 (news reader)"
+    timeout_seconds: float = 30.0
+    # Days the company context of the dashboard looks back for news.
+    context_days: int = 30
 
 
 @dataclass(frozen=True)
@@ -119,6 +148,7 @@ class Settings:
     ai: AIConfig = field(default_factory=AIConfig)
     backtest: BacktestConfig = field(default_factory=BacktestConfig)
     sources: SourcesConfig = field(default_factory=SourcesConfig)
+    news: NewsConfig = field(default_factory=NewsConfig)
     dashboard: DashboardConfig = field(default_factory=DashboardConfig)
 
     @property
@@ -225,3 +255,9 @@ def sec_user_agent() -> str:
             f'Invalid SEC_USER_AGENT ("{value}"). Use the format "Name contact@domain".'
         )
     return value
+
+
+def tiingo_api_key() -> str:
+    """Tiingo API key from TIINGO_API_KEY (.env or environment); empty when not set."""
+    load_env()
+    return os.environ.get("TIINGO_API_KEY", "").strip()

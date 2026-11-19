@@ -15,7 +15,7 @@ from radar.edgar import filing_index_url
 from radar.i18n import localized
 from radar.models import Signal
 
-from .base import EIGHTK, FORM144, SHORT, THIRTEENF
+from .base import EIGHTK, FORM144, NEWS, SHORT, THIRTEENF
 from .explain import event_title
 from .short.data import FTD_PAGE_URL
 from .specs import SPECS
@@ -25,7 +25,7 @@ INSIDERS = "insiders"
 FINRA_SHORT_URL = "https://www.finra.org/finra-data/browse-catalog/equity-short-interest"
 _ACCESSION = re.compile(r"^\d{10}-\d{2}-\d{6}$")
 
-CONTEXT_DAYS = {FORM144: 180, EIGHTK: 365, THIRTEENF: 400}
+CONTEXT_DAYS = {FORM144: 180, EIGHTK: 365, THIRTEENF: 400, NEWS: 30}
 
 
 def source_of(signal_type: str) -> str:
@@ -171,17 +171,23 @@ def event_view(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def company_context(
-    store: SourceStore, cik: str, ticker: str, *, today: date | None = None
+    store: SourceStore,
+    cik: str,
+    ticker: str,
+    *,
+    today: date | None = None,
+    news_days: int | None = None,
 ) -> dict[str, Any]:
     """Everything the extra sources know about one company, newest first."""
     today = today or date.today()
+    limits = {**CONTEXT_DAYS, **({NEWS: news_days} if news_days else {})}
     symbol = normalize_symbol(ticker)
     rows = store.company_events(
         cik, symbol, since=today - timedelta(days=max(CONTEXT_DAYS.values()))
     )
-    by_source: dict[str, list[dict[str, Any]]] = {FORM144: [], EIGHTK: [], THIRTEENF: []}
+    by_source: dict[str, list[dict[str, Any]]] = {FORM144: [], EIGHTK: [], THIRTEENF: [], NEWS: []}
     for row in rows:
-        limit = CONTEXT_DAYS.get(row["source"])
+        limit = limits.get(row["source"])
         if limit is None or row["date"] < (today - timedelta(days=limit)).isoformat():
             continue
         by_source[row["source"]].append(event_view(row))
@@ -194,6 +200,7 @@ def company_context(
         FORM144: by_source[FORM144][:20],
         EIGHTK: by_source[EIGHTK][:20],
         THIRTEENF: by_source[THIRTEENF][:20],
+        NEWS: by_source[NEWS][:20],
         SHORT: {
             "interest": [
                 {

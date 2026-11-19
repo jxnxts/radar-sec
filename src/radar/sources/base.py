@@ -1,6 +1,6 @@
 """Common shapes for the extra market-signal sources.
 
-Every source (Form 144, 13F, 8-K, short data) turns what it collects into
+Every source (Form 144, 13F, 8-K, short data, news) turns what it collects into
 `MarketEvent`s (one row per thing that happened, shown on the panel tape and in
 the company context) and, through the same rule functions in live mode and in
 the backtest, into `Signal`s.
@@ -20,7 +20,8 @@ FORM144 = "form144"
 THIRTEENF = "thirteenf"
 EIGHTK = "eightk"
 SHORT = "short"
-SOURCES = (FORM144, THIRTEENF, EIGHTK, SHORT)
+NEWS = "news"
+SOURCES = (FORM144, THIRTEENF, EIGHTK, SHORT, NEWS)
 
 # Direction of a signal's hypothesis.
 LONG = "long"  # expected to beat the index
@@ -67,6 +68,9 @@ class PollResult:
     signals: list[Signal] = field(default_factory=list)
     requests: int = 0
     note: str = ""
+    # Raw observations for the forward-test log that are not events (e.g. every news
+    # item, matched or not): {"kind", "source", "key", "seen_at", "data"} dicts.
+    records: list[dict[str, Any]] = field(default_factory=list)
 
 
 class Source(Protocol):

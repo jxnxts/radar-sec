@@ -23,6 +23,7 @@ from . import explain as _explain  # noqa: F401 - registers the catalogs
 from .base import MarketEvent, PollResult
 from .eightk.live import EightKSource
 from .form144.live import Form144Source
+from .news.live import NewsSource
 from .registry import Registry
 from .short.data import CusipMap
 from .short.history import FinraClient, build_cusip_map
@@ -32,7 +33,7 @@ from .thirteenf.live import ThirteenFSource
 
 log = logging.getLogger(__name__)
 
-ALL_SOURCES = ("form144", "eightk", "thirteenf", "short")
+ALL_SOURCES = ("form144", "eightk", "thirteenf", "short", "news")
 
 
 @dataclass
@@ -49,6 +50,8 @@ class SourceContext:
     momentum: Callable[[str, date], float | None]
     shares_outstanding: Callable[[str, date], float | None]
     resolve_cusip: Callable[[str, date], tuple[str, str, str] | None]
+    # The SEC registry itself, for sources that match names and tickers (news).
+    registry: Registry | None = None
 
     @staticmethod
     def parse_date(value: str) -> date:
@@ -102,6 +105,7 @@ class SourceRunner:
         today: Callable[[], date] = date.today,
         sources: list | None = None,
         finra: FinraClient | None = None,
+        news_config=None,
     ):
         self.store = SourceStore(conn)
         self.client = client
@@ -115,6 +119,7 @@ class SourceRunner:
             "eightk": EightKSource,
             "thirteenf": ThirteenFSource,
             "short": ShortSource,
+            "news": lambda: NewsSource(news_config),
         }
         self.sources = (
             sources
@@ -171,6 +176,7 @@ class SourceRunner:
             momentum=self._momentum,
             shares_outstanding=lambda cik, day: self.shares().as_of(cik, day),
             resolve_cusip=self.resolve_cusip,
+            registry=registry,
         )
 
     # -------------------------------------------------------------------- loop
@@ -222,6 +228,10 @@ class SourceRunner:
 
     def close(self) -> None:
         self._finra.close()
+        for source in self.sources:
+            closer = getattr(source, "close", None)
+            if callable(closer):
+                closer()
 
 
 def yahoo_momentum(ticker: str, day: date, sessions: int = 10) -> float | None:
@@ -256,4 +266,5 @@ def build_runner(settings, db, client) -> SourceRunner | None:
         cache_dir=settings.cache_dir,
         momentum=yahoo_momentum,
         prior_signal_dates=db.prior_signal_dates,
+        news_config=settings.news,
     )

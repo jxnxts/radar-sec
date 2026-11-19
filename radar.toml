@@ -55,5 +55,24 @@ price_requests_per_second = 2.0 # average pace; bigger bursts get blocked by Yah
 
 [sources]
 # Extra sources polled by `radar watch` and `radar serve`, each at its own pace:
-# form144 and eightk every cycle, thirteenf every 15 min, short (FINRA/SEC files) hourly.
-enabled = ["form144", "eightk", "thirteenf", "short"]
+# form144 and eightk every cycle, thirteenf every 15 min, short (FINRA/SEC files) hourly,
+# news per the [news] section below.
+enabled = ["form144", "eightk", "thirteenf", "short", "news"]
+
+[news]
+# Free news inputs. Items that name a listed company (explicit "(NYSE: XYZ)" tickers
+# first, then exact company names from the SEC registry) show on the dashboard tape.
+interval_seconds = 300.0        # press-release wires (PR Newswire keeps only its latest 20 items)
+# "businesswire" is off: its robots.txt disallows /rss/ for generic agents (the client checks
+# robots.txt and refuses it). "globenewswire" answers 403 to automated clients.
+wires = ["prnewswire"]
+gdelt = false                   # GDELT DOC 2.0; off: it answered 429 to every request when tested
+gdelt_interval_seconds = 900.0
+gdelt_query = "(NYSE OR NASDAQ) sourcelang:english"
+gdelt_max_records = 250
+tiingo_interval_seconds = 900.0 # Tiingo News runs only when TIINGO_API_KEY is set (.env)
+min_host_interval_seconds = 5.0 # politeness: at most one request per host every 5 s
+user_agent = "radar-sec/0.1 (news reader)"
+timeout_seconds = 30.0
+context_days = 30               # days of news in the dashboard's company context
+

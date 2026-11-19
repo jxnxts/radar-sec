@@ -301,4 +301,11 @@ MESSAGES: dict[str, str] = {
         "    {cached} cached, {downloaded} downloaded, {no_data} without data, {failed} failed"
     ),
     "cli.cycle.source_events": "{n} events from the extra sources",
+    "cli.news.polled": (
+        "{items} new news items from {feeds} feed(s), {matched} matched to a ticker."
+    ),
+    "cli.news.note": "Feeds: {note}",
+    "cli.news.no_registry": (
+        "The SEC ticker list could not be loaded: items were stored without matches."
+    ),
 }

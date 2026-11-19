@@ -303,4 +303,12 @@ MESSAGES: dict[str, str] = {
         "    {cached} do cache, {downloaded} baixados, {no_data} sem dados, {failed} com falha"
     ),
     "cli.cycle.source_events": "{n} eventos das fontes extras",
+    "cli.news.polled": (
+        "{items} notícias novas de {feeds} feed(s), {matched} associadas a um ticker."
+    ),
+    "cli.news.note": "Feeds: {note}",
+    "cli.news.no_registry": (
+        "Não foi possível carregar a lista de tickers da SEC: as notícias foram guardadas sem "
+        "associação."
+    ),
 }

@@ -489,6 +489,61 @@ if __name__ == "__main__":
 
 # ------------------------------------------------------------------- phase 2 research
 
+
+@app.command()
+def news(
+    limit: Annotated[int, typer.Option("--limit", min=0, help="Matched items to print.")] = 20,
+    lang: LangOption = None,
+    config: ConfigOption = None,
+    verbose: VerboseOption = False,
+) -> None:
+    """Polls the news feeds once, stores the new items and prints the matched ones."""
+    from radar.db import Database
+    from radar.http import SecClient
+    from radar.sources.news.live import NewsSource
+    from radar.sources.runner import SourceRunner
+
+    settings = _setup(verbose, config, lang)
+    try:
+        client = SecClient(settings.cache_dir, config=settings.sec)
+    except ConfigError as exc:
+        _fail(str(exc))
+    with client, Database(settings.db_path) as db:
+        source = NewsSource(settings.news)
+        runner = SourceRunner(db.conn, client, sources=[source], cache_dir=settings.cache_dir)
+        try:
+            before = sum(runner.store.count_news().values())
+            runner.tick(force=True)
+            status = runner.status[source.name]
+            if status.state == "error":
+                _fail(status.last_error or "news poll failed")
+            registry = runner.registry()
+            added = sum(runner.store.count_news().values()) - before
+            fresh = runner.store.recent_news(limit=added) if added else []
+            rows = [r for r in fresh if r["tickers"]]
+        finally:
+            runner.close()
+    _say(
+        settings,
+        "news.polled",
+        items=added,
+        feeds=len(source.feeds),
+        matched=len(rows),
+    )
+    if "; " in status.note:
+        _say(settings, "news.note", note=status.note.split("; ", 1)[1])
+    if not registry.by_ticker:
+        _say(settings, "news.no_registry")
+    for row in rows[:limit]:
+        tickers = ", ".join(row["tickers"])
+        tags = f" [dim]({', '.join(row['tags'])})[/dim]" if row["tags"] else ""
+        console.print(
+            f"[dim]{row['seen_at'][11:16]}[/dim] [cyan]{tickers:<10}[/cyan] "
+            f"{row['title'][:110]}{tags}",
+            highlight=False,
+        )
+
+
 phase2_app = typer.Typer(
     help="Phase 2 research: survivorship correction, selective insider variants, 10-K text "
     "change and calendar portfolios (see research/phase2-plan.md).",

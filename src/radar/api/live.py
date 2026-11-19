@@ -334,6 +334,8 @@ class LiveEngine:
         if self._watcher is not None:
             if self._sectors is not None:
                 self._sectors.flush()
+            if self._watcher.sources is not None:
+                self._watcher.sources.close()
             self._watcher.db.close()
             self._watcher.client.close()
 
@@ -504,7 +506,13 @@ class LiveEngine:
             signals = self._visible(self._reader.issuer_signals(cik))
             purchases = self._reader.issuer_purchases(cik)[:40]
             ticker = next((s.ticker for s in signals if s.ticker), "") or self._tickers.get(cik, "")
-            context = company_context(self._source_store(), cik, ticker, today=self._today())
+            context = company_context(
+                self._source_store(),
+                cik,
+                ticker,
+                today=self._today(),
+                news_days=self.settings.news.context_days,
+            )
             views = self._views(signals)
         return {**context, "ticker": ticker, "signals": views, "insiders": purchases}
 

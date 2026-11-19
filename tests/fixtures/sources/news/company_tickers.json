@@ -1,0 +1,202 @@
+{
+"0": {
+"cik_str": 320193,
+"ticker": "AAPL",
+"title": "Apple Inc."
+},
+"1": {
+"cik_str": 789019,
+"ticker": "MSFT",
+"title": "MICROSOFT CORP"
+},
+"2": {
+"cik_str": 1067983,
+"ticker": "BRK-B",
+"title": "BERKSHIRE HATHAWAY INC"
+},
+"3": {
+"cik_str": 1576280,
+"ticker": "GH",
+"title": "Guardant Health, Inc."
+},
+"4": {
+"cik_str": 920760,
+"ticker": "LEN",
+"title": "LENNAR CORP /NEW/"
+},
+"5": {
+"cik_str": 36966,
+"ticker": "FHN",
+"title": "FIRST HORIZON CORP"
+},
+"6": {
+"cik_str": 1653482,
+"ticker": "GTLB",
+"title": "Gitlab Inc."
+},
+"7": {
+"cik_str": 1520006,
+"ticker": "MTDR",
+"title": "Matador Resources Co"
+},
+"8": {
+"cik_str": 772406,
+"ticker": "CRUS",
+"title": "CIRRUS LOGIC, INC."
+},
+"9": {
+"cik_str": 2054696,
+"ticker": "NIQ",
+"title": "NIQ Global Intelligence plc"
+},
+"10": {
+"cik_str": 1507079,
+"ticker": "FND",
+"title": "Floor & Decor Holdings, Inc."
+},
+"11": {
+"cik_str": 1504008,
+"ticker": "BKU",
+"title": "BankUnited, Inc."
+},
+"12": {
+"cik_str": 1585389,
+"ticker": "SMA",
+"title": "SmartStop Self Storage REIT, Inc."
+},
+"13": {
+"cik_str": 1930313,
+"ticker": "SBC",
+"title": "SBC Medical Group Holdings Inc"
+},
+"14": {
+"cik_str": 1419536,
+"ticker": "CBNK",
+"title": "Capital Bancorp Inc"
+},
+"15": {
+"cik_str": 1709164,
+"ticker": "HBB",
+"title": "Hamilton Beach Brands Holding Co"
+},
+"16": {
+"cik_str": 1947463,
+"ticker": "NACB",
+"title": "ODNB Financial Corp"
+},
+"17": {
+"cik_str": 1833769,
+"ticker": "HYPR",
+"title": "Hyperfine, Inc."
+},
+"18": {
+"cik_str": 313364,
+"ticker": "MTR",
+"title": "MESA ROYALTY TRUST/TX"
+},
+"19": {
+"cik_str": 1692415,
+"ticker": "CODX",
+"title": "Co-Diagnostics, Inc."
+},
+"20": {
+"cik_str": 1067983,
+"ticker": "BRK-A",
+"title": "BERKSHIRE HATHAWAY INC"
+},
+"21": {
+"cik_str": 920760,
+"ticker": "LEN-B",
+"title": "LENNAR CORP /NEW/"
+},
+"22": {
+"cik_str": 1072725,
+"ticker": "GDRZF",
+"title": "GOLD RESERVE LTD"
+},
+"23": {
+"cik_str": 1114446,
+"ticker": "AMUB",
+"title": "UBS AG"
+},
+"24": {
+"cik_str": 1114446,
+"ticker": "BDCX",
+"title": "UBS AG"
+},
+"25": {
+"cik_str": 1114446,
+"ticker": "BDCZ",
+"title": "UBS AG"
+},
+"26": {
+"cik_str": 1114446,
+"ticker": "CEFD",
+"title": "UBS AG"
+},
+"27": {
+"cik_str": 1114446,
+"ticker": "UCIB",
+"title": "UBS AG"
+},
+"28": {
+"cik_str": 1114446,
+"ticker": "SMHB",
+"title": "UBS AG"
+},
+"29": {
+"cik_str": 1114446,
+"ticker": "MLPR",
+"title": "UBS AG"
+},
+"30": {
+"cik_str": 1114446,
+"ticker": "MVRL",
+"title": "UBS AG"
+},
+"31": {
+"cik_str": 1114446,
+"ticker": "PFFL",
+"title": "UBS AG"
+},
+"32": {
+"cik_str": 1114446,
+"ticker": "MLPB",
+"title": "UBS AG"
+},
+"33": {
+"cik_str": 1114446,
+"ticker": "HDLB",
+"title": "UBS AG"
+},
+"34": {
+"cik_str": 1114446,
+"ticker": "IFED",
+"title": "UBS AG"
+},
+"35": {
+"cik_str": 36966,
+"ticker": "FHN-PE",
+"title": "FIRST HORIZON CORP"
+},
+"36": {
+"cik_str": 36966,
+"ticker": "FHN-PF",
+"title": "FIRST HORIZON CORP"
+},
+"37": {
+"cik_str": 36966,
+"ticker": "FHN-PH",
+"title": "FIRST HORIZON CORP"
+},
+"38": {
+"cik_str": 1852575,
+"ticker": "SGST",
+"title": "Strategic Storage Trust VI, Inc."
+},
+"39": {
+"cik_str": 1930313,
+"ticker": "SBCWW",
+"title": "SBC Medical Group Holdings Inc"
+}
+}

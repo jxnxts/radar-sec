@@ -1,0 +1,4 @@
+[
+  {"id": 81234567, "title": "BankUnited, Inc. Increases Share Repurchase Program", "url": "https://www.example-news.com/bku-buyback", "description": "BankUnited raised its buyback authorization.", "publishedDate": "2026-11-19T21:15:00Z", "crawlDate": "2026-11-19T21:20:11.123Z", "source": "example-news.com", "tickers": ["bku"], "tags": ["Financial Services", "Stock Buyback"]},
+  {"id": 81234568, "title": "Unlisted Startup Raises Seed Round", "url": "https://www.example-news.com/startup", "description": "No listed company here.", "publishedDate": "2026-11-19T21:10:00Z", "crawlDate": "2026-11-19T21:19:00Z", "source": "example-news.com", "tickers": ["zzzz"], "tags": []}
+]

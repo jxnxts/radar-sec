@@ -106,6 +106,29 @@ MIGRATIONS: list[str] = [
         updated_at TEXT NOT NULL
     );
     """,
+    # 2: news items (all of them, matched or not; the matched ones are also events)
+    """
+    CREATE TABLE IF NOT EXISTS news_items (
+        key           TEXT PRIMARY KEY,
+        feed          TEXT NOT NULL,
+        url           TEXT NOT NULL,
+        canonical_url TEXT NOT NULL,
+        title         TEXT NOT NULL,
+        title_hash    TEXT NOT NULL,
+        summary       TEXT,
+        published_at  TEXT,
+        published_raw TEXT,
+        seen_at       TEXT NOT NULL,
+        tickers       TEXT NOT NULL,
+        ciks          TEXT NOT NULL,
+        matches       TEXT NOT NULL,
+        tags          TEXT NOT NULL,
+        score         TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_news_url ON news_items(canonical_url);
+    CREATE INDEX IF NOT EXISTS idx_news_title ON news_items(title_hash);
+    CREATE INDEX IF NOT EXISTS idx_news_seen ON news_items(seen_at);
+    """,
 ]
 
 
@@ -229,6 +252,64 @@ class SourceStore:
             "SELECT source, COUNT(*) AS n FROM market_events GROUP BY source"
         ).fetchall()
         return {r["source"]: r["n"] for r in rows}
+
+    # -------------------------------------------------------------------- news
+
+    def news_seen(self, key: str, canonical_url: str, title_hash: str) -> bool:
+        """Whether this item, or the same URL, or the same headline was stored already."""
+        row = self.conn.execute(
+            "SELECT 1 FROM news_items WHERE key = ? OR canonical_url = ? OR title_hash = ? LIMIT 1",
+            (key, canonical_url, title_hash),
+        ).fetchone()
+        return row is not None
+
+    def add_news(self, row: dict[str, Any]) -> bool:
+        """Store one news item (a `NewsSource.record`); False when it was already known."""
+        cursor = self.conn.execute(
+            """INSERT OR IGNORE INTO news_items
+               (key, feed, url, canonical_url, title, title_hash, summary, published_at,
+                published_raw, seen_at, tickers, ciks, matches, tags, score)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                row["key"],
+                row["feed"],
+                row["url"],
+                row["canonical_url"],
+                row["title"],
+                row["title_hash"],
+                row.get("summary", ""),
+                row.get("published_at"),
+                row.get("published_raw", ""),
+                row["seen_at"],
+                json.dumps(row.get("tickers", [])),
+                json.dumps(row.get("ciks", [])),
+                json.dumps(row.get("matches", [])),
+                json.dumps(row.get("tags", [])),
+                json.dumps(row["score"]) if row.get("score") is not None else None,
+            ),
+        )
+        self.conn.commit()
+        return cursor.rowcount == 1
+
+    def recent_news(self, *, limit: int = 100, matched_only: bool = False) -> list[dict[str, Any]]:
+        sql = "SELECT * FROM news_items"
+        if matched_only:
+            sql += " WHERE tickers <> '[]'"
+        sql += " ORDER BY seen_at DESC, rowid DESC LIMIT ?"
+        out = []
+        for r in self.conn.execute(sql, (limit,)).fetchall():
+            row = dict(r)
+            for name in ("tickers", "ciks", "matches", "tags"):
+                row[name] = json.loads(row[name] or "[]")
+            row["score"] = json.loads(row["score"]) if row["score"] else None
+            out.append(row)
+        return out
+
+    def count_news(self) -> dict[str, int]:
+        rows = self.conn.execute(
+            "SELECT feed, COUNT(*) AS n FROM news_items GROUP BY feed"
+        ).fetchall()
+        return {r["feed"]: r["n"] for r in rows}
 
     # ---------------------------------------------------------------- form 144
 
