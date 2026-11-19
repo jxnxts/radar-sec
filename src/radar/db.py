@@ -782,6 +782,10 @@ class Database:
         ).fetchall()
         return [date.fromisoformat(r["signal_date"]) for r in rows]
 
+    def has_signal(self, dedupe_key: str) -> bool:
+        row = self.conn.execute("SELECT 1 FROM signals WHERE dedupe_key = ?", (dedupe_key,))
+        return row.fetchone() is not None
+
     def get_signal(self, signal_id: int) -> Signal | None:
         row = self.conn.execute("SELECT * FROM signals WHERE id = ?", (signal_id,)).fetchone()
         return self._signal(row) if row else None

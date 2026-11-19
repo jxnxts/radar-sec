@@ -50,6 +50,9 @@ class WatchListener(Protocol):
     def signal(self, signal: Signal) -> None:
         """A new signal was stored, summarized and alerted."""
 
+    def prepare(self, signals: list[Signal]) -> None:
+        """The recent signals about to be published (optional): a chance to batch lookups."""
+
     def market_event(self, event_id: int, event: object) -> None:
         """A new event of an extra source (Form 144, 8-K, 13F, short data) was stored."""
 
@@ -136,10 +139,11 @@ class Watcher:
 
     def _notify(self, event: str, *args: object) -> None:
         """Notifies the listener, if any. A broken listener never brings the cycle down."""
-        if self.listener is None:
+        handler = getattr(self.listener, event, None) if self.listener is not None else None
+        if handler is None:
             return
         try:
-            getattr(self.listener, event)(*args)
+            handler(*args)
         except Exception:
             log.exception("monitor listener failed on '%s'", event)
 
@@ -351,6 +355,13 @@ class Watcher:
         the English text; the signal object carries the configured language.
         """
         max_age = timedelta(days=self.settings.signals.cluster_window_days)
+        fresh = [
+            s
+            for s in candidates
+            if self.today - s.signal_date <= max_age and not self.db.has_signal(s.dedupe_key)
+        ]
+        if fresh:
+            self._notify("prepare", fresh)
         for signal in sorted(candidates, key=lambda s: (s.signal_date, -s.score)):
             if not self.db.add_signal(signal):
                 continue

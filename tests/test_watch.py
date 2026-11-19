@@ -326,3 +326,24 @@ def test_an_operating_company_with_a_real_sic_keeps_its_signals(world):
     result = world.build().run_once()
     assert {s.type for s in result.signals} == {"big_officer_buy", "activist_13d"}
     assert result.excluded_funds == 0
+
+
+def test_listener_gets_the_new_recent_signals_in_one_batch_before_they_go_out(world):
+    order = []
+
+    class Listener:
+        def prepare(self, signals):
+            order.append(("prepare", sorted(s.type for s in signals)))
+
+        def signal(self, signal):
+            order.append(("signal", signal.type))
+
+    watcher = world.build()
+    watcher.listener = Listener()  # no stage/filing methods: those notices are skipped
+    watcher.run_once()
+    assert order[0] == ("prepare", ["activist_13d", "big_officer_buy"])
+    assert sorted(order[1:]) == [("signal", "activist_13d"), ("signal", "big_officer_buy")]
+
+    order.clear()
+    watcher.run_once()  # nothing new: no batch
+    assert order == []

@@ -205,6 +205,20 @@ class LiveEngine:
             done.append(signal.id)
         return done
 
+    def _prefetch(self, signals: list[Signal]) -> None:
+        """Warms the price and shares caches for a batch of signals about to be published,
+        so measuring each one as it goes out costs no extra query. Collection thread only."""
+        if self._prices is None or self._shares is None:
+            return
+        symbols = sorted({price_symbol(s.ticker) for s in signals} - {""})
+        try:
+            if symbols:
+                self._prices(symbols)
+        except Exception:
+            log.exception("latest prices unavailable")
+        for cik in sorted({normalize_cik(s.issuer_cik) for s in signals if s.issuer_cik}):
+            self._shares.get(cik)
+
     def _fill_liquidity(self, limit: int = LIQUIDITY_BATCH) -> None:
         """Measures the recent signals still without (or with a stale) price and market
         value, avoid signals first, and sends the updated cards to the dashboard."""
@@ -582,6 +596,9 @@ class _Listener:
             "seen_at": (event.seen_at or datetime.now(UTC)).isoformat(timespec="seconds"),
         }
         self.engine.hub.publish_threadsafe(events.MARKET_EVENT_NEW, event_view(row))
+
+    def prepare(self, signals: list[Signal]) -> None:
+        self.engine._prefetch(signals)
 
     def signal(self, signal: Signal) -> None:
         engine = self.engine
