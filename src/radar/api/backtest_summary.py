@@ -8,6 +8,7 @@ from every language's report (`backtest-<date>.pt-BR.md`...) as a localized map.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -219,11 +220,26 @@ def latest_report(reports_dir: Path) -> Path | None:
     return files[-1] if files else None
 
 
+_PHASE2 = re.compile(r"phase2-(\d{4}-\d{2}-\d{2})\.json")
+
+
+def load_phase2(reports_dir: Path) -> dict[str, Any] | None:
+    """The latest phase-2 summary (`phase2-<date>.json`, written by `radar phase2 report`)."""
+    files = sorted(p for p in reports_dir.glob("phase2-*.json") if _PHASE2.fullmatch(p.name))
+    if not files:
+        return None
+    try:
+        return json.loads(files[-1].read_text(encoding="utf-8"))
+    except ValueError:
+        return None
+
+
 def load_summary(reports_dir: Path) -> dict[str, Any] | None:
     path = latest_report(reports_dir)
     if path is None:
         return None
     summary = parse_report(path.read_text(encoding="utf-8"), name=path.name)
+    summary["phase2"] = load_phase2(reports_dir)
     stamp = _REPORT.fullmatch(path.name).group(1)  # type: ignore[union-attr]
     for lang in LANGS:
         if lang == DEFAULT_LANG:

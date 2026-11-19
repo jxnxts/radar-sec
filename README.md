@@ -15,7 +15,7 @@ It does four things:
 
 ![Dashboard in replay mode](docs/screenshots/replay-1920x1080.png)
 
-> **Honest verdict:** following these signals mechanically did **not** beat SPY between 2020 and 2025. See [Backtest result](#backtest-result).
+> **Honest verdict:** following these signals mechanically did **not** beat SPY between 2020 and 2025, and none of ten more selective, literature-based variants passed a pre-registered out-of-sample test either. See [Backtest result](#backtest-result) and [Phase 2 research](#phase-2-research).
 >
 > This is a research tool, not investment advice. Nothing here is a recommendation to buy or sell any security.
 
@@ -118,6 +118,18 @@ uv run radar report --lang pt-BR       # only the pt-BR report
 
 Re-renders the Markdown reports from an existing signals CSV, using the cached SEC datasets and no price downloads. A CSV from the first (Portuguese) version is converted to the English columns.
 
+### `radar phase2`
+
+```bash
+uv run radar phase2 collect            # SEC datasets and filings, prices (hours the first time; resumable)
+uv run radar phase2 run --split train  # 2020–2022: measure every pre-registered variant
+uv run radar phase2 freeze --stake 0.2 --dip 0.3   # record the parameters chosen on train
+uv run radar phase2 run --split test   # 2023–2025: refuses to run before the freeze
+uv run radar phase2 report             # reports/phase2-<date>.md and the dashboard summary .json
+```
+
+The research behind [Phase 2 research](#phase-2-research). Everything intermediate stays in `data/phase2/`. `--prices tiingo` uses a Tiingo key (`TIINGO_API_KEY`) instead of Yahoo; no key is needed by default.
+
 ### `radar serve` and `radar replay-build`
 
 ```bash
@@ -150,7 +162,7 @@ A full-screen, dark, dense screen, with signals arriving over WebSocket.
 | 01 Signals | One card per signal: logo, ticker, type, insiders (name, role and value), amount bought, score and sector. New signals enter at the top, highlighted. |
 | 02 Signal in focus | Price chart with the filing day and the insider purchases marked, the average price paid, the summary (AI or template), the rule that fired and the company's purchase history. |
 | 03 Buying radar | A radar scope by sector (each blip is a company, size is the amount bought, the rim is today) and the companies with the most buying in 7 or 30 days. |
-| 04 What the backtest says | The report's verdict, with numbers by signal type, horizon and year. Always visible, so the operator doesn't fool themselves. |
+| 04 What the backtest says | Two tabs. **Phase 2** (default): every pre-registered variant with its out-of-sample median excess, t-stats against SPY and IWM and verdict (use, maybe, discard), plus the effect of putting delisted companies back. **Phase 1**: the original report's verdict by signal type, horizon and year. Always visible, so the operator doesn't fool themselves. |
 | Tape | New filings (Form 4 and 13D) scrolling by, with the latest pinned on the left. |
 
 The dashboard opens each new signal by itself. If you click another one, it waits two minutes before following new signals again (or click "Pinned" to resume right away). Arrow keys move through the signals.
@@ -248,6 +260,8 @@ src/radar/
   alerts/           console, macOS and Telegram
   watch.py          the monitor cycle
   backtest/         datasets, prices, returns, statistics, report and replay file
+  research/         phase 2: SEC outcomes and price tape, price sources, variants, 10-K text,
+                    calendar portfolios, report (`radar phase2`)
   sectors.py        issuer sector from the SIC code
   sources/          extra sources (form144, eightk, thirteenf, short): rules, history, live
                     pollers, source tables, new-signals backtest and report
@@ -304,7 +318,33 @@ Returns are net of a 0.2% round-trip cost.
 - **The score doesn't help.** High-score signals did not do better than low-score ones.
 - **26% of the signals could not be measured** (2,369 of 9,018), mostly (1,459) because the ticker has no price on Yahoo, which usually means a delisted company. This is the largest uncertainty in the result.
 
-Bottom line: following these signals mechanically, with these rules, did not justify the risk between 2020 and 2025. What the backtest doesn't rule out is that a more selective cut works; that would need out-of-sample validation.
+Bottom line: following these signals mechanically, with these rules, did not justify the risk between 2020 and 2025. Phase 2 (below) tested more selective cuts out of sample and put the delisted companies back: neither changed the conclusion.
+
+## Phase 2 research
+
+Pre-registered plan: [`research/phase2-plan.md`](research/phase2-plan.md) (committed, with dated addenda, before the test run). Full report: [`reports/phase2-2026-11-18.md`](reports/phase2-2026-11-18.md).
+
+**Method.** Rules and the two free parameters were chosen on signals filed in 2020–2022 (train), frozen, then run once on 2023–2025 (test). Each variant is measured per signal and as an equal-weighted calendar-time portfolio (every signal held 3 months), with Newey-West t-stats and alphas against SPY and IWM, costs of 0.2% round trip (1% below $5). A variant passes only if, in the test period, its median excess is positive and its monthly portfolio t ≥ 2 **against both SPY and IWM**.
+
+**Survivorship correction, without paid data.** For signals Yahoo can't price, the company's own SEC filings say what happened (Form 25 and 15, merger proxies and tender offers, 8-K items 1.03, 2.01 and 5.01), and Form 4 transaction prices act as a free price tape (median error about 1% against Yahoo). Measured phase-1 signals went from 74% to 83%. The companies brought back did **worse** than the rest (median 3-month excess vs SPY −6.4%), so the correction makes the phase-1 verdict slightly more negative, not less.
+
+**Result (test period, 3 months): no variant passed.**
+
+| Variant | Idea | Median excess vs SPY / IWM | Portfolio t vs SPY / IWM | Verdict |
+|---|---|---|---|---|
+| `insider_buy` | officer/director open-market buy ≥ $50K (the base) | −4.1% / −2.7% | −0.8 / 0.7 | discard |
+| `opportunistic_buy` | Cohen, Malloy & Pomorski "opportunistic" insiders | −3.3% / −1.6% | −0.4 / 0.9 | discard |
+| `first_buy` | first purchase in 24 months | −3.6% / −2.6% | −1.6 / −1.0 | discard |
+| `stake_jump` | position up ≥ 20% | −4.3% / −3.2% | −1.3 / −0.4 | discard |
+| `dip_buy` | stock down ≥ 30% in 3 months | −4.4% / −4.0% | 0.0 / 0.6 | discard |
+| `csuite_cluster` | CEO and CFO (or 3 officers) buying within 14 days | −3.5% / −2.2% | −0.5 / 0.7 | discard |
+| `opportunistic_dip`, `first_big_stake` | combinations | −1.7% to −4.1% | −1.9 to −0.6 | discard |
+| `lazy_nonchangers` | 10-K barely changed vs last year ("Lazy Prices") | −6.2% / −0.9% | −3.0 / −1.5 | discard |
+| `insider_buy_text_ok` | insider buy, 10-K not in the most-changed quintile | −2.9% / −1.6% | −0.7 / 1.0 | discard |
+| `cluster_buy` (phase 1) | unchanged | −4.3% / −3.1% | −1.6 / −0.6 | discard |
+| `big_officer_buy` (phase 1) | unchanged | −4.5% / −2.3% | −0.3 / 2.3 | discard |
+
+The closest call, `big_officer_buy`, beat IWM by 0.5% a month (t 2.3) but lost to SPY and its typical signal lost to both; it was also negative in train. The 10-K text signal reversed between train and test. Because no variant passed, **no new signal type was added to the live monitor**; the dashboard's backtest panel shows the phase-2 verdict instead. A feasibility study for Brazil (CVM/B3 data) is in [`research/b3-feasibility.md`](research/b3-feasibility.md).
 
 ### How each signal is measured
 
@@ -391,7 +431,7 @@ AI summaries cover the new signals within the same hourly cap. Turn sources on o
 
 The report lists all of them with the run's numbers. The main ones:
 
-- **Survivorship bias.** Yahoo Finance keeps prices for almost no delisted companies. Signals on companies that went bankrupt or were acquired go unmeasured, and there is no way to know which case dominates.
+- **Survivorship bias.** Yahoo Finance keeps prices for almost no delisted companies. Phase 2 corrects most of it from SEC data (see [Phase 2 research](#phase-2-research)), approximately: Form 4 prices are noisy, and 17% of phase-1 signals remain unmeasured.
 - **Illiquid microcaps.** Much insider buying happens in small companies, where the spread costs far more than the assumed 0.2%.
 - **Idealized execution.** Buys and sells exactly at the close, with no price impact and no size limit.
 - **Hand-entered data.** Ticker, title and price are typed by the filer. Gross errors are filtered; subtle ones get through. CEO/CFO detection is based on the title text.

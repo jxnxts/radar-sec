@@ -13,7 +13,7 @@ Ele faz quatro coisas:
 
 ![Painel em modo replay, em português](docs/screenshots/replay-pt-BR-1920x1080.png)
 
-> **Veredito honesto:** seguir estes sinais mecanicamente **não** bateu o SPY entre 2020 e 2025. Veja [Resultado do backtest](#resultado-do-backtest).
+> **Veredito honesto:** seguir estes sinais mecanicamente **não** bateu o SPY entre 2020 e 2025, e nenhuma de dez variantes mais seletivas, tiradas da literatura, passou num teste fora da amostra pré-registrado. Veja [Resultado do backtest](#resultado-do-backtest) e [Pesquisa da fase 2](#pesquisa-da-fase-2).
 >
 > Isto é uma ferramenta de pesquisa, não uma recomendação de investimento. Nada aqui é recomendação de compra ou venda de qualquer ativo.
 
@@ -116,6 +116,18 @@ uv run radar report --lang pt-BR       # só o relatório em português
 
 Refaz os relatórios em Markdown a partir de um CSV de sinais já gerado, usando os datasets da SEC em cache e sem baixar preços. Um CSV da primeira versão (colunas em português) é convertido para as colunas em inglês.
 
+### `radar phase2`
+
+```bash
+uv run radar phase2 collect            # datasets e filings da SEC, preços (horas na primeira vez; retomável)
+uv run radar phase2 run --split train  # 2020–2022: mede cada variante pré-registrada
+uv run radar phase2 freeze --stake 0.2 --dip 0.3   # registra os parâmetros escolhidos no treino
+uv run radar phase2 run --split test   # 2023–2025: não roda antes do congelamento
+uv run radar phase2 report             # reports/phase2-<data>.md e o resumo .json do painel
+```
+
+A pesquisa por trás da [Pesquisa da fase 2](#pesquisa-da-fase-2). Tudo o que é intermediário fica em `data/phase2/`. `--prices tiingo` usa uma chave da Tiingo (`TIINGO_API_KEY`) no lugar do Yahoo; por padrão nenhuma chave é necessária.
+
 ### `radar serve` e `radar replay-build`
 
 ```bash
@@ -148,7 +160,7 @@ Uma tela cheia, escura e densa, com os sinais chegando por WebSocket.
 | 01 Sinais | Um cartão por sinal: logo, ticker, tipo, insiders (nome, cargo e valor), valor comprado, score e setor. O sinal novo entra no topo em destaque. |
 | 02 Sinal em foco | Gráfico de preço com o dia do filing e as compras dos insiders marcados, o preço médio pago, o resumo (da IA ou do modelo fixo), a regra que disparou e o histórico de compras da empresa. |
 | 03 Radar de compras | Visor de radar por setor (cada ponto é uma empresa, o tamanho é o valor comprado, a borda é hoje) e as empresas com mais compras em 7 ou 30 dias. |
-| 04 O que o backtest diz | O veredito do relatório, com os números por tipo de sinal, prazo e ano. Fica sempre à vista para o operador não se iludir. |
+| 04 O que o backtest diz | Duas abas. **Fase 2** (padrão): cada variante pré-registrada com o excesso mediano fora da amostra, o t contra SPY e IWM e o veredito (usar, talvez, descartar), mais o efeito de trazer de volta as empresas deslistadas. **Fase 1**: o veredito do relatório original por tipo de sinal, prazo e ano. Fica sempre à vista para o operador não se iludir. |
 | Fita | Os filings novos (Form 4 e 13D) passando, com o mais recente fixo à esquerda. |
 
 O painel abre cada sinal novo sozinho. Se você clicar em outro, ele espera dois minutos antes de voltar a seguir os novos (ou clique em "Fixado" para voltar já). As setas para cima e para baixo percorrem os sinais.
@@ -246,6 +258,8 @@ src/radar/
   alerts/           console, macOS e Telegram
   watch.py          o ciclo do monitor
   backtest/         datasets, preços, retornos, estatísticas, relatório e arquivo de replay
+  research/         fase 2: desfechos e fita de preços da SEC, fontes de preço, variantes,
+                    texto do 10-K, carteiras de calendário, relatório (`radar phase2`)
   sectors.py        setor do emissor pelo código SIC
   sources/          fontes extras (form144, eightk, thirteenf, short): regras, histórico,
                     coletores ao vivo, tabelas, backtest e relatório dos novos sinais
@@ -302,7 +316,33 @@ Retornos já com o custo de 0,2% descontado.
 - **O score não ajuda.** Sinais de score alto não renderam mais que os de score baixo.
 - **26% dos sinais ficaram sem medição** (2.369 de 9.018). A maior parte (1.459) por ticker sem preço no Yahoo, o que em geral significa empresa deslistada. É a maior incerteza do resultado.
 
-Conclusão prática: seguir estes sinais mecanicamente, com estas regras, não justificou o risco entre 2020 e 2025. O que o backtest não descarta é que um recorte mais seletivo funcione; isso exigiria validação fora da amostra.
+Conclusão prática: seguir estes sinais mecanicamente, com estas regras, não justificou o risco entre 2020 e 2025. A fase 2 (abaixo) testou recortes mais seletivos fora da amostra e trouxe de volta as empresas deslistadas: nada mudou a conclusão.
+
+## Pesquisa da fase 2
+
+Plano pré-registrado: [`research/phase2-plan.md`](research/phase2-plan.md) (commitado, com adendos datados, antes do teste). Relatório completo, em inglês: [`reports/phase2-2026-11-18.md`](reports/phase2-2026-11-18.md).
+
+**Método.** Regras e os dois parâmetros livres foram escolhidos nos sinais de 2020–2022 (treino), congelados e rodados uma única vez em 2023–2025 (teste). Cada variante é medida por sinal e como carteira de calendário equal-weight (cada sinal fica 3 meses), com t de Newey-West e alfa contra SPY e IWM, custo de 0,2% ida e volta (1% abaixo de US$ 5). Uma variante passa só se, no teste, o excesso mediano for positivo e o t da carteira mensal for ≥ 2 **contra SPY e contra IWM**.
+
+**Correção de sobrevivência, sem dados pagos.** Para os sinais que o Yahoo não precifica, os próprios filings da empresa na SEC dizem o que aconteceu (Form 25 e 15, proxies de fusão e ofertas públicas, itens 1.03, 2.01 e 5.01 do 8-K), e os preços dos Form 4 servem de fita de preços gratuita (erro mediano de cerca de 1% contra o Yahoo). Os sinais da fase 1 medidos passaram de 74% para 83%. As empresas que voltaram foram **pior** que as demais (excesso mediano em 3 meses de −6,4% contra o SPY): a correção deixa o veredito da fase 1 um pouco mais negativo, não menos.
+
+**Resultado (teste, 3 meses): nenhuma variante passou.**
+
+| Variante | Ideia | Excesso mediano vs SPY / IWM | t da carteira vs SPY / IWM | Veredito |
+|---|---|---|---|---|
+| `insider_buy` | compra a mercado de diretor ou executivo ≥ US$ 50 mil (a base) | −4,1% / −2,7% | −0,8 / 0,7 | descartar |
+| `opportunistic_buy` | insiders "oportunistas" de Cohen, Malloy e Pomorski | −3,3% / −1,6% | −0,4 / 0,9 | descartar |
+| `first_buy` | primeira compra em 24 meses | −3,6% / −2,6% | −1,6 / −1,0 | descartar |
+| `stake_jump` | posição sobe ≥ 20% | −4,3% / −3,2% | −1,3 / −0,4 | descartar |
+| `dip_buy` | ação caiu ≥ 30% em 3 meses | −4,4% / −4,0% | 0,0 / 0,6 | descartar |
+| `csuite_cluster` | CEO e CFO (ou 3 executivos) comprando em 14 dias | −3,5% / −2,2% | −0,5 / 0,7 | descartar |
+| `opportunistic_dip`, `first_big_stake` | combinações | −1,7% a −4,1% | −1,9 a −0,6 | descartar |
+| `lazy_nonchangers` | 10-K quase igual ao do ano anterior ("Lazy Prices") | −6,2% / −0,9% | −3,0 / −1,5 | descartar |
+| `insider_buy_text_ok` | compra de insider, 10-K fora do quintil que mais mudou | −2,9% / −1,6% | −0,7 / 1,0 | descartar |
+| `cluster_buy` (fase 1) | sem mudança | −4,3% / −3,1% | −1,6 / −0,6 | descartar |
+| `big_officer_buy` (fase 1) | sem mudança | −4,5% / −2,3% | −0,3 / 2,3 | descartar |
+
+O caso mais próximo, `big_officer_buy`, bateu o IWM em 0,5% ao mês (t 2,3), mas perdeu para o SPY e o sinal típico perdeu para os dois; no treino também foi negativo. O sinal de texto do 10-K inverteu entre treino e teste. Como nenhuma variante passou, **nenhum tipo de sinal novo entrou no monitor ao vivo**; o quadro do backtest no painel mostra o veredito da fase 2. Um estudo de viabilidade para o Brasil (dados da CVM/B3) está em [`research/b3-feasibility.md`](research/b3-feasibility.md).
 
 ### Como cada sinal é medido
 
@@ -390,7 +430,7 @@ no `radar.toml` (`[sources] enabled`).
 
 O relatório lista todas com os números da execução. As principais:
 
-- **Viés de sobrevivência.** O Yahoo Finance não guarda preços de quase nenhuma empresa deslistada. Sinais em empresas que faliram ou foram compradas ficam sem medição, e não dá para saber qual dos dois casos predomina.
+- **Viés de sobrevivência.** O Yahoo Finance não guarda preços de quase nenhuma empresa deslistada. A fase 2 corrige a maior parte com dados da SEC (veja [Pesquisa da fase 2](#pesquisa-da-fase-2)), de forma aproximada: os preços dos Form 4 são ruidosos e 17% dos sinais da fase 1 continuam sem medição.
 - **Microcaps ilíquidas.** Boa parte das compras de insiders acontece em empresas pequenas, onde o spread custa muito mais que os 0,2% assumidos.
 - **Execução idealizada.** Compra e venda exatamente no fechamento, sem impacto de preço e sem limite de tamanho.
 - **Dados declarados à mão.** Ticker, cargo e preço são digitados por quem arquiva. Erros grosseiros são filtrados; os sutis passam. A detecção de CEO/CFO é pelo texto do cargo.

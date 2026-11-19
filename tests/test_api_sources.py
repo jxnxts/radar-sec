@@ -290,3 +290,25 @@ def test_summary_falls_back_to_english_without_a_translated_report(tmp_path):
     summary = load_summary(tmp_path)
     assert summary["verdict"] == {"en": "No.", "pt-BR": "Não."}
     assert summary["caveat"]["pt-BR"] == "Cuidado."
+
+
+def test_summary_carries_the_phase2_verdict():
+    phase2 = load_summary(REPORTS)["phase2"]
+
+    assert phase2["date"] == "2026-11-18" and phase2["passed"] == []
+    assert {v["verdict"] for v in phase2["variants"]} == {"discard"}
+    keys = [v["key"] for v in phase2["variants"]]
+    assert "R2_big_officer_buy" in keys and "V8_lazy_nonchangers" in keys
+    assert "V0_text_covered" not in keys  # a comparison set, not a candidate
+    survivorship = phase2["survivorship"]
+    assert survivorship["generated"] == 9018
+    assert survivorship["measured_corrected"] > survivorship["measured_raw"]
+
+
+def test_summary_without_phase2_or_with_a_broken_file(tmp_path):
+    (tmp_path / "backtest-2021-12-31.md").write_text(
+        "# Backtest radar-sec — 2021-01-01 to 2021-12-31\n\n## Verdict\n\nNo.\n"
+    )
+    assert load_summary(tmp_path)["phase2"] is None
+    (tmp_path / "phase2-2021-12-31.json").write_text("{not json")
+    assert load_summary(tmp_path)["phase2"] is None

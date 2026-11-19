@@ -485,3 +485,92 @@ def replay_build(
 
 if __name__ == "__main__":
     app()
+
+
+# ------------------------------------------------------------------- phase 2 research
+
+phase2_app = typer.Typer(
+    help="Phase 2 research: survivorship correction, selective insider variants, 10-K text "
+    "change and calendar portfolios (see research/phase2-plan.md).",
+    no_args_is_help=True,
+)
+app.add_typer(phase2_app, name="phase2")
+
+
+def _research_client(settings: Settings):
+    from radar.research.pipeline import research_client
+
+    try:
+        return research_client(settings)
+    except ConfigError as exc:
+        _fail(str(exc))
+        raise  # unreachable: _fail exits
+
+
+@phase2_app.command("collect")
+def phase2_collect(
+    provider: Annotated[
+        str, typer.Option("--prices", help="Price source: yahoo-chart, yahoo or tiingo.")
+    ] = "yahoo-chart",
+    no_text: Annotated[bool, typer.Option("--no-text", help="Skip the 10-K downloads.")] = False,
+    config: ConfigOption = None,
+    verbose: VerboseOption = False,
+) -> None:
+    """Downloads everything phase 2 needs (SEC datasets and filings, prices). Resumable."""
+    from radar.research.pipeline import collect_all
+
+    settings = _setup(verbose, config)
+    with _research_client(settings) as client:
+        collect_all(settings, client, provider=provider, texts=not no_text)
+    _say(settings, "phase2.collected", path=settings.data_dir / "phase2")
+
+
+@phase2_app.command("run")
+def phase2_run(
+    split: Annotated[str, typer.Option("--split", help="train (2020–2022) or test (2023–2025).")],
+    config: ConfigOption = None,
+    verbose: VerboseOption = False,
+) -> None:
+    """Measures every pre-registered variant on one split."""
+    from radar.research.pipeline import run_split
+
+    settings = _setup(verbose, config)
+    with _research_client(settings) as client:
+        try:
+            run_split(settings, client, split)
+        except (RuntimeError, ValueError) as exc:
+            _fail(str(exc))
+    _say(settings, "phase2.ran", split=split, path=settings.data_dir / "phase2")
+
+
+@phase2_app.command("freeze")
+def phase2_freeze(
+    stake: Annotated[float, typer.Option("--stake", help="Stake increase chosen on train.")],
+    dip: Annotated[float, typer.Option("--dip", help="Drawdown chosen on train.")],
+    config: ConfigOption = None,
+) -> None:
+    """Records the parameters chosen on train. The test split needs them."""
+    from radar.research.pipeline import freeze
+
+    settings = _setup(False, config)
+    try:
+        path = freeze(settings, stake, dip)
+    except (RuntimeError, ValueError) as exc:
+        _fail(str(exc))
+    _say(settings, "phase2.frozen", path=path)
+
+
+@phase2_app.command("report")
+def phase2_report(
+    config: ConfigOption = None,
+) -> None:
+    """Writes reports/phase2-<date>.md (and .pt-BR.md) and the dashboard summary JSON."""
+    from radar.research.report import write_reports
+
+    settings = _setup(False, config)
+    try:
+        written = write_reports(settings)
+    except RuntimeError as exc:
+        _fail(str(exc))
+    for path in written:
+        _say(settings, "phase2.report", path=path)
