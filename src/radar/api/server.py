@@ -12,7 +12,7 @@ from radar.api.app import create_app
 from radar.api.hub import Hub
 from radar.api.live import LiveEngine
 from radar.api.logos import LogoService
-from radar.api.prices import BacktestHistory, PriceService, YahooPriceSource
+from radar.api.prices import BacktestHistory, PriceService, build_price_source
 from radar.api.replay import ReplayEngine
 from radar.backtest.replay import latest_replay, read_replay
 from radar.config import Settings, sec_user_agent
@@ -68,7 +68,7 @@ def build_app(settings: Settings, options: ServerOptions | None = None) -> FastA
     prices = None
     if options.prices:
         prices = PriceService(
-            YahooPriceSource(),
+            build_price_source(settings.prices),
             hub,
             cache_dir=settings.cache_dir,
             interval=options.price_interval,

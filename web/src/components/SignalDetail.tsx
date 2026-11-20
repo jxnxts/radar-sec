@@ -1,6 +1,7 @@
 import { labelOf, localized, roleLabel, useI18n } from '../i18n'
 import { personName } from '../lib/format'
 import { usePriceHistory, useSignalDetail } from '../lib/hooks'
+import { quoteDelay } from '../lib/market'
 import { cardFacts, factLabel, formatFact } from '../lib/facts'
 import { sourceOf, usePanel } from '../store'
 import type { Outcome, Purchase, Quote, Signal } from '../types'
@@ -75,7 +76,7 @@ function SourceKpis({ signal, quote }: { signal: Signal; quote: Quote | undefine
         </Kpi>
       ))}
       {quote ? (
-        <Kpi label={t.detail.kpi.quoteDelayed}>
+        <Kpi label={t.detail.kpi.quoteDelayed(quoteDelay(quote))}>
           {f.price(quote.price)} <Delta value={quote.change_pct} digits={2} />
         </Kpi>
       ) : null}
@@ -95,7 +96,7 @@ function Kpis({ signal, quote }: { signal: Signal; quote: Quote | undefined }) {
         <Kpi label={k.eventDate}>{f.date(signal.event_date)}</Kpi>
         <Kpi label={k.tone}>{signal.activist_tone ? k.activist : k.neutral}</Kpi>
         {quote ? (
-          <Kpi label={k.quoteDelayed}>
+          <Kpi label={k.quoteDelayed(quoteDelay(quote))}>
             {f.price(quote.price)} <Delta value={quote.change_pct} digits={2} />
           </Kpi>
         ) : null}
@@ -116,7 +117,7 @@ function Kpis({ signal, quote }: { signal: Signal; quote: Quote | undefined }) {
           : k.range(f.dateShort(signal.first_buy), f.dateShort(signal.last_buy))}
       </Kpi>
       {quote ? (
-        <Kpi label={k.quoteDelayed}>
+        <Kpi label={k.quoteDelayed(quoteDelay(quote))}>
           {f.price(quote.price)}
           {sinceBuy != null ? (
             <span className="kpi__sub">

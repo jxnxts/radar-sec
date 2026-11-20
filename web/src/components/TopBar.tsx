@@ -92,11 +92,14 @@ function IndexTile({ symbol, quote }: { symbol: string; quote: Quote | undefined
   )
 }
 
-function Indices() {
+export function Indices() {
   const { t } = useI18n()
   const quotes = usePanel((s) => s.quotes)
   const prices = usePanel((s) => s.prices)
   const delay = prices?.delay_minutes ?? 15
+  // Symbols the primary source does not cover (^VIX is not on IEX) come from the fallback.
+  const fallbackSymbols =
+    prices?.provider?.primary === prices?.source ? (prices?.provider?.fallback_symbols ?? []) : []
   return (
     <div className="indices" role="group" aria-label={t.indices.group(delay)}>
       <div className="indices__tiles">
@@ -104,7 +107,14 @@ function Indices() {
           <IndexTile key={symbol} symbol={symbol} quote={quotes[symbol]} />
         ))}
       </div>
-      <p className="indices__note">
+      <p
+        className="indices__note"
+        title={
+          fallbackSymbols.length > 0 && prices?.provider
+            ? t.indices.fallback(fallbackSymbols.join(', '), prices.provider.fallback)
+            : undefined
+        }
+      >
         <span className="tag tag--delay">{t.common.delayed(delay)}</span>
         {prices?.source ?? 'Yahoo Finance'}
       </p>

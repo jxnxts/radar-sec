@@ -3,6 +3,7 @@
 import type { Messages } from '../i18n/en'
 import { intlLocale, type Lang } from '../i18n/catalog'
 import type { Format } from './format'
+import type { Quote } from '../types'
 
 export type MarketState = 'open' | 'pre' | 'post' | 'closed'
 
@@ -190,4 +191,9 @@ export function dayLabel(now: Date, timeZone: string, lang: Lang): string {
     .formatToParts(now)
     .map((part) => (part.type === 'literal' ? part.value.replace(/^\s*de\s*$/, ' ') : part.value.replace(/\.$/, '')))
     .join('')
+}
+
+/** Minutes a quote lags the market (0 = real time); servers before Tiingo sent none: Yahoo's 15. */
+export function quoteDelay(quote: Pick<Quote, 'delay_minutes'> | undefined, fallback = 15): number {
+  return quote?.delay_minutes ?? fallback
 }

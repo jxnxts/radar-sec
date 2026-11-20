@@ -55,6 +55,26 @@ class Engine(Protocol):
     def tracked_tickers(self) -> list[str]: ...
 
 
+def tiingo_health(engine_status: dict[str, Any], prices_status: dict[str, Any]) -> dict[str, Any]:
+    """What the Tiingo key does in this session: News (often not in the plan) and quotes."""
+    from radar.config import tiingo_api_key
+
+    news: dict[str, Any] = {"state": "off"}
+    for source in engine_status.get("sources") or []:
+        for feed in (source.get("detail") or {}).get("feeds") or []:
+            if feed.get("name") == "tiingo":
+                news = {"state": feed.get("state"), "error": feed.get("error")}
+    provider = prices_status.get("provider") or {}
+    quotes: dict[str, Any] = {"state": "off"}
+    if provider.get("primary", "").startswith("Tiingo"):
+        quotes = {
+            "state": provider.get("primary_state"),
+            "error": provider.get("primary_error"),
+            "fallback_symbols": provider.get("fallback_symbols", []),
+        }
+    return {"key_set": bool(tiingo_api_key()), "news": news, "quotes": quotes}
+
+
 class ReplayControl(BaseModel):
     paused: bool | None = None
     speed: float | None = None
@@ -75,13 +95,16 @@ def create_app(
     started = time.monotonic()
 
     def status() -> dict[str, Any]:
+        engine_status = engine.status()
+        prices_status = prices.status() if prices else {"state": "off"}
         return {
-            **engine.status(),
+            **engine_status,
             "server_time": datetime.now(UTC).isoformat(timespec="seconds"),
             "uptime_s": int(time.monotonic() - started),
             "version": __version__,
             "ws": {"clients": hub.clients},
-            "prices": prices.status() if prices else {"state": "off"},
+            "prices": prices_status,
+            "tiingo": tiingo_health(engine_status, prices_status),
         }
 
     def snapshot() -> dict[str, Any]:

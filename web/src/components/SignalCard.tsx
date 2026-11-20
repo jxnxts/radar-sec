@@ -1,6 +1,7 @@
 import { labelOf, localized, roleLabel, useI18n } from '../i18n'
 import { cardFacts, factLabel, formatFact } from '../lib/facts'
 import { ARROWS, direction, personName } from '../lib/format'
+import { quoteDelay } from '../lib/market'
 import { sourceOf } from '../store'
 import type { Outcome, Quote, Signal } from '../types'
 import { Delta } from './Delta'
@@ -181,8 +182,8 @@ export function SignalCard({ signal, quote, selected, fresh, now, onSelect }: Si
           {signal.outcome ? (
             <OutcomeBadge outcome={signal.outcome} />
           ) : quote ? (
-            <span className="outcome" title={t.card.todayTitle}>
-              <span className="outcome__label">{t.card.todayDelayed}</span>
+            <span className="outcome" title={t.card.todayTitle(quoteDelay(quote))}>
+              <span className="outcome__label">{t.card.todayDelayed(quoteDelay(quote))}</span>
               <Delta value={quote.change_pct} digits={2} />
             </span>
           ) : null}

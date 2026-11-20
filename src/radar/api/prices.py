@@ -1,7 +1,10 @@
 """Quotes for the dashboard, behind an interface so the source can be swapped.
 
-True real-time data is paid. The default source is Yahoo Finance (yfinance),
-polled periodically and delayed by about 15 minutes; the dashboard says so.
+With TIINGO_API_KEY set (paid), quotes come from Tiingo's IEX feed (real time, from
+the IEX exchange), batched, with Yahoo Finance as the fallback for what Tiingo does
+not cover (indices such as ^VIX) or when it fails. Without a key the source is Yahoo
+Finance (yfinance), delayed by about 15 minutes. The dashboard shows the actual
+source and delay. Daily bars for the charts always come from Yahoo (split-adjusted).
 """
 
 from __future__ import annotations
@@ -15,11 +18,15 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Protocol
+from zoneinfo import ZoneInfo
 
 from radar.api import hub as events
 from radar.api.hub import Hub
+from radar.tiingo import TiingoClient, TiingoError, tiingo_symbol
 
 log = logging.getLogger(__name__)
+
+NEW_YORK = ZoneInfo("America/New_York")
 
 INDICES: dict[str, str] = {
     "SPY": "S&P 500",
@@ -40,6 +47,8 @@ class Quote:
     prev_close: float | None
     as_of: str  # ISO, with timezone, of the last known trade
     spark: list[float] = field(default_factory=list)  # the latest session, downsampled
+    source: str = ""  # provider of this quote ("Tiingo IEX", "Yahoo Finance")
+    delay_minutes: int | None = None  # that provider's delay (0 = real time)
 
     @property
     def change_pct(self) -> float | None:
@@ -132,6 +141,8 @@ class YahooPriceSource:
                 prev_close=round(float(before.iloc[-1]), 4) if not before.empty else None,
                 as_of=stamp.isoformat(timespec="seconds"),
                 spark=downsample([float(v) for v in today.tolist()]),
+                source=self.name,
+                delay_minutes=self.delay_minutes,
             )
         return out
 
@@ -189,6 +200,182 @@ class YahooPriceSource:
             )
             for index, row in frame.iterrows()
         ]
+
+
+def _float(value: Any) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number > 0 else None
+
+
+class TiingoIexSource:
+    """Tiingo IEX quotes: real time from the IEX exchange, many tickers per request.
+
+    `tngoLast` is IEX's last sale (or the mid of the IEX book when it is fresher);
+    after the close Tiingo sets it to the official closing price. The intraday line
+    (spark) is built from the polls themselves; the benchmark ETFs get the session's
+    5-minute closes once a day so their line starts complete.
+    """
+
+    name = "Tiingo IEX"
+    delay_minutes = 0
+
+    def __init__(
+        self,
+        client: TiingoClient,
+        *,
+        batch_size: int = 100,
+        seed_spark: tuple[str, ...] = ("SPY", "IWM", "QQQ"),
+    ):
+        self.client = client
+        self.batch_size = max(1, batch_size)
+        self.seed_spark = seed_spark
+        self._spark: dict[str, tuple[str, list[float]]] = {}
+        self._seeded: dict[str, str] = {}
+
+    def _seed(self, symbol: str, ticker: str, day: str) -> None:
+        if symbol not in self.seed_spark or self._seeded.get(symbol) == day:
+            return
+        self._seeded[symbol] = day
+        try:
+            rows = self.client.iex_intraday(ticker, date.fromisoformat(day))
+        except TiingoError as exc:
+            log.info("Tiingo intraday for %s unavailable: %s", symbol, exc)
+            return
+        closes = [c for r in rows if (c := _float(r.get("close"))) is not None]
+        if closes:
+            self._spark[symbol] = (day, closes)
+
+    def _line(self, symbol: str, day: str, price: float) -> list[float]:
+        current_day, values = self._spark.get(symbol, ("", []))
+        if current_day != day:
+            values = []
+        if not values or values[-1] != price:
+            values = [*values, price][-500:]
+        self._spark[symbol] = (day, values)
+        return downsample(values)
+
+    def quotes(self, symbols: list[str]) -> dict[str, Quote]:
+        wanted = {t: s for s in symbols if (t := tiingo_symbol(s))}
+        tickers = list(wanted)
+        out: dict[str, Quote] = {}
+        for start in range(0, len(tickers), self.batch_size):
+            for row in self.client.iex(tickers[start : start + self.batch_size]):
+                ticker = str(row.get("ticker") or "").lower()
+                symbol = wanted.get(ticker)
+                price = _float(row.get("tngoLast")) or _float(row.get("last"))
+                price = price or _float(row.get("mid"))
+                if symbol is None or price is None:
+                    continue
+                stamp = row.get("lastSaleTimestamp") or row.get("timestamp") or ""
+                try:
+                    moment = datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
+                except ValueError:
+                    continue
+                day = moment.astimezone(NEW_YORK).date().isoformat()
+                self._seed(symbol, ticker, day)
+                out[symbol] = Quote(
+                    symbol=symbol,
+                    price=round(price, 4),
+                    prev_close=_float(row.get("prevClose")),
+                    as_of=moment.isoformat(timespec="seconds"),
+                    spark=self._line(symbol, day, round(price, 4)),
+                    source=self.name,
+                    delay_minutes=self.delay_minutes,
+                )
+        return out
+
+    def last_closes(self, symbols: list[str]) -> dict[str, tuple[float, str]]:
+        return {s: (q.price, q.as_of) for s, q in self.quotes(symbols).items()}
+
+
+class FallbackPriceSource:
+    """A primary source (Tiingo IEX) with another (Yahoo) for what it misses or on error.
+
+    `name` and `delay_minutes` describe the provider of the latest quotes the primary
+    delivered (the primary when it delivered any), so the dashboard label tells the
+    truth; `history` (daily bars) always uses the fallback.
+    """
+
+    def __init__(self, primary: Any, fallback: Any):
+        self.primary = primary
+        self.fallback = fallback
+        self.history_provider = fallback
+        self.primary_state = "waiting"
+        self.primary_error: str | None = None
+        self.fallback_symbols: list[str] = []
+        self._active = primary
+
+    @property
+    def name(self) -> str:
+        return self._active.name
+
+    @property
+    def delay_minutes(self) -> int:
+        return self._active.delay_minutes
+
+    def _primary(self, call: str, symbols: list[str]) -> dict[str, Any]:
+        try:
+            got = getattr(self.primary, call)(symbols)
+        except Exception as exc:  # noqa: BLE001 - any primary failure falls back
+            self.primary_state, self.primary_error = "error", f"{exc}"[:200]
+            log.warning("%s unavailable, using %s: %s", self.primary.name, self.fallback.name, exc)
+            return {}
+        self.primary_state, self.primary_error = "ok", None
+        return got
+
+    def quotes(self, symbols: list[str]) -> dict[str, Quote]:
+        out = self._primary("quotes", symbols)
+        self._active = self.primary if out else self.fallback
+        missing = [s for s in symbols if s not in out]
+        self.fallback_symbols = missing
+        if missing:
+            try:
+                out.update(self.fallback.quotes(missing))
+            except Exception:  # noqa: BLE001 - keep what the primary gave
+                if not out:
+                    raise
+                log.warning("%s unavailable for %s", self.fallback.name, ", ".join(missing))
+        return out
+
+    def last_closes(self, symbols: list[str]) -> dict[str, tuple[float, str]]:
+        out = self._primary("last_closes", symbols)
+        missing = [s for s in symbols if s not in out]
+        if missing:
+            out.update(self.fallback.last_closes(missing))
+        return out
+
+    def history(self, symbol: str, start: date, end: date) -> list[Bar]:
+        return self.fallback.history(symbol, start, end)
+
+    def status(self) -> dict[str, Any]:
+        return {
+            "primary": self.primary.name,
+            "primary_state": self.primary_state,
+            "primary_error": self.primary_error,
+            "fallback": self.fallback.name,
+            "fallback_symbols": self.fallback_symbols[:20],
+        }
+
+
+def build_price_source(config: Any = None, api_key: str | None = None) -> Any:
+    """Tiingo IEX (with Yahoo behind it) when a key is set and allowed; Yahoo otherwise."""
+    from radar.config import PricesConfig, tiingo_api_key
+
+    config = config or PricesConfig()
+    key = tiingo_api_key() if api_key is None else api_key
+    if config.provider == "yahoo" or not key:
+        return YahooPriceSource()
+    client = TiingoClient(
+        key,
+        requests_per_hour=config.tiingo_requests_per_hour,
+        requests_per_second=config.tiingo_requests_per_second,
+        timeout=config.tiingo_timeout_seconds,
+    )
+    iex = TiingoIexSource(client, batch_size=config.tiingo_batch_size)
+    return FallbackPriceSource(iex, YahooPriceSource())
 
 
 class BacktestHistory:
@@ -287,6 +474,7 @@ class PriceService:
         return {"quotes": self.quotes, **self.status()}
 
     def status(self) -> dict[str, Any]:
+        provider = getattr(self.source, "status", None)
         return {
             "state": self.state,
             "source": self.source.name,
@@ -296,6 +484,8 @@ class PriceService:
                 self.last_tick_at.isoformat(timespec="seconds") if self.last_tick_at else None
             ),
             "error": self.error,
+            # Primary/fallback state when quotes come from Tiingo with Yahoo behind it.
+            "provider": provider() if callable(provider) else None,
         }
 
     async def run(self) -> None:
@@ -415,9 +605,10 @@ class PriceService:
                 return json.loads(path.read_text(encoding="utf-8"))
 
         bars: list[Bar] = []
-        source, kind, error = self.source.name, "ohlc", None
+        provider = getattr(self.source, "history_provider", self.source)
+        source, kind, error = provider.name, "ohlc", None
         try:
-            bars = self._executor.submit(self.source.history, symbol, start, end).result(timeout=40)
+            bars = self._executor.submit(provider.history, symbol, start, end).result(timeout=40)
         except Exception as exc:
             error = f"{exc.__class__.__name__}: {exc}"[:200]
             log.warning("history for %s unavailable: %s", symbol, error)
@@ -432,7 +623,7 @@ class PriceService:
             "end": end.isoformat(),
             "source": source,
             "kind": kind,
-            "delay_minutes": self.source.delay_minutes,
+            "delay_minutes": provider.delay_minutes,
             "bars": [asdict(bar) for bar in bars],
             "error": error,
         }

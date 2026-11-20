@@ -151,6 +151,11 @@ def test_api_over_the_live_engine(engine, tmp_path):
         assert health["sec"]["state"] == "starting" and health["sec"]["stage"] == "idle"
         assert health["ai"]["lang"] == "en" and health["ai"]["state"] == "ok"
         assert health["prices"] == {"state": "off"}
+        assert health["tiingo"] == {
+            "key_set": False,
+            "news": {"state": "off"},
+            "quotes": {"state": "off"},
+        }
         assert client.get("/api/signals").json() == []
 
         with client.websocket_connect("/ws") as socket:

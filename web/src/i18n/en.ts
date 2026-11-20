@@ -28,7 +28,7 @@ export const en = {
     months: (n: number) => (n === 1 ? '1 month' : `${n} months`),
     monthsShort: (n: number | string) => `${n} mo`,
     days: (n: number | string) => `${n} days`,
-    delayed: (minutes: number) => `Delayed ~${minutes} min`,
+    delayed: (minutes: number) => (minutes > 0 ? `Delayed ~${minutes} min` : 'Real-time'),
   },
 
   time: {
@@ -72,8 +72,10 @@ export const en = {
   },
 
   indices: {
-    group: (delay: number) => `Indices, quotes delayed about ${delay} minutes`,
+    group: (delay: number) =>
+      delay > 0 ? `Indices, quotes delayed about ${delay} minutes` : 'Indices, real-time quotes',
     noQuote: 'no quote',
+    fallback: (symbols: string, source: string) => `${symbols} from ${source}`,
   },
 
   system: {
@@ -250,8 +252,11 @@ export const en = {
     declaredStake: 'declared stake',
     aiSummary: 'AI summary',
     new: 'New',
-    todayTitle: 'Change in the latest session. Quote delayed about 15 minutes.',
-    todayDelayed: 'Today · delayed',
+    todayTitle: (delay: number) =>
+      delay > 0
+        ? `Change in the latest session. Quote delayed about ${delay} minutes.`
+        : 'Change in the latest session. Real-time quote (IEX).',
+    todayDelayed: (delay: number): string => (delay > 0 ? 'Today · delayed' : 'Today · real-time'),
     price: 'Price',
     marketValue: 'Mkt value',
     sizeUnknown: 'Price or market value unknown',
@@ -297,7 +302,7 @@ export const en = {
       tone: 'Purpose tone (Item 4)',
       activist: 'Activist',
       neutral: 'Neutral',
-      quoteDelayed: 'Quote · delayed',
+      quoteDelayed: (delay: number): string => (delay > 0 ? 'Quote · delayed' : 'Quote · real-time'),
       bought: 'Amount bought',
       distinctInsiders: 'Distinct insiders',
       stakeIncrease: 'Stake increase',
@@ -346,7 +351,7 @@ export const en = {
     legendExit: 'backtest exits',
     daily: 'Daily',
     close: 'Close',
-    delayed: (minutes: number) => `delayed ~${minutes} min`,
+    delayed: (minutes: number) => (minutes > 0 ? `delayed ~${minutes} min` : 'real-time'),
   },
 
   radar: {

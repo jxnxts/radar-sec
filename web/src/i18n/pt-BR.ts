@@ -28,7 +28,7 @@ export const ptBR: Messages = {
     months: (n) => (n === 1 ? '1 mês' : `${n} meses`),
     monthsShort: (n) => `${n} m`,
     days: (n) => `${n} dias`,
-    delayed: (minutes) => `Atrasado ~${minutes} min`,
+    delayed: (minutes) => (minutes > 0 ? `Atrasado ~${minutes} min` : 'Tempo real'),
   },
 
   time: {
@@ -71,8 +71,10 @@ export const ptBR: Messages = {
   },
 
   indices: {
-    group: (delay) => `Índices, cotação atrasada cerca de ${delay} minutos`,
+    group: (delay) =>
+      delay > 0 ? `Índices, cotação atrasada cerca de ${delay} minutos` : 'Índices, cotação em tempo real',
     noQuote: 'sem cotação',
+    fallback: (symbols, source) => `${symbols} via ${source}`,
   },
 
   system: {
@@ -246,8 +248,11 @@ export const ptBR: Messages = {
     declaredStake: 'participação declarada',
     aiSummary: 'Resumo IA',
     new: 'Novo',
-    todayTitle: 'Variação no pregão mais recente. Cotação atrasada cerca de 15 minutos.',
-    todayDelayed: 'Hoje · atrasado',
+    todayTitle: (delay) =>
+      delay > 0
+        ? `Variação no pregão mais recente. Cotação atrasada cerca de ${delay} minutos.`
+        : 'Variação no pregão mais recente. Cotação em tempo real (IEX).',
+    todayDelayed: (delay) => (delay > 0 ? 'Hoje · atrasado' : 'Hoje · tempo real'),
     price: 'Preço',
     marketValue: 'Valor de mercado',
     sizeUnknown: 'Preço ou valor de mercado desconhecido',
@@ -295,7 +300,7 @@ export const ptBR: Messages = {
       tone: 'Tom do propósito (Item 4)',
       activist: 'Ativista',
       neutral: 'Neutro',
-      quoteDelayed: 'Cotação · atrasada',
+      quoteDelayed: (delay) => (delay > 0 ? 'Cotação · atrasada' : 'Cotação · tempo real'),
       bought: 'Comprado a mercado',
       distinctInsiders: 'Insiders distintos',
       stakeIncrease: 'Aumento da posição',
@@ -344,7 +349,7 @@ export const ptBR: Messages = {
     legendExit: 'saídas do backtest',
     daily: 'Diário',
     close: 'Fechamento',
-    delayed: (minutes) => `atrasado ~${minutes} min`,
+    delayed: (minutes) => (minutes > 0 ? `atrasado ~${minutes} min` : 'tempo real'),
   },
 
   radar: {

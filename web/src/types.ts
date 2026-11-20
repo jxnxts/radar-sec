@@ -248,6 +248,9 @@ export interface Quote {
   change_pct: number | null
   as_of: string
   spark: number[]
+  /** Provider of this quote ("Tiingo IEX", "Yahoo Finance") and its delay; absent on older servers. */
+  source?: string
+  delay_minutes?: number | null
 }
 
 export interface RankedCompany {
@@ -293,6 +296,14 @@ export interface PricesStatus {
   interval_s?: number
   last_tick_at?: string | null
   error?: string | null
+  /** Primary/fallback state when quotes come from Tiingo with Yahoo behind it. */
+  provider?: {
+    primary: string
+    primary_state: string
+    primary_error: string | null
+    fallback: string
+    fallback_symbols: string[]
+  } | null
 }
 
 export interface ReplayStatus {
