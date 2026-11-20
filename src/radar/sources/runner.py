@@ -69,6 +69,8 @@ class SourceStatus:
     events: int = 0
     signals: int = 0
     note: str = ""
+    # Source-specific health (news feeds, press-release counters), when it has any.
+    detail: dict[str, Any] | None = None
 
     def view(self) -> dict[str, Any]:
         return {
@@ -83,6 +85,7 @@ class SourceStatus:
             "events": self.events,
             "signals": self.signals,
             "note": self.note,
+            "detail": self.detail,
         }
 
 
@@ -240,6 +243,13 @@ class SourceRunner:
             log.exception("forward log failed for source %s", name)
 
     def statuses(self) -> list[dict[str, Any]]:
+        for source in self.sources:
+            health = getattr(source, "health", None)
+            if callable(health):
+                try:
+                    self.status[source.name].detail = health()
+                except Exception:  # noqa: BLE001 - health never breaks the status
+                    log.exception("health of source %s failed", source.name)
         return [s.view() for s in self.status.values()]
 
     def close(self) -> None:

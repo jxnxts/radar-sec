@@ -29,9 +29,22 @@ ROBOTS_MAX_AGE_S = 86_400.0
 
 
 class NewsHttpError(RuntimeError):
-    def __init__(self, message: str, status_code: int | None = None):
+    def __init__(self, message: str, status_code: int | None = None, detail: str = ""):
         super().__init__(message)
         self.status_code = status_code
+        # The server's own short explanation (an API's {"detail": ...}), when it sent one.
+        self.detail = detail
+
+
+def _detail(response: httpx.Response) -> str:
+    """A short, single-line explanation from an error answer (never the request)."""
+    try:
+        payload = response.json()
+    except ValueError:
+        return ""
+    if isinstance(payload, dict) and isinstance(payload.get("detail"), str):
+        return " ".join(payload["detail"].split())[:200]
+    return ""
 
 
 class NewsClient:
@@ -154,7 +167,9 @@ class NewsClient:
             )
             suffix = f"; pausing {pause:.0f}s" if pause else ""
             raise NewsHttpError(
-                f"HTTP {response.status_code} on {host}{suffix}", response.status_code
+                f"HTTP {response.status_code} on {host}{suffix}",
+                response.status_code,
+                _detail(response),
             )
         self._failures.pop(host, None)
         if conditional:

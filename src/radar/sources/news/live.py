@@ -44,6 +44,9 @@ class Feed:
 
     name: str = ""
     interval_s: float = 300.0
+    # HTTP answers that mean "this key will never get in" (not "try later"): the feed
+    # is turned off for the rest of the session instead of retried.
+    disable_on: frozenset[int] = frozenset()
 
     def fetch(self, client: NewsClient) -> list[NewsItem]:
         raise NotImplementedError
@@ -83,6 +86,8 @@ class GdeltFeed(Feed):
 
 class TiingoFeed(Feed):
     name = "tiingo"
+    # 401: bad key; 403: the plan has no News API access ("You do not have permission").
+    disable_on = frozenset({401, 403})
 
     def __init__(self, api_key: str, interval_s: float, limit: int = 100):
         if not api_key:
@@ -149,6 +154,10 @@ class NewsSource:
         self._clock = clock
         self._now = now
         self._next: dict[str, float] = {f.name: 0.0 for f in self.feeds}
+        # Per-feed state for /api/health: waiting | ok | error | disabled.
+        self._state: dict[str, dict[str, Any]] = {
+            f.name: {"state": "waiting", "error": None, "last_ok_at": None} for f in self.feeds
+        }
         self._index: CompanyIndex | None = None
         self._index_of: int | None = None
 
@@ -165,7 +174,36 @@ class NewsSource:
 
     def due(self) -> list[Feed]:
         now = self._clock()
-        return [f for f in self.feeds if self._next.get(f.name, 0.0) <= now]
+        return [
+            f
+            for f in self.feeds
+            if self._state[f.name]["state"] != "disabled" and self._next.get(f.name, 0.0) <= now
+        ]
+
+    def _disable(self, feed: Feed, exc: NewsHttpError) -> None:
+        reason = f"HTTP {exc.status_code}"
+        if exc.detail:
+            reason += f": {exc.detail}"
+        self._state[feed.name] = {
+            **self._state[feed.name],
+            "state": "disabled",
+            "error": reason,
+        }
+        log.warning(
+            "news feed %s disabled for this session (%s); restart the radar after the "
+            "plan or key changes",
+            feed.name,
+            reason,
+        )
+
+    def health(self) -> dict[str, Any]:
+        """State of each feed, for /api/health (a disabled feed says why)."""
+        return {
+            "feeds": [
+                {"name": f.name, "interval_s": f.interval_s, **self._state[f.name]}
+                for f in self.feeds
+            ]
+        }
 
     def poll(self, ctx) -> PollResult:
         result = PollResult()
@@ -176,19 +214,29 @@ class NewsSource:
         for feed in due:
             try:
                 items = feed.fetch(self.client)
-            except (NewsHttpError, FeedFormatError) as exc:
-                log.warning("news feed %s: %s", feed.name, exc)
-                errors.append(f"{feed.name}: {exc}")
+            except NewsHttpError as exc:
+                if exc.status_code in feed.disable_on:
+                    self._disable(feed, exc)
+                    continue
+                self._failed(feed, exc, errors)
+                continue
+            except FeedFormatError as exc:
+                self._failed(feed, exc, errors)
                 continue
             finally:
                 self._next[feed.name] = self._clock() + feed.interval_s
             fetched += 1
             seen_at = self._now()
+            self._state[feed.name] = {
+                "state": "ok",
+                "error": None,
+                "last_ok_at": _iso(seen_at),
+            }
             # Feeds list the newest first; store the oldest first.
             for item in reversed(items):
                 self._take(ctx, index, item, seen_at, result)
         result.requests = len(due)
-        if due and not fetched:
+        if errors and not fetched:
             raise RuntimeError("; ".join(errors)[:300])
         matched = sum(1 for r in result.records if r["data"]["tickers"])
         note = f"{len(result.records)} new items, {matched} matched"
@@ -196,8 +244,16 @@ class NewsSource:
             note += "; SEC ticker list unavailable, nothing matched"
         if errors:
             note += f"; {'; '.join(errors)}"
+        disabled = [n for n, st in self._state.items() if st["state"] == "disabled"]
+        if disabled:
+            note += f"; off for this session: {', '.join(disabled)}"
         result.note = note[:300]
         return result
+
+    def _failed(self, feed: Feed, exc: Exception, errors: list[str]) -> None:
+        log.warning("news feed %s: %s", feed.name, exc)
+        errors.append(f"{feed.name}: {exc}")
+        self._state[feed.name] = {**self._state[feed.name], "state": "error", "error": str(exc)}
 
     def _take(
         self,
