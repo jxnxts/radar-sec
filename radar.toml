@@ -70,11 +70,28 @@ gdelt = false                   # GDELT DOC 2.0; off: it answered 429 to every r
 gdelt_interval_seconds = 900.0
 gdelt_query = "(NYSE OR NASDAQ) sourcelang:english"
 gdelt_max_records = 250
-tiingo_interval_seconds = 900.0 # Tiingo News runs only when TIINGO_API_KEY is set (.env)
+tiingo_interval_seconds = 900.0 # Tiingo News runs only when TIINGO_API_KEY is set (.env); a 403 turns it off for the session
 min_host_interval_seconds = 5.0 # politeness: at most one request per host every 5 s
 user_agent = "radar-sec/0.1 (news reader)"
 timeout_seconds = 30.0
 context_days = 30               # days of news in the dashboard's company context
+# Official press releases: the EX-99 exhibits of new 8-Ks become news of feed "sec-8k-ex99"
+# (free, from the SEC, through its shared rate limiter and cache).
+sec_exhibits = true
+sec_exhibits_per_filing = 3     # EX-99 documents read per 8-K
+sec_exhibits_filings_per_poll = 40  # 8-Ks needing their index page per poll; the rest wait
+sec_exhibit_max_bytes = 2000000 # larger exhibits (decks, financial statements) are skipped
+
+[prices]
+# "auto": with TIINGO_API_KEY (.env), real-time Tiingo IEX quotes on the dashboard and Tiingo
+# end-of-day closes in the forward snapshot, Yahoo for what Tiingo misses (^VIX) or on error;
+# without the key, Yahoo (delayed ~15 min). "yahoo": always Yahoo.
+provider = "auto"
+tiingo_batch_size = 100         # tickers per IEX request
+tiingo_requests_per_hour = 500  # one budget for every Tiingo call; past it, Yahoo answers
+tiingo_requests_per_second = 2.0
+tiingo_timeout_seconds = 20.0
+tiingo_snapshot_max_symbols = 300  # closes asked to Tiingo per daily snapshot (1 request each)
 
 [forward]
 # Append-only forward-test log: data/forward/YYYY-MM-DD.jsonl.gz, one record per signal,

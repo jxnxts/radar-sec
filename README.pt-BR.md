@@ -52,7 +52,7 @@ O `.env` fica fora do git. Só uma variável é obrigatória.
 | `RADAR_LANG` | não | Idioma dos resumos com IA, dos alertas e da saída da CLI: `en` ou `pt-BR`. Tem prioridade sobre o `lang` do `radar.toml`. Padrão: `en`. |
 | `RADAR_DATA_DIR` | não | Onde guardar o banco e o cache. Padrão: `./data`. |
 | `RADAR_CONFIG` | não | Arquivo de parâmetros. Padrão: `./radar.toml`. |
-| `TIINGO_API_KEY` | não | Paga. Liga o feed Tiingo News da fonte de notícias (e o `radar phase2 collect --prices tiingo`). Sem ela, nada chama a Tiingo. |
+| `TIINGO_API_KEY` | não | Paga. Liga as cotações em tempo real da Tiingo IEX no painel (o Yahoo continua como reserva), os fechamentos diários da Tiingo na foto de preços do teste prospectivo, o feed Tiingo News se o seu plano incluir notícias e o `radar phase2 collect --prices tiingo`. Vai só no cabeçalho `Authorization` e nunca aparece no log. Sem ela, nada chama a Tiingo. |
 
 ### `radar.toml`
 
@@ -446,7 +446,8 @@ entradas gratuitas:
 | Business Wire | `https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeEFpRXg==` | **desligado**: o feed responde, mas o `feed.businesswire.com/robots.txt` proíbe `/rss/` para agentes genéricos. O adaptador existe (`wires = ["prnewswire", "businesswire"]`) e o cliente consulta o robots.txt antes de cada feed, então ele segue recusado enquanto a regra valer |
 | GlobeNewswire | RSS de empresas abertas | **descartado**: responde 403 a clientes automáticos (inclusive no `robots.txt`) |
 | GDELT DOC 2.0 | `https://api.gdeltproject.org/api/v2/doc/doc` | implementado, **desligado por padrão** (`gdelt = false`): respondeu 429 a todas as requisições da máquina de teste; ligue onde ele responder |
-| Tiingo News (pago) | `https://api.tiingo.com/tiingo/news` | só com `TIINGO_API_KEY` definida; a chave vai no cabeçalho `Authorization` |
+| Tiingo News (pago) | `https://api.tiingo.com/tiingo/news` | só com `TIINGO_API_KEY` definida; a chave vai no cabeçalho `Authorization`. Planos sem acesso a notícias recebem 403 ("You do not have permission to access the News API"): o feed é desligado até o radar reiniciar, com uma linha só no log, e o `/api/health` mostra isso em `tiingo.news` |
+| Anexos EX-99 dos 8-K (SEC) | a página de índice do arquivamento e os documentos `EX-99.x` em `www.sec.gov` | ligado (`sec_exhibits = true`); veja abaixo |
 
 Cada notícia é guardada (`news_items`) com feed, URL, título, resumo, `published_at` como o feed
 informa, `seen_at` (o horário UTC em que o radar a buscou: a referência de tempo de qualquer
@@ -463,8 +464,25 @@ comunicados citavam uma empresa listada. As etiquetas são regras fixas de palav
 `dividend`. Nenhum LLM pontua as notícias ainda; `news/scoring.py` tem o gancho (`NewsScorer`),
 cujo resultado fica guardado junto da notícia.
 
-As notícias associadas viram eventos de mercado: aparecem na fita de baixo e em "esta empresa em
-todas as fontes" (últimos 30 dias). Os sites de notícia têm um cliente próprio e educado: no
+**Comunicados oficiais dos 8-K.** As empresas arquivam os comunicados à imprensa (resultados,
+aquisições, troca de executivos, dividendos) como anexo 99.x de um 8-K, no EDGAR segundos depois
+da aceitação e de graça. Quando a fonte de 8-K ao vivo vê um 8-K novo, cada anexo `EX-99.x` vira
+uma notícia do feed `sec-8k-ex99`: ticker e CIK vêm do próprio arquivamento (sem casar nomes),
+`published_at` é a hora de aceitação na SEC, `seen_at` a hora em que o radar o baixou, o título é
+a primeira linha de manchete do comunicado (número do anexo, "For immediate release" e blocos de
+contato são pulados) e o resumo é texto puro de até 1.000 caracteres, com as mesmas etiquetas. O
+link é o próprio anexo. A maioria dos anexos não custa requisição extra: as regras de 8-K já
+baixam o texto completo dos itens 1.01, 2.02, 5.02, 7.01 e 8.01, e os anexos saem dele. Os
+outros 8-K que listam o Item 9.01 custam a página de índice mais cada documento EX-99 (no máximo
+`sec_exhibits_per_filing`, pulando arquivos acima de `sec_exhibit_max_bytes`), pelo limitador
+compartilhado da SEC e pelo cache em disco, no máximo `sec_exhibits_filings_per_poll`
+arquivamentos por leitura (os demais esperam a próxima). A cópia oficial é guardada mesmo que um
+serviço de notícias já tenha publicado a mesma manchete. Numa amostra ao vivo de 93 8-K novos
+(19/11/2026, depois do fechamento), 49 comunicados foram guardados com 4 requisições extras à SEC.
+
+As notícias associadas (e todo comunicado de uma empresa listada) viram eventos de mercado:
+aparecem na fita de baixo (os comunicados como "Comunicado") e em "esta empresa em todas as
+fontes" (últimos 30 dias). Os sites de notícia têm um cliente próprio e educado: no
 mínimo 5 s entre requisições ao mesmo site, robots.txt consultado para os feeds RSS, requisições condicionais, nenhuma nova tentativa
 dentro da mesma leitura e uma pausa crescente (ou o `Retry-After` do servidor) depois de um
 403/429/5xx. O limitador da SEC não se aplica a eles.
@@ -472,7 +490,9 @@ dentro da mesma leitura e uma pausa crescente (ou o `Retry-After` do servidor) d
 **Registro do teste prospectivo** (`src/radar/forward.py`, `[forward]` no `radar.toml`). Todo
 sinal que o radar guarda (de todas as fontes), todo evento de mercado, toda notícia (associada ou
 não) e uma foto diária dos preços de fechamento (SPY, IWM e os tickers dos sinais e eventos
-recentes, no primeiro ciclo depois das 21:00 UTC em dias úteis) são acrescentados a
+recentes, no primeiro ciclo depois das 21:00 UTC em dias úteis; dos preços de fechamento da
+Tiingo quando `TIINGO_API_KEY` está definida, do Yahoo nos outros casos ou para o que a Tiingo
+não tiver, com a fonte anotada em cada registro de preço) são acrescentados a
 `data/forward/AAAA-MM-DD.jsonl.gz`, um registro JSON por linha com `kind`, `source`, `key`,
 `seen_at` e `data`. A partição é o dia UTC do `seen_at`. Os arquivos só são abertos para
 acréscimo (cada gravação é um novo membro gzip, e o `zcat` lê tudo como um fluxo só); um dia
@@ -491,11 +511,13 @@ zcat data/forward/2026-11-19.jsonl.gz | head
 | [Datasets de transações de insiders da SEC](https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets) | Backtest | Dados públicos, mesma política de acesso. |
 | [Busca textual do EDGAR](https://efts.sec.gov/LATEST/search-index) e conjuntos de dados da SEC de [13F](https://www.sec.gov/data-research/sec-markets-data/form-13f-data-sets) e [falhas de entrega](https://www.sec.gov/data-research/sec-markets-data/fails-deliver-data) | Fontes extras: histórico e ao vivo | Dados públicos, mesma política de acesso e mesmo limitador. |
 | [API de consulta da FINRA](https://developer.finra.org) (short interest consolidado) e [arquivos diários de volume vendido](https://www.finra.org/finra-data/browse-catalog/short-sale-volume-data) | Fonte de short | Conjuntos públicos, sem credencial; poucas requisições por dia, com cache. |
-| [Yahoo Finance](https://finance.yahoo.com) via [yfinance](https://github.com/ranaroussi/yfinance) | Preços do backtest, cotações atrasadas e gráficos do painel | API não oficial, sem vínculo com o Yahoo; os dados são para uso pessoal, nos termos do Yahoo, e sem garantia. Cotações com cerca de 15 minutos de atraso. |
+| [Yahoo Finance](https://finance.yahoo.com) via [yfinance](https://github.com/ranaroussi/yfinance) | Preços do backtest, cotações atrasadas do painel (sem chave da Tiingo, ou como reserva dela) e gráficos | API não oficial, sem vínculo com o Yahoo; os dados são para uso pessoal, nos termos do Yahoo, e sem garantia. Cotações com cerca de 15 minutos de atraso. |
+| Preços IEX e de fechamento da [Tiingo](https://www.tiingo.com/documentation/iex) (opcional, pago) | Cotações em tempo real do painel, fechamentos diários do teste prospectivo | A sua assinatura da Tiingo e os termos dela; só com `TIINGO_API_KEY`. Os tickers vão em lotes (100 por requisição IEX) e todas as chamadas à Tiingo do processo dividem uma cota por hora (`[prices] tiingo_requests_per_hour`, 500 por padrão); passando dela, o Yahoo responde. Os preços IEX são os negócios e o livro da própria bolsa IEX, em tempo real. |
 | Endpoint público de imagens da [Financial Modeling Prep](https://financialmodelingprep.com), com o [nvstly/icons](https://github.com/nvstly/icons) como reserva | Logos das empresas no painel | Os logos são marcas dos seus donos, baixados sob demanda e guardados só localmente (`data/cache/logos/`), nunca versionados. A requisição leva só o ticker. |
 | Feed RSS público da [PR Newswire](https://www.prnewswire.com/rss/) | Fonte de notícias | Feed público para uso pessoal, permitido pelo robots.txt; lido a cada 5 minutos com requisições condicionais, no máximo uma requisição por site a cada 5 s. Manchetes e links ficam só no banco local; o painel leva ao original. |
 | [API GDELT DOC 2.0](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/) (desligada por padrão) | Fonte de notícias | Dados abertos; no máximo uma requisição a cada 5 s (o limite do GDELT), pausa em 429. |
-| [Tiingo News](https://www.tiingo.com/documentation/news) (opcional, pago) | Fonte de notícias | A sua assinatura da Tiingo e os termos dela; só com `TIINGO_API_KEY`. |
+| [Tiingo News](https://www.tiingo.com/documentation/news) (opcional, pago) | Fonte de notícias | A sua assinatura da Tiingo e os termos dela; só com `TIINGO_API_KEY` e um plano que inclua notícias. |
+| Anexos EX-99 dos 8-K (SEC) | Fonte de notícias (comunicados oficiais) | Dados públicos, mesma política de acesso justo, limitador e cache das outras fontes da SEC. |
 | [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/python) | Resumos com IA (opcionais) | Usa o seu login/assinatura do Claude Code e os termos dele. |
 
 ## Limitações
@@ -509,7 +531,7 @@ O relatório lista todas com os números da execução. As principais:
 - **13D não entra no backtest.** Os datasets históricos usados cobrem só Form 3/4/5.
 - **13D antigo é lido por heurística.** Antes de dezembro de 2024 não havia XML.
 - **O monitor depende do feed "getcurrent"**, que mostra os filings mais recentes. Se o radar ficar desligado por dias, o que saiu do feed nesse intervalo não é recuperado (só os Form 4 recentes de emissores com compra nova).
-- **Os preços do painel são atrasados** em cerca de 15 minutos e vêm de uma fonte gratuita sem garantia.
+- **Os preços do painel são atrasados** em cerca de 15 minutos e vêm de uma fonte gratuita sem garantia, a não ser com `TIINGO_API_KEY`: aí são preços IEX em tempo real, que refletem só os negócios da bolsa IEX (uma fatia pequena do volume; depois do fechamento a Tiingo informa o fechamento oficial). O rótulo no painel diz qual fonte e qual atraso estão valendo.
 - **O radar de compras do modo ao vivo só enxerga o que está no banco.** A janela de 30 dias fica incompleta até o monitor ter rodado por 30 dias; o painel mostra desde quando o banco cobre.
 - **O replay mostra o ticker e o logo de hoje**, não os da época. Empresas que saíram do cadastro da SEC aparecem com monograma e, em geral, sem gráfico.
 

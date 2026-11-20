@@ -54,7 +54,7 @@ uv run radar serve                         # API, WebSocket, collector and dashb
 | `RADAR_LANG` | no | Language for AI summaries, alerts and CLI output: `en` or `pt-BR`. Overrides `lang` in `radar.toml`. Default: `en`. |
 | `RADAR_DATA_DIR` | no | Where the database and cache live. Default: `./data`. |
 | `RADAR_CONFIG` | no | Parameters file. Default: `./radar.toml`. |
-| `TIINGO_API_KEY` | no | Paid. Turns on the Tiingo News feed of the news source (and `radar phase2 collect --prices tiingo`). Without it, nothing calls Tiingo. |
+| `TIINGO_API_KEY` | no | Paid. Turns on Tiingo IEX real-time quotes on the dashboard (Yahoo stays as the fallback), Tiingo end-of-day closes for the forward-test snapshot, the Tiingo News feed if your plan includes it, and `radar phase2 collect --prices tiingo`. Sent only in the `Authorization` header, never logged. Without it, nothing calls Tiingo. |
 
 ### `radar.toml`
 
@@ -446,7 +446,8 @@ look-ahead-free forward-test data. Two pieces do that.
 | Business Wire | `https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeEFpRXg==` | **off**: the feed answers, but `feed.businesswire.com/robots.txt` disallows `/rss/` for generic agents. The adapter exists (`wires = ["prnewswire", "businesswire"]`), and the client checks robots.txt before every wire, so it stays refused while that rule stands |
 | GlobeNewswire | public-company RSS | **dropped**: answers 403 to automated clients (also its `robots.txt`) |
 | GDELT DOC 2.0 | `https://api.gdeltproject.org/api/v2/doc/doc` | implemented, **off by default** (`gdelt = false`): it answered 429 to every request from the test machine; turn it on where it answers |
-| Tiingo News (paid) | `https://api.tiingo.com/tiingo/news` | only when `TIINGO_API_KEY` is set; the key goes in the `Authorization` header |
+| Tiingo News (paid) | `https://api.tiingo.com/tiingo/news` | only when `TIINGO_API_KEY` is set; the key goes in the `Authorization` header. Plans without news access get 403 ("You do not have permission to access the News API"): the feed is then turned off for the session with one log line, and `/api/health` shows it under `tiingo.news` |
+| SEC 8-K exhibits (EX-99) | the filing index and its `EX-99.x` documents on `www.sec.gov` | on (`sec_exhibits = true`); see below |
 
 Each item is stored (`news_items`) with its feed, URL, title, summary, `published_at` as the
 feed states it, `seen_at` (the UTC time the radar fetched it: the point-in-time timestamp for
@@ -462,8 +463,25 @@ Tags are deterministic keyword rules: `earnings`, `guidance`, `mna`, `offering`,
 `fda`, `lawsuit`, `exec_change`, `dividend`. No LLM scores the news yet; `news/scoring.py`
 holds the hook (`NewsScorer`), whose result is stored next to the item.
 
-Matched items become market events: they show on the bottom tape and in "this company across
-all sources" (last 30 days). The news hosts get their own polite client: a minimum of 5 s
+**Official press releases from 8-Ks.** Companies file their press releases (earnings,
+deals, executive changes, dividends) as exhibit 99.x of an 8-K, on EDGAR within seconds of
+acceptance and for free. When the live 8-K source sees a new 8-K, each `EX-99.x` exhibit
+becomes a news item of feed `sec-8k-ex99`: ticker and CIK come from the filing (no name
+matching), `published_at` is the SEC acceptance time, `seen_at` the fetch time, the title is
+the release's first headline line (exhibit numbers, "For immediate release" and contact
+blocks are skipped) and the summary is plain text capped at 1,000 characters, with the same
+keyword tags. The link is the exhibit itself. Most exhibits cost no extra request: the 8-K
+rules already download the submission text of items 1.01, 2.02, 5.02, 7.01 and 8.01, and
+the exhibits are read from it. Other 8-Ks that list Item 9.01 cost the filing index plus each
+EX-99 document (at most `sec_exhibits_per_filing`, skipping files over
+`sec_exhibit_max_bytes`), through the shared SEC limiter and the disk cache, at most
+`sec_exhibits_filings_per_poll` filings per poll (the rest wait for the next poll). An official
+copy is kept even if a wire already carried the same headline. On a live sample of 93 new
+8-Ks (2026-11-19, after the close), 49 press releases were stored with 4 extra SEC requests.
+
+Matched items (and every press release of a listed filer) become market events: they show on
+the bottom tape (press releases as "Release") and in "this company across all sources" (last
+30 days). The news hosts get their own polite client: a minimum of 5 s
 between requests to the same host, robots.txt checked for the RSS wires, conditional requests, no retries inside a poll and a growing
 pause (or the server's `Retry-After`) after a 403/429/5xx. The SEC rate limiter is not used for
 them.
@@ -471,7 +489,8 @@ them.
 **Forward-test log** (`src/radar/forward.py`, `[forward]` in `radar.toml`). Every signal the
 radar stores (all sources), every market event, every news item (matched or not) and a daily
 closing-price snapshot (SPY, IWM and the tickers of recent signals and events, on the first
-cycle after 21:00 UTC on weekdays) are appended to `data/forward/YYYY-MM-DD.jsonl.gz`, one
+cycle after 21:00 UTC on weekdays; from Tiingo end-of-day prices when `TIINGO_API_KEY` is set,
+Yahoo otherwise or for what Tiingo misses, with the source in each price record) are appended to `data/forward/YYYY-MM-DD.jsonl.gz`, one
 JSON record per line with `kind`, `source`, `key`, `seen_at` and `data`. The partition is the
 UTC day of `seen_at`. Files are only opened in append mode (each write is a new gzip member, so
 `zcat` reads them as one stream); a past day is never rewritten.
@@ -489,11 +508,13 @@ zcat data/forward/2026-11-19.jsonl.gz | head
 | [SEC insider transactions data sets](https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets) | Backtest | Public data, same fair access policy. |
 | [EDGAR full-text search](https://efts.sec.gov/LATEST/search-index) and [SEC Form 13F](https://www.sec.gov/data-research/sec-markets-data/form-13f-data-sets) / [fails-to-deliver](https://www.sec.gov/data-research/sec-markets-data/fails-deliver-data) data sets | Extra sources: history and live | Public data, same fair access policy and rate limiter. |
 | [FINRA Query API](https://developer.finra.org) (consolidated short interest) and [daily short volume files](https://www.finra.org/finra-data/browse-catalog/short-sale-volume-data) | Short-data source | Public datasets, no credentials; a few requests per day, cached. |
-| [Yahoo Finance](https://finance.yahoo.com) via [yfinance](https://github.com/ranaroussi/yfinance) | Backtest prices, delayed dashboard quotes and charts | Unofficial API, not affiliated with Yahoo; data is for personal use under Yahoo's terms and comes with no guarantee. Quotes are delayed about 15 minutes. |
+| [Yahoo Finance](https://finance.yahoo.com) via [yfinance](https://github.com/ranaroussi/yfinance) | Backtest prices, delayed dashboard quotes (without a Tiingo key, or as its fallback) and charts | Unofficial API, not affiliated with Yahoo; data is for personal use under Yahoo's terms and comes with no guarantee. Quotes are delayed about 15 minutes. |
+| [Tiingo](https://www.tiingo.com/documentation/iex) IEX and end-of-day prices (optional, paid) | Real-time dashboard quotes, forward-test daily closes | Your own Tiingo subscription and its terms; only with `TIINGO_API_KEY`. Tickers are batched (100 per IEX request) and every Tiingo call of the process shares one hourly budget (`[prices] tiingo_requests_per_hour`, 500 by default); past it, Yahoo answers. IEX prices are the IEX exchange's own trades and book, in real time. |
 | [Financial Modeling Prep](https://financialmodelingprep.com) public image endpoint, with [nvstly/icons](https://github.com/nvstly/icons) as fallback | Company logos on the dashboard | Logos are trademarks of their owners, fetched on demand and cached locally (`data/cache/logos/`), never committed. Only the ticker is sent. |
 | [PR Newswire](https://www.prnewswire.com/rss/) public RSS feed | News source | Public feed for personal use, allowed by its robots.txt; polled every 5 minutes with conditional requests, at most one request per host every 5 s. Headlines and links are stored locally; the dashboard links to the original. |
 | [GDELT DOC 2.0 API](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/) (off by default) | News source | Open data; at most one request every 5 s (GDELT's limit), backoff on 429. |
-| [Tiingo News](https://www.tiingo.com/documentation/news) (optional, paid) | News source | Your own Tiingo subscription and its terms; only with `TIINGO_API_KEY`. |
+| [Tiingo News](https://www.tiingo.com/documentation/news) (optional, paid) | News source | Your own Tiingo subscription and its terms; only with `TIINGO_API_KEY` and a plan that includes news. |
+| SEC 8-K exhibits (EX-99) | News source (official press releases) | Public data, same fair access policy, rate limiter and cache as the other SEC sources. |
 | [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/python) | Optional AI summaries | Runs on your own Claude Code login/subscription and its terms. |
 
 ## Limitations
@@ -507,7 +528,7 @@ The report lists all of them with the run's numbers. The main ones:
 - **13D is not in the backtest.** The historical data sets cover only Forms 3/4/5.
 - **Older 13Ds are read heuristically.** There was no XML before December 2024.
 - **The monitor depends on the "getcurrent" feed**, which shows only the most recent filings. If the radar is off for days, what left the feed meanwhile is not recovered (except recent Form 4s of issuers with a new purchase).
-- **Dashboard prices are delayed** about 15 minutes and come from a free source with no guarantee.
+- **Dashboard prices are delayed** about 15 minutes and come from a free source with no guarantee, unless `TIINGO_API_KEY` is set: then they are real-time IEX prices, which reflect trades on the IEX exchange only (a small share of volume; after the close Tiingo reports the official close). The label on the dashboard says which source and delay are in use.
 - **The live buying radar only sees what is in the database.** The 30-day window is incomplete until the monitor has run for 30 days; the dashboard shows since when the database has coverage.
 - **Replay shows today's ticker and logo**, not the historical ones. Companies that left the SEC registry show a monogram and, usually, no chart.
 
