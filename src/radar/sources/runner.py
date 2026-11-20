@@ -23,6 +23,7 @@ from . import explain as _explain  # noqa: F401 - registers the catalogs
 from .base import MarketEvent, PollResult
 from .eightk.live import EightKSource
 from .form144.live import Form144Source
+from .news.exhibits import PressReleaseCollector
 from .news.live import NewsSource
 from .registry import Registry
 from .short.data import CusipMap
@@ -122,7 +123,7 @@ class SourceRunner:
         self.recorder = recorder
         catalog = {
             "form144": Form144Source,
-            "eightk": EightKSource,
+            "eightk": lambda: EightKSource(press_releases=press_release_collector(news_config)),
             "thirteenf": ThirteenFSource,
             "short": ShortSource,
             "news": lambda: NewsSource(news_config),
@@ -258,6 +259,17 @@ class SourceRunner:
             closer = getattr(source, "close", None)
             if callable(closer):
                 closer()
+
+
+def press_release_collector(news_config) -> PressReleaseCollector | None:
+    """The 8-K EX-99 collector for `[news]`, or None when `sec_exhibits` is off."""
+    if news_config is None or not news_config.sec_exhibits:
+        return None
+    return PressReleaseCollector(
+        per_filing=news_config.sec_exhibits_per_filing,
+        filings_per_poll=news_config.sec_exhibits_filings_per_poll,
+        max_bytes=news_config.sec_exhibit_max_bytes,
+    )
 
 
 def yahoo_momentum(ticker: str, day: date, sessions: int = 10) -> float | None:

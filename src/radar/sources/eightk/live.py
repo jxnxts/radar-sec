@@ -1,7 +1,9 @@
 """8-K and NT 10-K/10-Q in live mode.
 
 Items come from the feed summary; the filing text is downloaded only for the items
-whose rules read text (buybacks, executive exits, merger agreements).
+whose rules read text (buybacks, executive exits, merger agreements). With a
+`PressReleaseCollector`, the EX-99 exhibits (press releases) of each new 8-K also
+become news items (see radar.sources.news.exhibits).
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ from radar.http import SecHttpError, decode
 
 from ..base import EIGHTK, MarketEvent, PollResult
 from ..feeds import FeedItem, fetch_items
+from ..news.exhibits import FilingInfo, PressReleaseCollector
 from .rules import NT_FORMS, SPECS, Filing8K, detect
 from .text import (
     BUYBACK_PHRASES,
@@ -101,10 +104,21 @@ class EightKSource:
     name = EIGHTK
     interval_s = 60.0
 
-    def __init__(self, *, count: int = 100, max_pages: int = 3):
+    def __init__(
+        self,
+        *,
+        count: int = 100,
+        max_pages: int = 3,
+        press_releases: PressReleaseCollector | None = None,
+    ):
         self.count = count
         self.max_pages = max_pages
+        self.press_releases = press_releases
         self._last_nt: datetime | None = None
+
+    def health(self) -> dict | None:
+        """Press-release counters for /api/health (None when that part is off)."""
+        return self.press_releases.health() if self.press_releases else None
 
     def _known(self, ctx, accession: str) -> bool:
         return ctx.store.has_event(EIGHTK, accession)
@@ -156,12 +170,14 @@ class EightKSource:
             if ref.form == "8-K" and set(filing.items) & TEXT_ITEMS:
                 need_text.append(item)
         payloads = ctx.client.fetch_many(i.ref.txt_url for i in need_text)
+        texts: dict[str, str] = {}
         for item in need_text:
             payload = payloads.get(item.ref.txt_url)
             if payload is None or isinstance(payload, SecHttpError):
                 continue
+            texts[item.ref.accession] = decode(payload)
             filings[item.ref.accession] = classify_text(
-                filings[item.ref.accession], decode(payload)
+                filings[item.ref.accession], texts[item.ref.accession]
             )
 
         urls = {i.ref.accession: i.ref.url for i in new}
@@ -173,4 +189,43 @@ class EightKSource:
             for kind in SPECS
         }
         result.signals += detect(filings.values(), prior_signals=prior)
+        if self.press_releases is not None:
+            self._press_releases(ctx, new, filings, texts, result)
         return result
+
+    def _press_releases(
+        self,
+        ctx,
+        new: list[FeedItem],
+        filings: dict[str, Filing8K],
+        texts: dict[str, str],
+        result: PollResult,
+    ) -> None:
+        """EX-99 exhibits of the new 8-Ks, stored as news (a failure never stops the 8-Ks)."""
+        infos = {
+            i.ref.accession: FilingInfo(
+                accession=i.ref.accession,
+                form=i.ref.form,
+                cik=i.ref.cik,
+                name=i.ref.company,
+                ticker=filings[i.ref.accession].ticker,
+                index_url=i.ref.url,
+                accepted_at=i.ref.accepted_at,
+                items=filings[i.ref.accession].items,
+            )
+            for i in new
+            if i.ref.form == "8-K"
+        }
+        news_before = len(result.records)
+        try:
+            self.press_releases.collect(
+                ctx,
+                result,
+                from_text=[(infos[a], raw) for a, raw in texts.items() if a in infos],
+                need_index=[info for a, info in infos.items() if a not in texts],
+            )
+        except Exception:  # noqa: BLE001 - press releases are extra; 8-K events still count
+            log.exception("8-K press releases failed")
+        stored = len(result.records) - news_before
+        if stored:
+            result.note = f"{stored} press release(s) from EX-99 exhibits"

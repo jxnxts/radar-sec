@@ -444,6 +444,7 @@ export const en = {
       short_interest_release: 'FINRA',
       ftd_release: 'FTD',
       news: 'News',
+      press_release: 'Release',
     } as Record<string, string>,
     /** Keyword tags of a news item (see src/radar/sources/news/tags.py). */
     newsTags: {

@@ -28,7 +28,7 @@ from .feeds import (
     parse_tiingo,
     tiingo_url,
 )
-from .matching import CompanyIndex, match_companies
+from .matching import CompanyIndex, Match, match_companies
 from .model import NewsItem, normalize_title
 from .scoring import NewsScorer
 from .tags import tag
@@ -263,81 +263,103 @@ class NewsSource:
         seen_at: datetime,
         result: PollResult,
     ) -> None:
-        store = ctx.store
-        key, canonical = item.key, item.canonical_url
-        title_key = (
-            item.title_hash if len(normalize_title(item.title)) >= MIN_TITLE_FOR_DEDUPE else key
-        )
-        if store.news_seen(key, canonical, title_key):
-            return
         matches = (
             match_companies(index, item.title, item.summary, item.provider_tickers)
             if index is not None
             else []
         )
-        record: dict[str, Any] = {
+        store_item(ctx, item, seen_at, result, matches=matches, scorer=self.scorer)
+
+
+def store_item(
+    ctx,
+    item: NewsItem,
+    seen_at: datetime,
+    result: PollResult,
+    *,
+    matches: list[Match],
+    scorer: NewsScorer | None = None,
+    event_kind: str = "news",
+    dedupe_title: bool = True,
+    event_data: dict[str, Any] | None = None,
+) -> bool:
+    """Store one news item, record it for the forward log and emit one event per company.
+
+    Shared by the news poller and the 8-K press releases (`exhibits`). Returns False
+    when the item was already known. `dedupe_title=False` dedupes by key and URL only:
+    an official SEC copy of a release is kept even when a wire carried the headline.
+    """
+    store = ctx.store
+    key, canonical = item.key, item.canonical_url
+    long_title = len(normalize_title(item.title)) >= MIN_TITLE_FOR_DEDUPE
+    title_key = item.title_hash if long_title else key
+    if store.news_seen(key, canonical, title_key if dedupe_title else key):
+        return False
+    record: dict[str, Any] = {
+        "key": key,
+        "feed": item.feed,
+        "url": item.url,
+        "canonical_url": canonical,
+        "title": item.title,
+        "title_hash": title_key,
+        "summary": item.summary,
+        "published_at": _iso(item.published_at),
+        "published_raw": item.published_raw,
+        "seen_at": _iso(seen_at),
+        "tickers": [m.ticker for m in matches],
+        "ciks": [m.cik for m in matches],
+        "matches": [m.view() for m in matches],
+        "tags": tag(item.title, item.summary),
+        "extra": item.extra,
+        "score": None,
+    }
+    if scorer is not None:
+        try:
+            record["score"] = scorer.score(record)
+        except Exception:  # noqa: BLE001 - a broken scorer never loses the item
+            log.exception("news scorer %s failed", getattr(scorer, "name", "?"))
+    if not store.add_news(record):
+        return False
+    result.records.append(
+        {
+            "kind": "news",
+            "source": item.feed,  # per feed, so the log counts each one
             "key": key,
-            "feed": item.feed,
-            "url": item.url,
-            "canonical_url": canonical,
-            "title": item.title,
-            "title_hash": title_key,
-            "summary": item.summary,
-            "published_at": _iso(item.published_at),
-            "published_raw": item.published_raw,
-            "seen_at": _iso(seen_at),
-            "tickers": [m.ticker for m in matches],
-            "ciks": [m.cik for m in matches],
-            "matches": [m.view() for m in matches],
-            "tags": tag(item.title, item.summary),
-            "extra": item.extra,
-            "score": None,
+            "seen_at": record["seen_at"],
+            "data": record,
         }
-        if self.scorer is not None:
-            try:
-                record["score"] = self.scorer.score(record)
-            except Exception:  # noqa: BLE001 - a broken scorer never loses the item
-                log.exception("news scorer %s failed", getattr(self.scorer, "name", "?"))
-        if not store.add_news(record):
-            return
-        result.records.append(
-            {
-                "kind": "news",
-                "source": item.feed,  # per feed, so the log counts each one
-                "key": key,
-                "seen_at": record["seen_at"],
-                "data": record,
-            }
-        )
-        if not matches:
-            return
-        published = item.published_at
-        day = min(published, seen_at).date() if published else seen_at.date()
-        summary = item.summary
-        if len(summary) > EVENT_SUMMARY_MAX:
-            summary = summary[: EVENT_SUMMARY_MAX - 1].rstrip() + "…"
-        # One event per company named, so each one's context shows the item.
-        for match in matches:
-            result.events.append(
-                MarketEvent(
-                    source=NEWS,
-                    kind="news",
-                    key=f"{key}:{match.cik}",
-                    event_date=day,
-                    issuer_cik=match.cik,
-                    issuer_name=match.name,
-                    ticker=match.ticker,
-                    title=item.title,
-                    url=item.url,
-                    seen_at=seen_at,
-                    data={
-                        "feed": item.feed,
-                        "news_key": key,
-                        "summary": summary,
-                        "tags": record["tags"],
-                        "method": match.method,
-                        "matches": record["matches"],
-                        "published_at": record["published_at"],
-                    },
-                )
+    )
+    if not matches:
+        return True
+    published = item.published_at
+    day = min(published, seen_at).date() if published else seen_at.date()
+    summary = item.summary
+    if len(summary) > EVENT_SUMMARY_MAX:
+        summary = summary[: EVENT_SUMMARY_MAX - 1].rstrip() + "…"
+    # One event per company named, so each one's context shows the item.
+    for match in matches:
+        result.events.append(
+            MarketEvent(
+                source=NEWS,
+                kind=event_kind,
+                key=f"{key}:{match.cik}",
+                event_date=day,
+                issuer_cik=match.cik,
+                issuer_name=match.name,
+                ticker=match.ticker,
+                title=item.title,
+                url=item.url,
+                seen_at=seen_at,
+                data={
+                    "feed": item.feed,
+                    "news_key": key,
+                    "summary": summary,
+                    "tags": record["tags"],
+                    "method": match.method,
+                    "matches": record["matches"],
+                    "published_at": record["published_at"],
+                    **(event_data or {}),
+                },
             )
+        )
+    return True

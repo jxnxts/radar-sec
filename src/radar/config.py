@@ -100,6 +100,14 @@ class NewsConfig:
     timeout_seconds: float = 30.0
     # Days the company context of the dashboard looks back for news.
     context_days: int = 30
+    # Official press releases: the EX-99 exhibits of the 8-Ks the live 8-K source sees,
+    # stored as news of feed "sec-8k-ex99" (free, from the SEC, under its rate limit).
+    sec_exhibits: bool = True
+    sec_exhibits_per_filing: int = 3  # EX-99 documents read per 8-K
+    # 8-Ks whose index page must be fetched (no submission text already downloaded) read
+    # per 8-K poll; the rest wait for the next poll (~2-3 SEC requests each).
+    sec_exhibits_filings_per_poll: int = 40
+    sec_exhibit_max_bytes: int = 2_000_000  # larger exhibits (decks, statements) are skipped
 
 
 @dataclass(frozen=True)

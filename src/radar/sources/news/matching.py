@@ -25,6 +25,7 @@ from ..registry import Registry
 EXCHANGE = "exchange"
 PROVIDER = "provider"
 NAME = "name"
+FILING = "filing"  # the filer itself (SEC exhibits): no matching at all
 
 _US_EXCHANGES = (
     r"NYSE\s+American|NYSE\s+Arca|NYSE\s+MKT|NYSE|"
@@ -73,7 +74,7 @@ class Match:
     ticker: str
     cik: str
     name: str
-    method: str  # exchange | provider | name
+    method: str  # exchange | provider | name | filing
     exchange: str = ""
 
     def view(self) -> dict[str, str]:

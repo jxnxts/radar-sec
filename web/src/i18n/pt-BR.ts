@@ -441,6 +441,7 @@ export const ptBR: Messages = {
       short_interest_release: 'FINRA',
       ftd_release: 'FTD',
       news: 'Notícia',
+      press_release: 'Comunicado',
     } as Record<string, string>,
     newsTags: {
       earnings: 'Resultado',
