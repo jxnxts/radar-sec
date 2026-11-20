@@ -177,6 +177,10 @@ def event_record(event_id: int, event: Any) -> dict[str, Any]:
     }
 
 
+YAHOO = "yahoo"
+TIINGO = "tiingo"
+
+
 def yahoo_closes(batch_size: int = 20, requests_per_second: float = 2.0) -> PriceFetch:
     """Daily closes from Yahoo, in small paced batches (see radar.backtest.prices)."""
 
@@ -190,8 +194,76 @@ def yahoo_closes(batch_size: int = 20, requests_per_second: float = 2.0) -> Pric
             if i:
                 time.sleep(1.0 / requests_per_second)
             got, failed = provider.fetch(symbols[i : i + batch_size], start, end)
+            for frame in got.values():
+                frame.attrs["source"] = YAHOO
             data.update(got)
             errors.update(failed)
+        return data, errors
+
+    return fetch
+
+
+def tiingo_frame(rows: list[dict[str, Any]]):
+    """Tiingo end-of-day rows as the snapshot's table: close (as traded), adj_close
+    (splits and dividends) and split (0 = none, as Yahoo reports it)."""
+    import pandas as pd
+
+    kept = [r for r in rows if r.get("date") and r.get("close") and r.get("adjClose")]
+    if not kept:
+        return None
+    index = pd.DatetimeIndex([pd.Timestamp(str(r["date"])[:10]) for r in kept], name="day")
+    split = [float(r.get("splitFactor") or 1.0) for r in kept]
+    frame = pd.DataFrame(
+        {
+            "close": [float(r["close"]) for r in kept],
+            "adj_close": [float(r["adjClose"]) for r in kept],
+            "split": [0.0 if s == 1.0 else s for s in split],
+        },
+        index=index,
+    ).sort_index()
+    frame.attrs["source"] = TIINGO
+    return frame
+
+
+def tiingo_closes(client, fallback: PriceFetch, max_symbols: int = 300) -> PriceFetch:
+    """Tiingo end-of-day closes (one request per ticker), Yahoo for the rest.
+
+    Indices, symbols past `max_symbols`, tickers Tiingo does not know and everything
+    after the hourly budget runs out (or a 401/403/429) go to `fallback`.
+    """
+    from radar.tiingo import TiingoAuthError, TiingoBudgetError, TiingoError, tiingo_symbol
+
+    def fetch(symbols: list[str], start: date, end: date):
+        data: dict[str, Any] = {}
+        errors: dict[str, str] = {}
+        rest: list[str] = []
+        stopped = ""
+        for i, symbol in enumerate(symbols):
+            ticker = tiingo_symbol(symbol)
+            if ticker is None or stopped or i >= max_symbols:
+                rest.append(symbol)
+                continue
+            try:
+                frame = tiingo_frame(client.daily(ticker, start, end))
+            except (TiingoAuthError, TiingoBudgetError) as exc:
+                stopped = str(exc)
+                log.warning("Tiingo end-of-day stopped at %s: %s; Yahoo does the rest", symbol, exc)
+                rest.append(symbol)
+                continue
+            except TiingoError as exc:
+                errors[symbol] = f"tiingo: {exc}"[:200]
+                rest.append(symbol)
+                continue
+            if frame is None:
+                rest.append(symbol)
+            else:
+                data[symbol] = frame
+        if rest:
+            got, failed = fallback(rest, start, end)
+            data.update(got)
+            errors.update(failed)
+            for symbol in got:
+                errors.pop(symbol, None)
         return data, errors
 
     return fetch
@@ -365,10 +437,13 @@ class ForwardRecorder:
                         "close": float(last["close"]),
                         "adj_close": float(last["adj_close"]),
                         "split": float(last["split"]) if "split" in last else 0.0,
+                        # Which provider gave this close ("tiingo" or "yahoo").
+                        "source": frame.attrs.get("source", YAHOO),
                     },
                 }
             )
         missing = sorted(set(symbols) - {r["data"]["symbol"] for r in records})
+        by_source = Counter(r["data"]["source"] for r in records)
         records.append(
             {
                 "kind": PRICE,
@@ -379,6 +454,7 @@ class ForwardRecorder:
                     "snapshot": True,
                     "requested": len(symbols),
                     "recorded": len(records),
+                    "sources": dict(by_source),
                     "missing": missing[:500],
                     "errors": dict(list(errors.items())[:100]),
                 },
@@ -392,6 +468,27 @@ class ForwardRecorder:
             self._snapshot_day = None
         log.info("price snapshot: %d of %d symbols recorded", len(records) - 1, len(symbols))
         return len(records) - 1
+
+
+def snapshot_closes(settings) -> PriceFetch:
+    """Tiingo end-of-day (Yahoo behind it) when a key is set; Yahoo otherwise."""
+    from radar.config import tiingo_api_key
+
+    bt = settings.backtest
+    yahoo = yahoo_closes(bt.price_batch_size, bt.price_requests_per_second)
+    cfg = settings.prices
+    key = tiingo_api_key()
+    if cfg.provider == "yahoo" or not key:
+        return yahoo
+    from radar.tiingo import TiingoClient
+
+    client = TiingoClient(
+        key,
+        requests_per_hour=cfg.tiingo_requests_per_hour,
+        requests_per_second=cfg.tiingo_requests_per_second,
+        timeout=cfg.tiingo_timeout_seconds,
+    )
+    return tiingo_closes(client, yahoo, cfg.tiingo_snapshot_max_symbols)
 
 
 def build_recorder(settings, db) -> ForwardRecorder | None:
@@ -409,5 +506,5 @@ def build_recorder(settings, db) -> ForwardRecorder | None:
         price_signal_days=cfg.price_signal_days,
         price_event_days=cfg.price_event_days,
         price_max_symbols=cfg.price_max_symbols,
-        fetch_closes=yahoo_closes(bt.price_batch_size, bt.price_requests_per_second),
+        fetch_closes=snapshot_closes(settings),
     )

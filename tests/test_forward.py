@@ -182,9 +182,11 @@ def test_daily_price_snapshot_runs_once_after_the_close(tmp_path):
         "close": 11.0,
         "adj_close": 10.9,
         "split": 0.0,
+        "source": "yahoo",  # a frame without a source tag counts as Yahoo
     }
     summary = prices[-1]["data"]
     assert summary["snapshot"] and summary["missing"] == ["NEWZ"] and summary["recorded"] == 4
+    assert summary["sources"] == {"yahoo": 4}
     assert SourceStore(conn).get_state(SNAPSHOT_STATE) == "2026-11-19"
 
     now[0] = _at(23)

@@ -111,6 +111,31 @@ class NewsConfig:
 
 
 @dataclass(frozen=True)
+class PricesConfig:
+    """Where quotes and daily closes come from (radar.api.prices, radar.forward)."""
+
+    # "auto": Tiingo when TIINGO_API_KEY is set (IEX real-time quotes on the dashboard,
+    # end-of-day prices for the forward-test snapshot), Yahoo Finance otherwise or for
+    # what Tiingo misses; "yahoo": always Yahoo, even with a key.
+    provider: str = "auto"
+    # Tickers per IEX request (one request answers the whole batch).
+    tiingo_batch_size: int = 100
+    # One budget for every Tiingo request of the process (quotes and the snapshot's
+    # one-request-per-ticker end-of-day prices); past it, Yahoo answers until the
+    # hour rolls over. Conservative: check your plan's limits before raising it.
+    tiingo_requests_per_hour: int = 500
+    tiingo_requests_per_second: float = 2.0
+    tiingo_timeout_seconds: float = 20.0
+    # Tickers of the daily forward-test snapshot asked to Tiingo end-of-day; the rest
+    # (and any Tiingo failure) go to Yahoo. Each one is a request.
+    tiingo_snapshot_max_symbols: int = 300
+
+    def __post_init__(self) -> None:
+        if self.provider not in ("auto", "yahoo"):
+            raise ConfigError(f'[prices] provider must be "auto" or "yahoo", not "{self.provider}"')
+
+
+@dataclass(frozen=True)
 class ForwardConfig:
     """Append-only forward-test log (radar.forward): every live signal and event, as seen."""
 
@@ -173,6 +198,7 @@ class Settings:
     backtest: BacktestConfig = field(default_factory=BacktestConfig)
     sources: SourcesConfig = field(default_factory=SourcesConfig)
     news: NewsConfig = field(default_factory=NewsConfig)
+    prices: PricesConfig = field(default_factory=PricesConfig)
     forward: ForwardConfig = field(default_factory=ForwardConfig)
     dashboard: DashboardConfig = field(default_factory=DashboardConfig)
 
